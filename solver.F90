@@ -473,10 +473,10 @@ end subroutine gradfi
 
         G=0.5d0
 
-        FACP=1.0d0-FAC
-        FII=T(IJN)*FAC+T(IJP)*FACP
-        DFXI=DTX(IJN)*FAC+DTX(IJP)*FACP
-        DFYI=DTY(IJN)*FAC+DTY(IJP)*FACP
+        !FACP=1.0d0-FAC
+        !FII=T(IJN)*FAC+T(IJP)*FACP
+        !DFXI=DTX(IJN)*FAC+DTX(IJP)*FACP
+        !DFYI=DTY(IJN)*FAC+DTY(IJP)*FACP
         
     !
     !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
@@ -489,21 +489,21 @@ end subroutine gradfi
     !
     !.....EXPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
-        FCFIE=FM*FII
-        FDFIE=ALPHA*(DFXI*SX+DFYI*SY)
+        !FCFIE=FM*FII
+        !FDFIE=ALPHA*(DFXI*SX+DFYI*SY)
     !
     !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
-        FCFII=MIN(FM,ZERO)*T(IJN)+MAX(FM,ZERO)*T(IJP)
-        FDFII=VSOL*(DFXI*XPN+DFYI*YPN)
+        !FCFII=MIN(FM,ZERO)*T(IJN)+MAX(FM,ZERO)*T(IJP)
+        !FDFII=VSOL*(DFXI*XPN+DFYI*YPN)
     !
     !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
     !
         CAN=-VSOL+MIN(FM,ZERO)
         CAP=-VSOL-MAX(FM,ZERO)
-        FFIC=G*(FCFIE-FCFII)
-        Q(IJP)=Q(IJP)-FFIC+FDFIE-FDFII
-        Q(IJN)=Q(IJN)+FFIC-FDFIE+FDFII
+        !FFIC=G*(FCFIE-FCFII)
+        !Q(IJP)=Q(IJP)-FFIC+FDFIE-FDFII
+        !Q(IJN)=Q(IJN)+FFIC-FDFIE+FDFII
 
 end subroutine fluxsc
 
@@ -535,11 +535,9 @@ subroutine temp
         SY=(X(IJ2)-X(IJ1))
         COEFC=RHO*(SX*VX+SY*VY)
         COEFD=ALPHA*SRDW(IW)
-        print *, IJP, COEFC, T(IJB)
         AP(IJP)=AP(IJP)+COEFD
-        !Q(IJP)=Q(IJP)+COEFD*T(IJB)-min(COEFC*T(IJB),ZERO)
-        Q(IJP)=Q(IJP)+COEFD*T(IJB)-COEFC*T(IJB)
-        !print *, Q(IJP)
+        Q(IJP)=Q(IJP)+COEFD*T(IJB)-min(COEFC*T(IJB),ZERO)
+        !Q(IJP)=Q(IJP)+COEFD*T(IJB)-COEFC*T(IJB)
       END DO
       !print *, COEFF
 

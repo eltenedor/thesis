@@ -3,8 +3,8 @@ all: solver
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
-resolution = 2
-expath = ../order_verification/petsc_cds/${resolution}
+resolution = 512
+expath = ../order_verification/test/${resolution}
 
 solver_src = \
 	${expath}/paramMod.F90 \
