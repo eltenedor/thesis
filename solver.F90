@@ -189,12 +189,11 @@ subroutine calcSc
 
     URF=1.0
 
-    !call gradfi(T,DTX,DTY)
+    call gradfi(T,DTX,DTY)
 
     do I=2,NIM
         do IJ=LI(I)+2,LI(I)+NIM
             Q(IJ)=src(XC(IJ), YC(IJ), 0.0d0, TIME)*VOL
-            !print *, Q(IJ)
             AP(IJ)=0.0d0
         end do
     end do
@@ -202,7 +201,6 @@ subroutine calcSc
     do I=2,NIM-1
         do IJ=LI(I)+2,LI(I)+NJM
         call fluxsc(IJ,IJ+NJ,IJ,IJ-1,RHO*VX*DY,FX(IJ),AW(IJ+NJ),AE(IJ))
-        !print *, IJ, AW(IJ)
         end do
     end do
 
@@ -404,7 +402,7 @@ subroutine gradfi(FI,DFX,DFY)
 !..CONTRRIBUTION FROM INNER EAST SIDES
 !
     do I=2,NIM-1
-        do IJ=LI(I)+2,LI(I)*NJM
+        do IJ=LI(I)+2,LI(I)+NJM
             FIE=FI(IJ+NJ)*FX(IJ)+FI(IJ)*(1.0d0-FX(IJ))
             SX=Y(IJ)-Y(IJ-1)
             SY=X(IJ-1)-X(IJ)
@@ -473,10 +471,10 @@ end subroutine gradfi
 
         G=0.5d0
 
-        !FACP=1.0d0-FAC
-        !FII=T(IJN)*FAC+T(IJP)*FACP
-        !DFXI=DTX(IJN)*FAC+DTX(IJP)*FACP
-        !DFYI=DTY(IJN)*FAC+DTY(IJP)*FACP
+        FACP=1.0d0-FAC
+        FII=T(IJN)*FAC+T(IJP)*FACP
+        DFXI=DTX(IJN)*FAC+DTX(IJP)*FACP
+        DFYI=DTY(IJN)*FAC+DTY(IJP)*FACP
         
     !
     !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
@@ -489,21 +487,21 @@ end subroutine gradfi
     !
     !.....EXPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
-        !FCFIE=FM*FII
-        !FDFIE=ALPHA*(DFXI*SX+DFYI*SY)
+        FCFIE=FM*FII
+        FDFIE=ALPHA*(DFXI*SX+DFYI*SY)
     !
     !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
-        !FCFII=MIN(FM,ZERO)*T(IJN)+MAX(FM,ZERO)*T(IJP)
-        !FDFII=VSOL*(DFXI*XPN+DFYI*YPN)
+        FCFII=MIN(FM,ZERO)*T(IJN)+MAX(FM,ZERO)*T(IJP)
+        FDFII=VSOL*(DFXI*XPN+DFYI*YPN)
     !
     !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
     !
         CAN=-VSOL+MIN(FM,ZERO)
         CAP=-VSOL-MAX(FM,ZERO)
-        !FFIC=G*(FCFIE-FCFII)
-        !Q(IJP)=Q(IJP)-FFIC+FDFIE-FDFII
-        !Q(IJN)=Q(IJN)+FFIC-FDFIE+FDFII
+        FFIC=G*(FCFIE-FCFII)
+        Q(IJP)=Q(IJP)-FFIC+FDFIE-FDFII
+        Q(IJN)=Q(IJN)+FFIC-FDFIE+FDFII
 
 end subroutine fluxsc
 
