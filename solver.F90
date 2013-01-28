@@ -3,12 +3,20 @@ program main
 !#########################################################
 
     use ch
+    use coef
     use ind
     use logic
     use sc
     use var
     implicit none
 
+#include <finclude/petscsys.h>
+#include <finclude/petscksp.h>
+
+    PetscErrorCode :: ierr
+    KSP :: ksp
+
+    call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
 
     open(unit=2,FILE='grid.out')
     rewind 2
@@ -18,8 +26,15 @@ program main
 
     call init
 
+    call KSPCreate(PETSC_COMM_WORLD,ksp,ierr)
+
+    ! Set runtime options
+
+    call KSPSetFromOptions(ksp,ierr)
+
     ITIMS=1
     ITIME=1
+!....START TIME LOOP
     do ITIM=ITIMS,ITIME
         if (LTIME) then
             TIME=TIME+DT
@@ -31,12 +46,36 @@ program main
            end do
        end if
 
-        call updateBd
-        call calcSc
+       call updateBd
+
+!....START SIMPLE RALAXATIONS (OUTER ITERATIONS)
+        LSG=10
+        TOL=10e-4
+        do LS=1,LSG
+            print *, 'OUTER ITERATION: ', LS
+            call calcsc(ksp)
+            print *,'RESIDUAL: ', MINRES 
+            if (TOL.LT.10e-8) then
+                call writeVtk
+                exit
+            else
+                TOL=TOL/100.0d0
+            end if
+        end do
         !call setField
-        call writeVtk
+
+!....WRITE RESULTS TO VTK FILE 
 
     end do
+
+    ! Free work space
+
+    call VecDestroy(sol,ierr)
+    call VecDestroy(b,ierr)
+    call MatDestroy(A,ierr)
+    call MatDestroy(A2,ierr)
+    call KSPDestroy(ksp,ierr) 
+    call PetscFinalize(ierr)
 
 end program main
 
@@ -46,12 +85,19 @@ subroutine init
 !#########################################################
     
     use bc
+    use coef
     use geo
     use ind
     use logic
     use param
     use var
     implicit none
+
+#include <finclude/petscsys.h>
+#include <finclude/petscksp.h>
+#include <finclude/petscpc.h>
+
+    PetscErrorCode :: ierr
 
     NI=NXA
     NJ=NYA
@@ -78,7 +124,40 @@ subroutine init
         call setField
         call writeVtk
     end if
-        
+
+    ! Create Matrix
+
+    call MatCreate(PETSC_COMM_WORLD,A,ierr)
+    call MatSetType(A,MATSEQAIJ,ierr)
+    call MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,N,N,ierr)
+    call MatSetFromOptions(A,ierr) 
+    
+    ! Increase performance during matrix assembly due to preallocation
+    call MatSeqAIJSetPreallocation(A,i5,PETSC_NULL_INTEGER,ierr)
+
+    ! Create Vector
+
+    call VecCreate(PETSC_COMM_WORLD,sol,ierr)
+    call VecSetSizes(sol,PETSC_DECIDE,N,ierr)
+    call VecSetFromOptions(sol,ierr)
+    call VecDuplicate(sol,b,ierr)
+    call VecDuplicate(sol,vt1,ierr)
+    call VecDuplicate(sol,vt2,ierr)
+    call VecDuplicate(sol,res,ierr)
+
+    call VecSet(sol,0.0,ierr)
+    call VecAssemblyBegin(sol,ierr)
+    call VecAssemblyEnd(sol,ierr)
+    call VecSet(vt1,0.0,ierr)
+    call VecAssemblyBegin(vt1,ierr)
+    call VecAssemblyEnd(vt1,ierr)
+    call VecSet(vt2,0.0,ierr)
+    call VecAssemblyBegin(vt2,ierr)
+    call VecAssemblyEnd(vt2,ierr)
+    call VecSet(res,0.0,ierr)
+    call VecAssemblyBegin(res,ierr)
+    call VecAssemblyEnd(res,ierr)
+
 end subroutine init
 
 !#########################################################
@@ -113,7 +192,8 @@ subroutine writeVtk
 
     character(10) :: TIME_CH
     !write(TIME_CH,'(f6.4)') TIME
-    write(TIME_CH,'(I1)') ITIM
+    !write(TIME_CH,'(I1)') ITIM
+    write(TIME_CH,'(I1)') LS
     VTKFILE='grid_'//trim(TIME_CH)//'.vtk'
     print *, ' *** GENERATING .VTK *** '
     open (unit=4,FILE=VTKFILE)
@@ -163,7 +243,7 @@ subroutine updateBd
 end subroutine updateBd
 
 !#########################################################
-subroutine calcSc
+subroutine calcSc(ksp)
 !#########################################################
 
     use bc
@@ -182,14 +262,18 @@ subroutine calcSc
 #include <finclude/petscpc.h>
 
     real*8 :: APT, URF
-    KSP :: ksp
     PC :: pc
-    PetscReal :: tol
+    KSP, intent(in out) :: ksp
     PetscErrorCode :: ierr
+    KSPConvergedReason :: reason
 
-    URF=1.0
+    URF=1.0d0
 
     call gradfi(T,DTX,DTY)
+
+    !if(N.le.10) then
+    !    call VecView(sol,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !end if
 
     do I=2,NIM
         do IJ=LI(I)+2,LI(I)+NIM
@@ -235,28 +319,6 @@ subroutine calcSc
       END DO
       END DO
     
-    call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-
-    ! Create Matrix
-
-    call MatCreate(PETSC_COMM_WORLD,A,ierr)
-    call MatSetType(A,MATSEQAIJ,ierr)
-    call MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,N,N,ierr)
-    call MatSetFromOptions(A,ierr) 
-    
-    ! Increase performance during matrix assembly due to preallocation
-    call MatSeqAIJSetPreallocation(A,i5,PETSC_NULL_INTEGER,ierr)
-
-    ! Not necessary anymore, since preallocation is used
-    !call MatSetUp(A,ierr)
-
-    ! Create Vector
-
-    call VecCreate(PETSC_COMM_WORLD,sol,ierr)
-    call VecSetSizes(sol,PETSC_DECIDE,N,ierr)
-    call VecSetFromOptions(sol,ierr)
-    call VecDuplicate(sol,b,ierr)
-
     ! Assemble matrix and Vector
 
     ! Assembly inner CV matrix coefficients
@@ -325,36 +387,42 @@ subroutine calcSc
     call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyEnd(b,ierr)
 
+    if(LS.eq.1) then
+        call MatConvert(A,MATSAME,MAT_INITIAL_MATRIX,A2,ierr)
+    else
+        call KSPSetInitialGuessNonzero(ksp,PETSC_TRUE,ierr)
+    endif
+
     if(N.le.10) call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
-
-    ! create linear solver context
-
-    call KSPCreate(PETSC_COMM_WORLD,ksp,ierr)
 
     ! Set operators
 
-    call KSPSetOperators(ksp,A,A,DIFFERENT_NONZERO_PATTERN,ierr)
+    call KSPSetOperators(ksp,A,A2,SAME_PRECONDITIONER,ierr)
 
-    ! Set linear solver defaults
-
-    call KSPGetPC(ksp,pc,ierr)
-    call PCSetType(pc,PCJACOBI,ierr)
-    tol=1.0e-10
+    ! Calculate initial Residual
+    
     call KSPSetTolerances(ksp,tol,PETSC_DEFAULT_DOUBLE_PRECISION, &
-         & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
-
-    ! Set runtime options
-
-    call KSPSetFromOptions(ksp,ierr)
-
+            & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
     ! Solve the linear system
 
     call KSPSolve(ksp,b,sol,ierr)
+    !call KSPGetConvergedReason(ksp,reason,ierr)
+    !call PetscPrintf(PETSC_COMM_WORLD,reason,ierr);
+
+
+    !call KSPBuildResidual(ksp,vt1,res,vres,ierr)
+    call KSPInitialResidual(ksp,sol,vt1,vt2,res,b,ierr)
+
+    call VecMin(vt2,PETSC_NULL_INTEGER,minres,ierr)
+    TOL=abs(MINRES)
+
+    !print *, TOL
 
     ! View solver info
 
-    call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
     if(N.le.10) then
+        call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call VecView(sol,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call VecView(b,PETSC_VIEWER_STDOUT_WORLD,ierr)
     end if
@@ -362,19 +430,11 @@ subroutine calcSc
     do I=2,NIM
         do J=2,NJM
             IJ=LI(I)+J
-            col=DTC(IJ)
-            call VecGetValues(sol,i1,col,valt,ierr)
+            row=DTC(IJ)
+            call VecGetValues(sol,i1,row,valt,ierr)
             T(IJ)=valt
         end do
     end do
-
-    ! Free work space
-
-    call VecDestroy(sol,ierr)
-    call VecDestroy(b,ierr)
-    call MatDestroy(A,ierr)
-    call KSPDestroy(ksp,ierr)
-    call PetscFinalize(ierr)
 
     call calcErr
 
@@ -456,7 +516,7 @@ end subroutine gradfi
 
 !################################################################
     subroutine fluxSc(IJP, IJN, IJ1, IJ2, FM, FAC, CAP, CAN)
-    !################################################################
+!################################################################
         
         use bc
         use coef
@@ -469,8 +529,9 @@ end subroutine gradfi
         real*8, intent(in out) :: CAP, CAN
         integer, intent(in) :: IJP, IJN, IJ1, IJ2
 
-        G=0.5d0
+        G=0.0d0
 
+        
         FACP=1.0d0-FAC
         FII=T(IJN)*FAC+T(IJP)*FACP
         DFXI=DTX(IJN)*FAC+DTX(IJP)*FACP
@@ -535,7 +596,6 @@ subroutine temp
         COEFD=ALPHA*SRDW(IW)
         AP(IJP)=AP(IJP)+COEFD
         Q(IJP)=Q(IJP)+COEFD*T(IJB)-min(COEFC*T(IJB),ZERO)
-        !Q(IJP)=Q(IJP)+COEFD*T(IJB)-COEFC*T(IJB)
       END DO
       !print *, COEFF
 
@@ -564,7 +624,7 @@ subroutine calcErr
     end do
     
     write(10, *), E/N
-    print *, E/N
+    print *,'ERROR: ', E/N
 
 end subroutine calcErr
 
