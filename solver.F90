@@ -192,8 +192,8 @@ subroutine writeVtk
 
     character(10) :: TIME_CH
     !write(TIME_CH,'(f6.4)') TIME
-    !write(TIME_CH,'(I1)') ITIM
-    write(TIME_CH,'(I1)') LS
+    write(TIME_CH,'(I1)') ITIM
+    !write(TIME_CH,'(I1)') LS
     VTKFILE='grid_'//trim(TIME_CH)//'.vtk'
     print *, ' *** GENERATING .VTK *** '
     open (unit=4,FILE=VTKFILE)
@@ -237,6 +237,21 @@ subroutine updateBd
     do IW=1,NWALI
         IJB=IJW(IW)
         T(IJB)=phi(XC(IJB),YC(IJB),0.0d0,TIME)
+    end do
+
+!...Calculate MassFluxes
+    do I=2,NIM-1
+        do IJ=LI(I)+2,LI(I)+NJM
+        XN=0.5d0*(X(IJ)-X(IJ-NJ))
+        YN=0.5d0*(Y(IJ)-Y(IJ-NJ))
+        F1(IJ)=RHO*DY*vel(XN,YN,0.0d0,0.0d0)
+        end do
+    end do
+
+    do I=2,NIM
+        XN=0.5d0*(X(IJ)-X(IJ-1))
+        YN=0.5d0*(Y(IJ)-Y(IJ-1))
+        F2(IJ)=RHO*DY*vel(XN,YN,0.0d0,0.0d0)
     end do
     
 
@@ -284,13 +299,13 @@ subroutine calcSc(ksp)
 
     do I=2,NIM-1
         do IJ=LI(I)+2,LI(I)+NJM
-        call fluxsc(IJ,IJ+NJ,IJ,IJ-1,RHO*VX*DY,FX(IJ),AW(IJ+NJ),AE(IJ))
+        call fluxsc(IJ,IJ+NJ,IJ,IJ-1,F1(IJ),FX(IJ),AW(IJ+NJ),AE(IJ))
         end do
     end do
 
     do I=2,NIM
         do IJ=LI(I)+2,LI(I)+NJM-1
-        call fluxsc(IJ,IJ+1,IJ-NJ,IJ,RHO*VY*DX,FY(IJ),AS(IJ+1),AN(IJ))
+        call fluxsc(IJ,IJ+1,IJ-NJ,IJ,F2(IJ),FY(IJ),AS(IJ+1),AN(IJ))
         end do
     end do
 
@@ -592,10 +607,11 @@ subroutine temp
         IJ2=IJW2(IW)
         SX=(Y(IJ1)-Y(IJ2))
         SY=(X(IJ2)-X(IJ1))
-        COEFC=RHO*(SX*VX+SY*VY)
+        !COEFC=RHO*(SX*VX+SY*VY)
         COEFD=ALPHA*SRDW(IW)
         AP(IJP)=AP(IJP)+COEFD
-        Q(IJP)=Q(IJP)+COEFD*T(IJB)-min(COEFC*T(IJB),ZERO)
+        !Q(IJP)=Q(IJP)+COEFD*T(IJB)-min(COEFC*T(IJB),ZERO)
+        Q(IJP)=Q(IJP)+COEFD*T(IJB)
       END DO
       !print *, COEFF
 
@@ -623,6 +639,7 @@ subroutine calcErr
         end do
     end do
     
+    rewind 10
     write(10, *), E/N
     print *,'ERROR: ', E/N
 
