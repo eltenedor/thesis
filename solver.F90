@@ -6,15 +6,11 @@ program main
     use coef
     use ind
     use logic
+    use petsc_ksp_module
     use sc
     use var
     implicit none
-
 #include <finclude/petscsys.h>
-#include <finclude/petscksp.h>
-
-    PetscErrorCode :: ierr
-    KSP :: ksp
 
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
 
@@ -25,12 +21,7 @@ program main
     rewind 10
 
     call init
-
-    call KSPCreate(PETSC_COMM_WORLD,ksp,ierr)
-
-    ! Set runtime options
-
-    call KSPSetFromOptions(ksp,ierr)
+    call setUpKSP
 
     ITIMS=1
     ITIME=1
@@ -49,11 +40,11 @@ program main
        call updateBd
 
 !....START SIMPLE RALAXATIONS (OUTER ITERATIONS)
-        LSG=10
-        TOL=10e-4
+        LSG=1
+        TOL=10e-8
         do LS=1,LSG
             print *, 'OUTER ITERATION: ', LS
-            call calcsc(ksp)
+            call calcsc
             print *,'RESIDUAL: ', MINRES 
             if (TOL.LT.10e-8) then
                 call writeVtk
@@ -70,15 +61,10 @@ program main
 
     ! Free work space
 
-    call VecDestroy(sol,ierr)
-    call VecDestroy(b,ierr)
-    call MatDestroy(A,ierr)
-    call MatDestroy(A2,ierr)
-    call KSPDestroy(ksp,ierr) 
+    call cleanUp(A,b,sol)
     call PetscFinalize(ierr)
 
 end program main
-
 
 !#########################################################
 subroutine init
@@ -92,7 +78,6 @@ subroutine init
     use param
     use var
     implicit none
-
 #include <finclude/petscsys.h>
 #include <finclude/petscksp.h>
 #include <finclude/petscpc.h>
@@ -144,19 +129,6 @@ subroutine init
     call VecDuplicate(sol,vt1,ierr)
     call VecDuplicate(sol,vt2,ierr)
     call VecDuplicate(sol,res,ierr)
-
-    call VecSet(sol,0.0,ierr)
-    call VecAssemblyBegin(sol,ierr)
-    call VecAssemblyEnd(sol,ierr)
-    call VecSet(vt1,0.0,ierr)
-    call VecAssemblyBegin(vt1,ierr)
-    call VecAssemblyEnd(vt1,ierr)
-    call VecSet(vt2,0.0,ierr)
-    call VecAssemblyBegin(vt2,ierr)
-    call VecAssemblyEnd(vt2,ierr)
-    call VecSet(res,0.0,ierr)
-    call VecAssemblyBegin(res,ierr)
-    call VecAssemblyEnd(res,ierr)
 
 end subroutine init
 
@@ -242,23 +214,25 @@ subroutine updateBd
 !...Calculate MassFluxes
     do I=2,NIM-1
         do IJ=LI(I)+2,LI(I)+NJM
-        XN=0.5d0*(X(IJ)-X(IJ-NJ))
-        YN=0.5d0*(Y(IJ)-Y(IJ-NJ))
-        F1(IJ)=RHO*DY*vel(XN,YN,0.0d0,0.0d0)
+            XN=0.5d0*(X(IJ)+X(IJ-1))
+            YN=0.5d0*(Y(IJ)+Y(IJ-1))
+            F1(IJ)=RHO*DX*vel(XN,YN,0.0d0,0.0d0)
         end do
     end do
 
     do I=2,NIM
-        XN=0.5d0*(X(IJ)-X(IJ-1))
-        YN=0.5d0*(Y(IJ)-Y(IJ-1))
-        F2(IJ)=RHO*DY*vel(XN,YN,0.0d0,0.0d0)
+        do IJ=LI(I)+2,LI(I)+NJM-1
+            XN=0.5d0*(X(IJ)+X(IJ-NJ))
+            YN=0.5d0*(Y(IJ)+Y(IJ-NJ))
+            F2(IJ)=RHO*DY*vel(XN,YN,0.0d0,0.0d0)
+        end do
     end do
     
 
 end subroutine updateBd
 
 !#########################################################
-subroutine calcSc(ksp)
+subroutine calcSc
 !#########################################################
 
     use bc
@@ -267,28 +241,20 @@ subroutine calcSc(ksp)
     use grad
     use ind
     use mms
+    use petsc_ksp_module
     use sc
     use logic
     use var
     implicit none
-    
 #include <finclude/petscsys.h>
-#include <finclude/petscksp.h>
-#include <finclude/petscpc.h>
+#include <finclude/petscvec.h>
+#include <finclude/petscmat.h>
 
     real*8 :: APT, URF
-    PC :: pc
-    KSP, intent(in out) :: ksp
-    PetscErrorCode :: ierr
-    KSPConvergedReason :: reason
 
     URF=1.0d0
 
     call gradfi(T,DTX,DTY)
-
-    !if(N.le.10) then
-    !    call VecView(sol,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    !end if
 
     do I=2,NIM
         do IJ=LI(I)+2,LI(I)+NIM
@@ -296,6 +262,7 @@ subroutine calcSc(ksp)
             AP(IJ)=0.0d0
         end do
     end do
+            print *, Q(IJPW(1))
 
     do I=2,NIM-1
         do IJ=LI(I)+2,LI(I)+NJM
@@ -330,7 +297,7 @@ subroutine calcSc(ksp)
       DO I=2,NIM
       DO IJ=LI(I)+2,LI(I)+NJM
         AP(IJ)=(AP(IJ)-AE(IJ)-AW(IJ)-AN(IJ)-AS(IJ))/URF
-        Q(IJ)=Q(IJ)+(1.-URF)*AP(IJ)*T(IJ)
+        Q(IJ)=Q(IJ)+(1.0d0-URF)*AP(IJ)*T(IJ)
       END DO
       END DO
     
@@ -364,6 +331,7 @@ subroutine calcSc(ksp)
 
     ! Assembly matrix coefficients of boundary cv
 
+    print *, IJPW(1)
     do IW=1,NWALI
         IJ=IJPW(IW)
         IJP=DTC(IJ)
@@ -395,6 +363,13 @@ subroutine calcSc(ksp)
         !
     end do
 
+    print *, AP(IJPW(1))
+    print *, AE(IJPW(1))
+    print *, AW(IJPW(1))
+    print *, AN(IJPW(1))
+    print *, AS(IJPW(1))
+    print *, Q(IJPW(1))
+
     ! assembly matrix and right hand vector
 
     call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr)
@@ -402,45 +377,7 @@ subroutine calcSc(ksp)
     call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyEnd(b,ierr)
 
-    if(LS.eq.1) then
-        call MatConvert(A,MATSAME,MAT_INITIAL_MATRIX,A2,ierr)
-    else
-        call KSPSetInitialGuessNonzero(ksp,PETSC_TRUE,ierr)
-    endif
-
-    if(N.le.10) call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
-
-    ! Set operators
-
-    call KSPSetOperators(ksp,A,A2,SAME_PRECONDITIONER,ierr)
-
-    ! Calculate initial Residual
-    
-    call KSPSetTolerances(ksp,tol,PETSC_DEFAULT_DOUBLE_PRECISION, &
-            & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
-    ! Solve the linear system
-
-    call KSPSolve(ksp,b,sol,ierr)
-    !call KSPGetConvergedReason(ksp,reason,ierr)
-    !call PetscPrintf(PETSC_COMM_WORLD,reason,ierr);
-
-
-    !call KSPBuildResidual(ksp,vt1,res,vres,ierr)
-    call KSPInitialResidual(ksp,sol,vt1,vt2,res,b,ierr)
-
-    call VecMin(vt2,PETSC_NULL_INTEGER,minres,ierr)
-    TOL=abs(MINRES)
-
-    !print *, TOL
-
-    ! View solver info
-
-    !call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    if(N.le.10) then
-        call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        call VecView(sol,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        call VecView(b,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    end if
+    call solveSys(A,b,sol,N,LS,tol)
 
     do I=2,NIM
         do J=2,NJM
@@ -544,9 +481,8 @@ end subroutine gradfi
         real*8, intent(in out) :: CAP, CAN
         integer, intent(in) :: IJP, IJN, IJ1, IJ2
 
-        G=0.0d0
+        G=1.0d0
 
-        
         FACP=1.0d0-FAC
         FII=T(IJN)*FAC+T(IJP)*FACP
         DFXI=DTX(IJN)*FAC+DTX(IJP)*FACP
@@ -611,8 +547,11 @@ subroutine temp
         COEFD=ALPHA*SRDW(IW)
         AP(IJP)=AP(IJP)+COEFD
         !Q(IJP)=Q(IJP)+COEFD*T(IJB)-min(COEFC*T(IJB),ZERO)
+        !print *, IJP, COEFD, Q(IJP), T(IJB), XC(IJB), YC(IJB)
         Q(IJP)=Q(IJP)+COEFD*T(IJB)
+        !print *, Q(IJP)
       END DO
+      print *, Q(IJPW(1)), SRDW(IJPW(1)), T(IJW(1))
       !print *, COEFF
 
 end subroutine temp
@@ -629,19 +568,77 @@ subroutine calcErr
 
     real*8 :: E,ER
     E=0.0d0
+    ER=0.0d0
 
 
     do I=2,NIM
         do IJ=LI(I)+2,LI(I)+NIM
             !ER=T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME)
+            !E=abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
             E=E+abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
+            !ER=max(E,ER)
             !print *, T(IJ), XC(IJ), YC(IJ), phi(XC(IJ),YC(IJ),0.0d0,TIME),ER
         end do
     end do
     
     rewind 10
-    write(10, *), E/N
-    print *,'ERROR: ', E/N
+    write(10, *), E/dble(N)
+    !write(10, *), ER 
+    print *, 'ERROR ', E/dble(N)
+    !print *,'ERROR: ', ER
 
 end subroutine calcErr
+
+!################################################################
+subroutine linSys(N,A,B,X) 
+!################################################################
+    
+    implicit none
+    integer, intent(in) :: N
+    real*8, dimension(N, N), intent(in) :: A
+    real*8, dimension(N), intent(in) :: B
+    real*8, dimension(N), intent(inout) :: X
+    integer :: K, I, J
+    real*8, dimension(N) :: X_0
+    real*8 :: SIGMA, EPS, R
+    
+    EPS=1e-6
+    R=EPS
+    
+    open(unit=11,FILE='coef.out')
+
+    do I=1,N
+        X(I)=0
+        write(11, *), (A(I,J), J=1,N), B(I)
+    end do
+    K=0
+
+    do 
+        if (R.GE.EPS) then
+            K=K+1
+            !print *, K
+            do I=1,N
+                X_0(I)=X(I)
+            end do
+            do I=1,N
+                SIGMA=0
+                do J=1,N
+                    if(J.NE.I) then
+                            SIGMA=SIGMA+A(I,J)*X_0(J)
+                    end if
+                end do
+                X(I)=(B(I)-SIGMA)/A(I,I)
+            end do
+            R=0
+            do I=1,N
+                R=R+abs(X(I)-X_0(I))
+            end do
+            R=R/N
+        else
+            exit
+        end if
+    end do
+
+end subroutine linSys
+
 

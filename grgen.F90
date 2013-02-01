@@ -82,8 +82,8 @@ subroutine cartesian
     use ind
     implicit none
 
-    DX=(XXE-XXS)/NICV
-    DY=(YYE-YYS)/NJCV
+    DX=(XXE-XXS)/dble(NICV)
+    DY=(YYE-YYS)/dble(NJCV)
     VOL=DX*DY
 
     NI=NICV+2
@@ -98,13 +98,16 @@ subroutine cartesian
         LI(I)=(I-1)*NJ
     end do
 
+    !print *, YYS
     call createMapping
     
+    !print *, YYS
     do I=1,NIM
        do J=1,NJM
             IJ=LI(I)+J
-            X(IJ)=XXS+(I-1)*DX
-            Y(IJ)=YYS+(J-1)*DY 
+            X(IJ)=XXS+dble(I-1)*DX
+            Y(IJ)=YYS+dble(J-1)*DY 
+            !print *, IJ, dble(J-1), Y(IJ), YYS, DY
         end do
     end do
 
@@ -115,6 +118,7 @@ subroutine createMapping
 !########################################################
 
     use ind
+    use geo
     implicit none
 
     IJP=-1
@@ -138,8 +142,8 @@ subroutine gridexport
     use ind
     implicit none
 
-    DX=(XXE-XXS)/NICV
-    DY=(YYE-YYS)/NJCV
+    DX=(XXE-XXS)/dble(NICV)
+    DY=(YYE-YYS)/dble(NJCV)
 !...Create solver file
     !OPEN(UNIT=9,FILE='../../../pet_src/paramMod.F90')
     OPEN(UNIT=9,FILE='paramMod.F90')
@@ -279,7 +283,7 @@ subroutine calcG
     use geo
     use ind
     implicit none
-    real*8 :: XE, XN,YE, YN, DLPE, DLEE, DLPN, DLNN, DN, AR,SMALL
+    real*8 :: XE, YE, DLPE, DLEE, DLPN, DLNN, DN, AR,SMALL
     integer :: IJ1, IJ2
 
     SMALL=1.0E-20
