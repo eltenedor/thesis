@@ -1,21 +1,19 @@
-#define PETSC_AVOID_DECLARATIONS
-#include <finclude/petscsys.h>
-#include <finclude/petscvec.h>
-#include <finclude/petscmat.h>
-#include <finclude/petscpc.h>
-#include <finclude/petscksp.h>
-#undef PETSC_AVOID_DECLARATIONS
-
 !#########################################################
 module petsc_ksp_module
 !#########################################################
 
     implicit none
+#include <finclude/petscsysdef.h>
+#include <finclude/petscvecdef.h>
+#include <finclude/petscmatdef.h>
+#include <finclude/petscpcdef.h>
+#include <finclude/petsckspdef.h>
 
     KSP :: ksp
     PC :: pc
     PetscErrorCode :: ierr
     KSPConvergedReason :: reason
+    PetscInt :: its
     Mat :: A2
     Vec :: vt1,vt2,res
 
@@ -41,11 +39,13 @@ end subroutine setUpKSP
 subroutine solveSys(A,b,x,N,LS,tol)
 !#########################################################
 
+    use logic
     implicit none
 #include <finclude/petscsys.h>
 #include <finclude/petscvec.h>
 #include <finclude/petscmat.h>
 #include <finclude/petscksp.h>
+#include <finclude/petscpc.h>
 
     Mat, intent(in) :: A
     Vec, intent(in) :: b
@@ -63,8 +63,6 @@ subroutine solveSys(A,b,x,N,LS,tol)
         call KSPSetInitialGuessNonzero(ksp,PETSC_TRUE,ierr)
     endif
 
-    if(N.le.10) call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
-
     ! Set operators
 
     call KSPSetOperators(ksp,A,A2,SAME_PRECONDITIONER,ierr)
@@ -74,8 +72,13 @@ subroutine solveSys(A,b,x,N,LS,tol)
     ! Solve the linear system
 
     call KSPSolve(ksp,b,x,ierr)
+
+    ! Get KSP information
     call KSPGetConvergedReason(ksp,reason,ierr)
-    !call PetscPrintf(PETSC_COMM_WORLD,reason,ierr);
+    call KSPGetIterationNumber(ksp,its,ierr)
+
+    reasonInt=reason
+    itsInt=its
 
     !call KSPBuildResidual(ksp,vt1,res,vres,ierr)
     call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
@@ -83,16 +86,17 @@ subroutine solveSys(A,b,x,N,LS,tol)
     call VecMin(vt2,PETSC_NULL_INTEGER,tol,ierr)
     tol=abs(tol)
 
-    !print *, TOL
+    print *, TOL
 
     ! View solver info
 
     call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    if(N.le.10) then
+    !if(N.le.16) then
+        call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call VecView(x,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call VecView(b,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    end if
+    !end if
 
 end subroutine solveSys
     
@@ -106,6 +110,7 @@ subroutine cleanUp(A,b,x)
 #include <finclude/petscvec.h>
 #include <finclude/petscmat.h>
 #include <finclude/petscksp.h>
+#include <finclude/petscpc.h>
 
     Mat, intent(in out) :: A
     Vec, intent(in out) :: b,x

@@ -41,17 +41,17 @@ program main
 
 !....START SIMPLE RALAXATIONS (OUTER ITERATIONS)
         LSG=1
-        TOL=10e-8
+        TOL=10e-12
         do LS=1,LSG
             print *, 'OUTER ITERATION: ', LS
             call calcsc
             print *,'RESIDUAL: ', MINRES 
-            if (TOL.LT.10e-8) then
+            !if (TOL.LT.10e-10) then
                 call writeVtk
-                exit
-            else
-                TOL=TOL/100.0d0
-            end if
+            !    exit
+            !else
+            !    TOL=TOL/100.0d0
+            !end if
         end do
         !call setField
 
@@ -126,9 +126,6 @@ subroutine init
     call VecSetSizes(sol,PETSC_DECIDE,N,ierr)
     call VecSetFromOptions(sol,ierr)
     call VecDuplicate(sol,b,ierr)
-    call VecDuplicate(sol,vt1,ierr)
-    call VecDuplicate(sol,vt2,ierr)
-    call VecDuplicate(sol,res,ierr)
 
 end subroutine init
 
@@ -216,7 +213,8 @@ subroutine updateBd
         do IJ=LI(I)+2,LI(I)+NJM
             XN=0.5d0*(X(IJ)+X(IJ-1))
             YN=0.5d0*(Y(IJ)+Y(IJ-1))
-            F1(IJ)=RHO*DX*vel(XN,YN,0.0d0,0.0d0)
+            !F1(IJ)=RHO*DY*vel(XN,YN,0.0d0,0.0d0)
+            F1(IJ)=RHO*DY*VX
         end do
     end do
 
@@ -224,7 +222,8 @@ subroutine updateBd
         do IJ=LI(I)+2,LI(I)+NJM-1
             XN=0.5d0*(X(IJ)+X(IJ-NJ))
             YN=0.5d0*(Y(IJ)+Y(IJ-NJ))
-            F2(IJ)=RHO*DY*vel(XN,YN,0.0d0,0.0d0)
+            !F2(IJ)=RHO*DX*vel(XN,YN,0.0d0,0.0d0)
+            F2(IJ)=RHO*DX*VY
         end do
     end do
     
@@ -251,6 +250,7 @@ subroutine calcSc
 #include <finclude/petscmat.h>
 
     real*8 :: APT, URF
+    PetscLogDouble :: time1, time2
 
     URF=1.0d0
 
@@ -262,7 +262,6 @@ subroutine calcSc
             AP(IJ)=0.0d0
         end do
     end do
-            print *, Q(IJPW(1))
 
     do I=2,NIM-1
         do IJ=LI(I)+2,LI(I)+NJM
@@ -331,7 +330,6 @@ subroutine calcSc
 
     ! Assembly matrix coefficients of boundary cv
 
-    print *, IJPW(1)
     do IW=1,NWALI
         IJ=IJPW(IW)
         IJP=DTC(IJ)
@@ -363,12 +361,6 @@ subroutine calcSc
         !
     end do
 
-    print *, AP(IJPW(1))
-    print *, AE(IJPW(1))
-    print *, AW(IJPW(1))
-    print *, AN(IJPW(1))
-    print *, AS(IJPW(1))
-    print *, Q(IJPW(1))
 
     ! assembly matrix and right hand vector
 
@@ -377,7 +369,11 @@ subroutine calcSc
     call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyEnd(b,ierr)
 
+    call PetscGetCPUTime(time1,ierr)
     call solveSys(A,b,sol,N,LS,tol)
+    call PetscGetCPUTime(time2,ierr)
+
+    tges=time2-time1
 
     do I=2,NIM
         do J=2,NJM
@@ -514,6 +510,7 @@ end subroutine gradfi
         FFIC=G*(FCFIE-FCFII)
         Q(IJP)=Q(IJP)-FFIC+FDFIE-FDFII
         Q(IJN)=Q(IJN)+FFIC-FDFIE+FDFII
+        print *, IJP, FM
 
 end subroutine fluxsc
 
@@ -543,15 +540,14 @@ subroutine temp
         IJ2=IJW2(IW)
         SX=(Y(IJ1)-Y(IJ2))
         SY=(X(IJ2)-X(IJ1))
-        !COEFC=RHO*(SX*VX+SY*VY)
+        COEFC=RHO*(SX*VX+SY*VY)
         COEFD=ALPHA*SRDW(IW)
         AP(IJP)=AP(IJP)+COEFD
-        !Q(IJP)=Q(IJP)+COEFD*T(IJB)-min(COEFC*T(IJB),ZERO)
+        Q(IJP)=Q(IJP)+COEFD*T(IJB)-COEFC*T(IJB)
         !print *, IJP, COEFD, Q(IJP), T(IJB), XC(IJB), YC(IJB)
-        Q(IJP)=Q(IJP)+COEFD*T(IJB)
-        !print *, Q(IJP)
+        !Q(IJP)=Q(IJP)+COEFD*T(IJB)
+        !print *, IJP, Q(IJP)
       END DO
-      print *, Q(IJPW(1)), SRDW(IJPW(1)), T(IJW(1))
       !print *, COEFF
 
 end subroutine temp
@@ -562,6 +558,7 @@ subroutine calcErr
 
     use geo
     use ind
+    use logic
     use mms
     use var
     implicit none
@@ -582,9 +579,9 @@ subroutine calcErr
     end do
     
     rewind 10
-    write(10, *), E/dble(N)
+    write(10, *), E/dble(N), tges, reasonInt, itsInt
     !write(10, *), ER 
-    print *, 'ERROR ', E/dble(N)
+    print *, 'ERROR ', E/dble(N), tges, reasonInt, itsInt
     !print *,'ERROR: ', ER
 
 end subroutine calcErr
