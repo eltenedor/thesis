@@ -40,18 +40,14 @@ program main
        call updateBd
 
 !....START SIMPLE RALAXATIONS (OUTER ITERATIONS)
-        LSG=1
-        TOL=10e-12
+        LSG=10000
         do LS=1,LSG
             print *, 'OUTER ITERATION: ', LS
             call calcsc
-            print *,'RESIDUAL: ', MINRES 
-            !if (TOL.LT.10e-10) then
+            if (CONVERGED) then
                 call writeVtk
-            !    exit
-            !else
-            !    TOL=TOL/100.0d0
-            !end if
+                exit
+            end if
         end do
         !call setField
 
@@ -263,17 +259,20 @@ subroutine calcSc
         end do
     end do
 
+
     do I=2,NIM-1
         do IJ=LI(I)+2,LI(I)+NJM
         call fluxsc(IJ,IJ+NJ,IJ,IJ-1,F1(IJ),FX(IJ),AW(IJ+NJ),AE(IJ))
         end do
     end do
 
+
     do I=2,NIM
         do IJ=LI(I)+2,LI(I)+NJM-1
         call fluxsc(IJ,IJ+1,IJ-NJ,IJ,F2(IJ),FY(IJ),AS(IJ+1),AN(IJ))
         end do
     end do
+
 
 !
 !.....UNSTEADY TERM CONTRIBUTION
@@ -400,14 +399,17 @@ subroutine gradfi(FI,DFX,DFY)
     implicit none
 
     real(KIND=PREC), intent(in out) :: FI(NIJ), DFX(NIJ), DFY(NIJ)
-
+!
+!...INITIALIZE FIELDS
+!
     do IJ=1,NIJ
         DFX(IJ)=0
-        DFX(IJ)=0
+        DFY(IJ)=0
     end do
 
 !
 !..CONTRRIBUTION FROM INNER EAST SIDES
+!..WERTE AUF DEN CV-FLÄCHEN GEWICHTET MIT DER FLÄCHE
 !
     do I=2,NIM-1
         do IJ=LI(I)+2,LI(I)+NJM
@@ -423,6 +425,7 @@ subroutine gradfi(FI,DFX,DFY)
             DFY(IJ+NJ)=DFY(IJ+NJ)-DFYE
         end do
     end do
+    !print *, DFX(6), DFX(10), DFY(6), DFY(10)
 !
 !.....CONTRRIBUTION FROM INNER NORTH SIDES
 !
@@ -440,6 +443,7 @@ subroutine gradfi(FI,DFX,DFY)
             DFY(IJ+1)=DFY(IJ+1)-DFYN
         end do
     end do
+    !print *, DFX(6), DFX(10), DFY(6), DFY(10)
 !
 !.....CONTRIBUTION FROM WALL BOUNDARIES
 !
@@ -449,6 +453,7 @@ subroutine gradfi(FI,DFX,DFY)
         DFX(IJPW(I))=DFX(IJPW(I))+FI(IJW(I))*SX
         DFY(IJPW(I))=DFY(IJPW(I))+FI(IJW(I))*SY
     end do
+    !print *, DFX(6), DFX(10), DFY(6), DFY(10)
 
 !
 !.....CALCULATE GRADIENT COMPONENTS AT CV-CENTERS
@@ -483,6 +488,7 @@ end subroutine gradfi
         FII=T(IJN)*FAC+T(IJP)*FACP
         DFXI=DTX(IJN)*FAC+DTX(IJP)*FACP
         DFYI=DTY(IJN)*FAC+DTY(IJP)*FACP
+        !print *, DFXI, DFYI, DTX(IJN), DTX(IJP), FAC
         
     !
     !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
@@ -497,6 +503,7 @@ end subroutine gradfi
     !
         FCFIE=FM*FII
         FDFIE=ALPHA*(DFXI*SX+DFYI*SY)
+        !print *, DFXI, SX, DFYI, SY,FDFIE
     !
     !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
@@ -510,7 +517,6 @@ end subroutine gradfi
         FFIC=G*(FCFIE-FCFII)
         Q(IJP)=Q(IJP)-FFIC+FDFIE-FDFII
         Q(IJN)=Q(IJN)+FFIC-FDFIE+FDFII
-        print *, IJP, FM
 
 end subroutine fluxsc
 
@@ -542,8 +548,8 @@ subroutine temp
         SY=(X(IJ2)-X(IJ1))
         COEFC=RHO*(SX*VX+SY*VY)
         COEFD=ALPHA*SRDW(IW)
-        AP(IJP)=AP(IJP)+COEFD
-        Q(IJP)=Q(IJP)+COEFD*T(IJB)-COEFC*T(IJB)
+        AP(IJP)=AP(IJP)+COEFD-COEFC
+        Q(IJP)=Q(IJP)+(COEFD-COEFC)*T(IJB)
         !print *, IJP, COEFD, Q(IJP), T(IJB), XC(IJB), YC(IJB)
         !Q(IJP)=Q(IJP)+COEFD*T(IJB)
         !print *, IJP, Q(IJP)
@@ -579,9 +585,9 @@ subroutine calcErr
     end do
     
     rewind 10
-    write(10, *), E/dble(N), tges, reasonInt, itsInt
+    write(10, *), E/dble(N), tges, reasonInt, itsInt, LS
     !write(10, *), ER 
-    print *, 'ERROR ', E/dble(N), tges, reasonInt, itsInt
+    print *, 'ERROR ', E/dble(N), tges, reasonInt, itsInt, LS
     !print *,'ERROR: ', ER
 
 end subroutine calcErr

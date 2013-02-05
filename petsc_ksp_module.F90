@@ -52,26 +52,56 @@ subroutine solveSys(A,b,x,N,LS,tol)
     Vec, intent(in out) :: x
     integer, intent(in) :: N,LS
     PetscScalar, intent(in out) :: tol
-
+    PetscReal :: r2, b2, rtol, rinit
+    
+    ! Calculate initial Residual
+    
+    
 
     if(LS.eq.1) then
         call MatConvert(A,MATSAME,MAT_INITIAL_MATRIX,A2,ierr)
         call VecDuplicate(x,vt1,ierr)
         call VecDuplicate(x,vt2,ierr)
         call VecDuplicate(x,res,ierr)
+        !
+        ! Set starting tolerance 1e-4
+        !
+        rtol = 1e-4
+        !rtol = 1e-10
     else
         call KSPSetInitialGuessNonzero(ksp,PETSC_TRUE,ierr)
+        !
+        ! Calculate new relative Tolerance
+        !
+        call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
+        call VecNorm(vt2,NORM_2,r2,ierr)
+        call VecNorm(b,NORM_2,b2,ierr)
+        rtol=(r2/b2)/100.0
     endif
 
     ! Set operators
 
     call KSPSetOperators(ksp,A,A2,SAME_PRECONDITIONER,ierr)
+    
 
-    call KSPSetTolerances(ksp,tol,PETSC_DEFAULT_DOUBLE_PRECISION, &
+    call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION, &
             & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
+            
     ! Solve the linear system
 
     call KSPSolve(ksp,b,x,ierr)
+    
+    ! Check convergence criterion
+    
+    !call KSPBuildResidual(ksp,vt1,vt2,res,ierr)
+    call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
+    call VecMin(res,PETSC_NULL_INTEGER,tol,ierr)
+    tol=abs(tol)
+    
+    if (tol<1e-12 .and. rtol < 1e-9) then
+        CONVERGED=.true.
+        print *, "Final tolerance: ", tol
+    endif
 
     ! Get KSP information
     call KSPGetConvergedReason(ksp,reason,ierr)
@@ -80,23 +110,18 @@ subroutine solveSys(A,b,x,N,LS,tol)
     reasonInt=reason
     itsInt=its
 
-    !call KSPBuildResidual(ksp,vt1,res,vres,ierr)
-    call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
-
-    call VecMin(vt2,PETSC_NULL_INTEGER,tol,ierr)
-    tol=abs(tol)
-
-    print *, TOL
+    !print *, TOL
 
     ! View solver info
 
     call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    !if(N.le.16) then
+    if(N.le.16) then
         call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
+        call VecView(res,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call VecView(x,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call VecView(b,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    !end if
+    end if
 
 end subroutine solveSys
     

@@ -27,7 +27,11 @@ function src(x,y,z,t) result(src_res)
     real*8, intent(in) :: x,y,z,t
     real*8 :: src_res
     
-    SRC_RES = x*2.0d0+y*2.0d0-4.0d0
+    !SRC_RES = x*2.0d0+y*2.0d0-4.0d0
+    SRC_RES = x*2.0d0-4.0d0
+    !SRC_RES=-4.0d0
+    !SRC_RES=x*sin(pi*x)*2.0d0+pi*cos(pi*x)*(x**2+y**2)-4.0d0
+    !SRC_RES=0
 
 
 end function src
