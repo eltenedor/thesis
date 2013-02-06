@@ -49,7 +49,7 @@ do
     make solver expath=$expath/$i >/dev/null 
     cd $expath/$i
     echo -e "running $i/.solver"
-    ./solver 1>/dev/null 2>log 
+    ./solver -pc_type lu -ksp_type cgs 1>/dev/null 2>log 
     echo -e "$i*$i: $(cat ERR.out)" | cat >>../ERR.out
     cd $currDir
 done

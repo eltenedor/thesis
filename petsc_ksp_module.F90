@@ -82,7 +82,6 @@ subroutine solveSys(A,b,x,N,LS,tol)
     ! Set operators
 
     call KSPSetOperators(ksp,A,A2,SAME_PRECONDITIONER,ierr)
-    
 
     call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION, &
             & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
