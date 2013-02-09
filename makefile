@@ -5,7 +5,7 @@ include ${PETSC_DIR}/conf/rules
 
 # default values, will be overwritten by bash
 resolution = 4
-expath = ../order_verification/test_convective/${resolution}
+expath = ../order_verification/test_3d/${resolution}
 
 solver_src = \
 	${expath}/paramMod.F90 \

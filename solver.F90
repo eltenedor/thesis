@@ -252,17 +252,21 @@ subroutine calcSc
 
     call gradfi(T,DTX,DTY)
 
-    do I=2,NIM
-        do IJ=LI(I)+2,LI(I)+NIM
-            Q(IJ)=src(XC(IJ), YC(IJ), 0.0d0, TIME)*VOL
-            AP(IJ)=0.0d0
+    do K=2,NKM
+        do I=2,NIM
+            do IJK=LI(I)+2,LI(I)+NIM
+                Q(IJ)=src(XC(IJ), YC(IJ), 0.0d0, TIME)*VOL
+                AP(IJ)=0.0d0
+            end do
         end do
     end do
 
 
-    do I=2,NIM-1
-        do IJ=LI(I)+2,LI(I)+NJM
-        call fluxsc(IJ,IJ+NJ,IJ,IJ-1,F1(IJ),FX(IJ),AW(IJ+NJ),AE(IJ))
+    do K=2,NKM
+        do I=2,NIM-1
+            do IJ=LI(I)+2,LI(I)+NJM
+            call fluxsc(IJ,IJ+NJ,IJ,IJ-1,F1(IJ),FX(IJ),AW(IJ+NJ),AE(IJ))
+            end do
         end do
     end do
 

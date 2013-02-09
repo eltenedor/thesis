@@ -59,6 +59,7 @@ subroutine solveSys(A,b,x,N,LS,tol)
     
 
     if(LS.eq.1) then
+        ! Navier Stokes, muss die Matrix aktualisiert werden
         call MatConvert(A,MATSAME,MAT_INITIAL_MATRIX,A2,ierr)
         call VecDuplicate(x,vt1,ierr)
         call VecDuplicate(x,vt2,ierr)
