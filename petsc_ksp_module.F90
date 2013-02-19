@@ -56,8 +56,6 @@ subroutine solveSys(A,b,x,N,LS,tol)
     
     ! Calculate initial Residual
     
-    
-
     if(LS.eq.1) then
         ! Navier Stokes, muss die Matrix aktualisiert werden
         call MatConvert(A,MATSAME,MAT_INITIAL_MATRIX,A2,ierr)
@@ -72,12 +70,20 @@ subroutine solveSys(A,b,x,N,LS,tol)
     else
         call KSPSetInitialGuessNonzero(ksp,PETSC_TRUE,ierr)
         !
-        ! Calculate new relative Tolerance
+        ! Check convergence and calculate new relative Tolerance
         !
         call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
-        call VecNorm(vt2,NORM_2,r2,ierr)
-        call VecNorm(b,NORM_2,b2,ierr)
-        rtol=(r2/b2)/100.0
+        call VecMin(res,PETSC_NULL_INTEGER,tol,ierr)
+        tol=abs(tol)
+        if (tol<1e-12 .and. rtol < 1e-9) then
+            CONVERGED=.true.
+            print *, "Final tolerance: ", tol
+            return
+        else
+            call VecNorm(vt2,NORM_2,r2,ierr)
+            call VecNorm(b,NORM_2,b2,ierr)
+            rtol=(r2/b2)/100.0            
+        endif
     endif
 
     ! Set operators
@@ -91,18 +97,6 @@ subroutine solveSys(A,b,x,N,LS,tol)
 
     call KSPSolve(ksp,b,x,ierr)
     
-    ! Check convergence criterion
-    
-    !call KSPBuildResidual(ksp,vt1,vt2,res,ierr)
-    call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
-    call VecMin(res,PETSC_NULL_INTEGER,tol,ierr)
-    tol=abs(tol)
-    
-    if (tol<1e-12 .and. rtol < 1e-9) then
-        CONVERGED=.true.
-        print *, "Final tolerance: ", tol
-    endif
-
     ! Get KSP information
     call KSPGetConvergedReason(ksp,reason,ierr)
     call KSPGetIterationNumber(ksp,its,ierr)
@@ -115,11 +109,16 @@ subroutine solveSys(A,b,x,N,LS,tol)
     ! View solver info
 
     call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    if(N.le.16) then
+    if(N.le.64) then
+        print *, 'Matrix A:'
         call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        call VecView(res,PETSC_VIEWER_STDOUT_WORLD,ierr)
+        print *, 'Vector vt2:'
+        !call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
+        print *, 'Vector res:'
+        !call VecView(res,PETSC_VIEWER_STDOUT_WORLD,ierr)
+        print *, 'Vector x:'
         call VecView(x,PETSC_VIEWER_STDOUT_WORLD,ierr)
+        print *, 'Vector b:'
         call VecView(b,PETSC_VIEWER_STDOUT_WORLD,ierr)
     end if
 

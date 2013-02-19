@@ -4,7 +4,7 @@ include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
 # default values, will be overwritten by bash
-resolution = 4
+resolution = 2
 expath = ../order_verification/test_3d/${resolution}
 
 solver_src = \

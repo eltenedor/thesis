@@ -5,7 +5,7 @@ currDir=$PWD
 if [ -z "$1" ]
 then
     iSt=2
-    iEn=256
+    iEn=64
 else
     iSt=$1
     if [ -z "$2" ]
@@ -17,7 +17,7 @@ else
 fi
 
 
-expath=../order_verification/test_convective
+expath=../order_verification/test_3d
 
 if [ ! -d $expath ]
 then
@@ -40,7 +40,7 @@ do
     echo -e "compiling and linking $i/.grgen"
     make grgen expath=$expath/$i >/dev/null
     cd $expath/$i
-    echo -e "*\ngrid.out\n-1 1 $i\n-1 1 $i\n1 1 1 1\n" | cat>grid.input
+    echo -e "*\ngrid.out\n-1 1 $i\n-1 1 $i\n-1 1 $i\n1 1 1 1 1 1\n" | cat>grid.input
     echo -e "running $i/.grgen"
     ./grgen <grid.input >/dev/null
     cd $currDir
@@ -50,7 +50,7 @@ do
     cd $expath/$i
     echo -e "running $i/.solver"
     ./solver -pc_type lu -ksp_type cgs 1>/dev/null 2>log 
-    echo -e "$i*$i: $(cat ERR.out)" | cat >>../ERR.out
+    echo -e "$i*$i*$i: $(cat ERR.out)" | cat >>../ERR.out
     cd $currDir
 done
 

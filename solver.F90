@@ -29,18 +29,20 @@ program main
     do ITIM=ITIMS,ITIME
         if (LTIME) then
             TIME=TIME+DT
-           do I=1,NI
-                do J=1,NJ
-                   IJ=LI(I)+J
-                   TO(IJ)=T(IJ)
-               end do
-           end do
+            do K=1,NK
+                do I=1,NI
+                    do IJK=LK(K)+LI(I)+J,LK(K)+LI(I)+NJ
+                        TO(IJK)=T(IJK)
+                    end do
+                end do
+            end do
        end if
 
        call updateBd
 
 !....START SIMPLE RALAXATIONS (OUTER ITERATIONS)
         LSG=10000
+        !LSG=1
         do LS=1,LSG
             print *, 'OUTER ITERATION: ', LS
             call calcsc
@@ -82,22 +84,51 @@ subroutine init
 
     NI=NXA
     NJ=NYA
-    NIJ=NXYA
+    NK=NZA
+    NIJ=NI*NJ
+    NIJK=NXYZA
     NIM=NI-1
     NJM=NJ-1
+    NKM=NK-1
     NICV=NIM-1
     NJCV=NJM-1
-    N=NICV*NJCV
+    NKCV=NKM-1
+    N=NICV*NJCV*NKCV
     NWALI=NWA
+    NIJCV=NICV*NJCV
 
-    read(2,*) (ITB(1,I),I=1,NI), (ITB(2,I),I=1,NI),&
-            (JTB(1,J),J=1,NJ), (JTB(2,J),J=1,NJ),& 
-            (LI(I),I=1,NI),(CTD(IJP),IJP=0,NIJ-1),(DTC(I),I=1,NIJ),&
-            (IJW(I),I=1,NWALI), (IJPW(I),I=1,NWALI),(IJW1(I),I=1,NWALI),&
-            (IJW2(I),I=1,NWALI)
-    read(2,*) (X(I),I=1,NIJ), (Y(I),I=1,NIJ), (XC(I),I=1,NIJ),&
-            (YC(I),I=1,NIJ), (FX(I), I=1,NIJ), (FY(I), I=1,NIJ),DX,DY, VOL,&
-            (SRDW(I),I=1,NWALI),(XTW(I),I=1,NWALI),(YTW(I),I=1,NWALI)
+    read(2,*)  (ITB(1,I),IK=1,NI*NK)
+    read(2,*)  (ITB(2,I),IK=1,NI*NK)
+    read(2,*)  (JTB(1,J),JK=1,NJ*NK)
+    read(2,*)  (JTB(2,J),JK=1,NJ*NK)
+    read(2,*)  (KTB(1,K),IJ=1,NI*NJ)
+
+    read(2,*)  (KTB(2,K),IJ=1,NI*NJ)
+    read(2,*)  (LK(K),K=1,NK)
+    read(2,*)  (LI(I),I=1,NI)
+    read(2,*)  (CTD(I),I=0,NIJK-1)
+    read(2,*)  (DTC(I),I=1,NIJK)
+
+    read(2,*)  (IJKW(I),I=1,NWALI)
+    read(2,*)  (IJKPW(I),I=1,NWALI)
+    read(2,*)  (IJKW1(I),I=1,NWALI)
+    read(2,*)  (IJKW2(I),I=1,NWALI)
+    read(2,*)  (IJKW3(I),I=1,NWALI)
+
+    read(2,*)  (IJKW4(I),I=1,NWALI)
+    read(2,*)  (X(I),I=1,NIJK)
+    read(2,*)  (Y(I),I=1,NIJK)
+    read(2,*)  (Z(I),I=1,NIJK)
+    read(2,*)  (XC(I),I=1,NIJK)
+
+    read(2,*)  (YC(I),I=1,NIJK)
+    read(2,*)  (ZC(I),I=1,NIJK)
+    read(2,*)  (FX(I), I=1,NIJK)
+    read(2,*)  (FY(I), I=1,NIJK)
+    read(2,*)  (FZ(I), I=1,NIJK)
+
+    read(2,*)  DX,DY,DZ, VOL
+    read(2,*)  (SRDW(I),I=1,NWALI)
 
     TIME=1.0d0
 
@@ -114,7 +145,7 @@ subroutine init
     call MatSetFromOptions(A,ierr) 
     
     ! Increase performance during matrix assembly due to preallocation
-    call MatSeqAIJSetPreallocation(A,i5,PETSC_NULL_INTEGER,ierr)
+    call MatSeqAIJSetPreallocation(A,i7,PETSC_NULL_INTEGER,ierr)
 
     ! Create Vector
 
@@ -166,22 +197,25 @@ subroutine writeVtk
     write(4,'(A)') 'grid'
     write(4,'(A)') 'ASCII'
     write(4,'(A)') 'DATASET STRUCTURED_GRID'
-    write(4,'(A I6 I6 I6)') 'DIMENSIONS', NIM, NJM,1
-    write(4,'(A I9 A)') 'Points', NIM*NJM, ' float'
-    DO I=1,NIM
-        DO J=1,NJM
-            IJ=LI(I)+J
-            write(4,'(E20.10,1X,E20.10,1X,E20.10)'), X(IJ), Y(IJ),0.0
+    write(4,'(A I6 I6 I6)') 'DIMENSIONS', NIM, NJM,NKM
+    write(4,'(A I9 A)') 'Points', NIM*NJM*NKM, ' float'
+    do K=1,NKM
+        DO I=1,NIM
+            DO J=1,NJM
+                IJK=LK(K)+LI(I)+J
+                write(4,'(E20.10,1X,E20.10,1X,E20.10)'), X(IJK), Y(IJK),Z(IJK)
+            END DO
         END DO
-    END DO
-    write(4,'(A10, I9)') 'CELL_DATA ', (NICV*NJCV)
+    end do
+    write(4,'(A10, I9)') 'CELL_DATA ',(NICV*NJCV*NKCV)
     write(4,'(A15)') 'SCALARS T float'
     write(4,'(A20)') 'LOOKUP_TABLE default'
+    do K=2,NKM
     do I=2,NIM
-        do J=2,NJM
-            IJ=LI(I)+J
-            write(4,'(F12.8)') T(IJ)
+        do IJK=LK(K)+LI(I)+2,LK(K)+LI(I)+NJM
+            write(4,'(F12.8)') T(IJK)
         end do
+    end do
     end do
 
 end subroutine writeVtk
@@ -195,32 +229,43 @@ subroutine updateBd
     use ind
     use mms
     use sc
+    use param
     use var
     implicit none
+    real(KIND=PREC) :: XE,YE,ZE,XN,YN,ZN,XT,YT,ZT
 
 !...Dirichlet BC
     do IW=1,NWALI
-        IJB=IJW(IW)
-        T(IJB)=phi(XC(IJB),YC(IJB),0.0d0,TIME)
+        IJKB=IJKW(IW)
+        T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
     end do
 
 !...Calculate MassFluxes
+    do K=2,NKM
     do I=2,NIM-1
-        do IJ=LI(I)+2,LI(I)+NJM
-            XN=0.5d0*(X(IJ)+X(IJ-1))
-            YN=0.5d0*(Y(IJ)+Y(IJ-1))
-            !F1(IJ)=RHO*DY*vel(XN,YN,0.0d0,0.0d0)
-            F1(IJ)=RHO*DY*VX
-        end do
+    do J=2,NJM
+        IJK=LK(K)+LI(I)+J
+        F1(IJK)=RHO*DY*DZ*VX
+    end do
+    end do
     end do
 
+    do K=2,NKM
     do I=2,NIM
-        do IJ=LI(I)+2,LI(I)+NJM-1
-            XN=0.5d0*(X(IJ)+X(IJ-NJ))
-            YN=0.5d0*(Y(IJ)+Y(IJ-NJ))
-            !F2(IJ)=RHO*DX*vel(XN,YN,0.0d0,0.0d0)
-            F2(IJ)=RHO*DX*VY
-        end do
+    do J=2,NJM-1
+        IJK=LK(K)+LI(I)+J
+        F2(IJK)=RHO*DX*DZ*VY
+    end do
+    end do
+    end do
+
+    do K=2,NKM-1
+    do I=2,NIM
+    do J=2,NJM
+        IJK=LK(K)+LI(I)+J
+        F3(IJK)=RHO*DX*DY*VZ
+    end do
+    end do
     end do
     
 
@@ -250,45 +295,64 @@ subroutine calcSc
 
     URF=1.0d0
 
-    call gradfi(T,DTX,DTY)
+    call gradfi(T,DTX,DTY,DTZ)
 
+    ! initialize Q and AP
     do K=2,NKM
-        do I=2,NIM
-            do IJK=LI(I)+2,LI(I)+NIM
-                Q(IJ)=src(XC(IJ), YC(IJ), 0.0d0, TIME)*VOL
-                AP(IJ)=0.0d0
-            end do
-        end do
-    end do
-
-
-    do K=2,NKM
-        do I=2,NIM-1
-            do IJ=LI(I)+2,LI(I)+NJM
-            call fluxsc(IJ,IJ+NJ,IJ,IJ-1,F1(IJ),FX(IJ),AW(IJ+NJ),AE(IJ))
-            end do
-        end do
-    end do
-
-
     do I=2,NIM
-        do IJ=LI(I)+2,LI(I)+NJM-1
-        call fluxsc(IJ,IJ+1,IJ-NJ,IJ,F2(IJ),FY(IJ),AS(IJ+1),AN(IJ))
-        end do
+    do J=2,NJM
+        IJK=LK(K)+LI(I)+J
+        Q(IJK)=src(XC(IJK), YC(IJK), ZC(IJK), TIME)*VOL
+        AP(IJK)=0.0d0
+    end do
+    end do
     end do
 
+    ! FLUXES THROUGH EAST FACE
+    do K=2,NKM
+    do I=2,NIM-1
+    do J=2,NJM
+        IJK=LK(K)+LI(I)+J
+        call fluxsc(IJK,IJK+NJ,IJK-NIJ-1,IJK-1,IJK,F1(IJK),FX(IJK),AW(IJK+NJ),AE(IJK))
+    end do
+    end do
+    end do
+
+
+    ! FLUXES THROUGH NORTH FACE
+    do K=2,NKM
+    do I=2,NIM
+    do J=2,NJM-1
+        IJK=LK(K)+LI(I)+J
+        call fluxsc(IJK,IJK+1,IJK-NIJ,IJK,IJK-NJ,F2(IJK),FY(IJK),AS(IJK+1),AN(IJK))
+    end do
+    end do
+    end do
+
+    ! FLUXES THROUGH TOP FACE
+    do K=2,NKM-1
+    do I=2,NIM
+    do J=2,NJM
+        IJK=LK(K)+LI(I)+J
+        call fluxsc(IJK,IJK+NIJ,IJK-NJ-1,IJK-NJ,IJK,F3(IJK),FZ(IJK),AB(IJK+NIJ),AT(IJK))
+    end do
+    end do
+    end do
 
 !
 !.....UNSTEADY TERM CONTRIBUTION
 !
     if(LTIME) then
-        DO I=2,NIM
-        DO IJ=LI(I)+2,LI(I)+NJM
-          APT=RHO*VOL/DT
-          Q(IJ)=Q(IJ)+APT*TO(IJ)
-          AP(IJ)=AP(IJ)+APT
-        END DO
-        END DO
+        do K=2,NKM
+        do I=2,NIM
+        do J=2,NJM
+            IJK=LK(K)+LI(I)+J
+            APT=RHO*VOL/DT
+            Q(IJK)=Q(IJK)+APT*TO(IJK)
+            AP(IJK)=AP(IJK)+APT
+        end do
+        end do
+        end do
     end if
 
     call temp
@@ -296,70 +360,88 @@ subroutine calcSc
 !
 !.....FINAL COEFFICIENT AND SOURCE MATRIX FOR FI-EQUATION
 !
-      DO I=2,NIM
-      DO IJ=LI(I)+2,LI(I)+NJM
-        AP(IJ)=(AP(IJ)-AE(IJ)-AW(IJ)-AN(IJ)-AS(IJ))/URF
-        Q(IJ)=Q(IJ)+(1.0d0-URF)*AP(IJ)*T(IJ)
-      END DO
-      END DO
+    do K=2,NKM
+    DO I=2,NIM
+    do J=2,NJM
+        IJK=LK(K)+LI(I)+J
+        AP(IJK)=(AP(IJK)-AE(IJK)-AW(IJK)-AN(IJK)-AS(IJK)-AT(IJK)-AB(IJK))/URF
+        Q(IJK)=Q(IJK)+(1.0d0-URF)*AP(IJK)*T(IJK)
+    end do
+    end do
+    end do
     
     ! Assemble matrix and Vector
 
     ! Assembly inner CV matrix coefficients
 
+    do K=3,NKM-1
     do I=3,NIM-1
-        do IJ=LI(I)+3,LI(I)+NJM-1
-            IJP=DTC(IJ)
-            row=IJP
-            !
-            col(1)=IJP-NJCV
-            col(2)=IJP-1
-            col(3)=IJP
-            col(4)=IJP+1
-            col(5)=IJP+NJCV
-            !
-            val(1)=AW(IJ)
-            val(2)=AS(IJ)
-            val(3)=AP(IJ)
-            val(4)=AN(IJ)
-            val(5)=AE(IJ)
-            valq=Q(IJ)
-            !
-            call MatSetValues(A,i1,row,i5,col,val,INSERT_VALUES,ierr)
-            call VecSetValue(b,row,valq,INSERT_VALUES,ierr)
-            !
-        end do
+    do J=3,NJM-1
+        IJK=LK(K)+LI(I)+J
+        IJKP=DTC(IJK)
+        row=IJKP
+        !
+        col(1)=IJKP-NIJCV
+        col(2)=IJKP-NJCV
+        col(3)=IJKP-1
+        col(4)=IJKP
+        col(5)=IJKP+1
+        col(6)=IJKP+NJCV
+        col(7)=IJKP+NIJCV
+        !
+        val(1)=AB(IJK)
+        val(2)=AW(IJK)
+        val(3)=AS(IJK)
+        val(4)=AP(IJK)
+        val(5)=AN(IJK)
+        val(6)=AE(IJK)
+        val(7)=AT(IJK)
+        valq=Q(IJK)
+        !
+        call MatSetValues(A,i1,row,i7,col,val,INSERT_VALUES,ierr)
+        call VecSetValue(b,row,valq,INSERT_VALUES,ierr)
+        !
+    end do
+    end do
     end do
 
     ! Assembly matrix coefficients of boundary cv
 
     do IW=1,NWALI
-        IJ=IJPW(IW)
-        IJP=DTC(IJ)
-        row=IJP
-        col=(/-1,-1,IJP,-1,-1/)
+        IJK=IJKPW(IW)
+        IJKP=DTC(IJK)
+        row=IJKP
+        col=(/-1,-1,-1,IJKP,-1,-1,-1/)
         !
-        val(3)=AP(IJ)
-        valq=Q(IJ)
+        val(4)=AP(IJK)
+        valq=Q(IJK)
         !
-        if (AS(IJ).ne.0) then
-            val(2)=AS(IJ)
-            col(2)=IJP-1
+        if (AS(IJK).ne.0) then
+            val(3)=AS(IJK)
+            col(3)=IJKP-1
         end if
-        if (AN(IJ).ne.0) then
-            val(4)=AN(IJ)
-            col(4)=IJP+1
+        if (AN(IJK).ne.0) then
+            val(5)=AN(IJK)
+            col(5)=IJKP+1
         end if
-        if (AW(IJ).ne.0) then
-            val(1)=AW(IJ)
-            col(1)=IJP-NJCV
+        if (AW(IJK).ne.0) then
+            val(2)=AW(IJK)
+            col(2)=IJKP-NJCV
         end if
-        if (AE(IJ).ne.0) then
-            val(5)=AE(IJ)
-            col(5)=IJP+NJCV
+        if (AE(IJK).ne.0) then
+            val(6)=AE(IJK)
+            col(6)=IJKP+NJCV
+        end if
+        if (AB(IJK).ne.0) then
+            val(1)=AB(IJK)
+            col(1)=IJKP-NIJCV
+        end if
+        if (AT(IJK).ne.0) then
+            val(7)=AT(IJK)
+            col(7)=IJKP+NIJCV
         end if
         !
-        call MatSetValues(A,i1,row,i5,col,val,INSERT_VALUES,ierr)
+        call MatSetValues(A,i1,row,i7,col,val,INSERT_VALUES,ierr)
         call VecSetValue(b,row,valq,INSERT_VALUES,ierr)
         !
     end do
@@ -376,15 +458,21 @@ subroutine calcSc
     call solveSys(A,b,sol,N,LS,tol)
     call PetscGetCPUTime(time2,ierr)
 
+    if (CONVERGED) then
+        return
+    end if
+
     tges=time2-time1
 
+    do K=2,NIM
     do I=2,NIM
         do J=2,NJM
-            IJ=LI(I)+J
-            row=DTC(IJ)
+            IJK=LK(K)+LI(I)+J
+            row=DTC(IJK)
             call VecGetValues(sol,i1,row,valt,ierr)
-            T(IJ)=valt
+            T(IJK)=valt
         end do
+    end do
     end do
 
     call calcErr
@@ -392,87 +480,172 @@ subroutine calcSc
 end subroutine calcSc
 
 !################################################################
-subroutine gradfi(FI,DFX,DFY)
+subroutine gradfi(FI,DFX,DFY,DFZ)
 !################################################################
 
     use bc
     use geo
     use grad
     use ind
+    use param
     use sc
     implicit none
 
-    real(KIND=PREC), intent(in out) :: FI(NIJ), DFX(NIJ), DFY(NIJ)
+    real(KIND=PREC), intent(in out) :: FI(NIJK), DFX(NIJK), DFY(NIJK), DFZ(NIJK)
+    real(KIND=PREC) :: AR,DN, NX, NY, NZ
+    integer :: IJK1, IJK2, IJK3, IJK4
+
 !
 !...INITIALIZE FIELDS
 !
-    do IJ=1,NIJ
-        DFX(IJ)=0
-        DFY(IJ)=0
+    do IJK=1,NIJK
+        DFX(IJK)=0.0d0
+        DFY(IJK)=0.0d0
+        DFZ(IJK)=0.0d0
     end do
 
 !
 !..CONTRRIBUTION FROM INNER EAST SIDES
 !..WERTE AUF DEN CV-FLÄCHEN GEWICHTET MIT DER FLÄCHE
 !
+    do K=2,NKM
     do I=2,NIM-1
-        do IJ=LI(I)+2,LI(I)+NJM
+    do J=2,NJM
+            IJK=LK(K)+LI(I)+J
             FIE=FI(IJ+NJ)*FX(IJ)+FI(IJ)*(1.0d0-FX(IJ))
-            SX=Y(IJ)-Y(IJ-1)
-            SY=X(IJ-1)-X(IJ)
+
+            IJK4=IJK
+            IJK3=IJK4-1
+            IJK2=IJK3-NIJ
+            IJK1=IJK4-NIJ
+            !
+            call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+            !
+            SX=AR*NX
+            SY=AR*NY
+            SZ=AR*NZ
+
             DFXE=FIE*SX
             DFYE=FIE*SY
+            DFZE=FIE*SZ
 
-            DFX(IJ)=DFX(IJ)+DFXE
-            DFY(IJ)=DFY(IJ)+DFYE
-            DFX(IJ+NJ)=DFX(IJ+NJ)-DFXE
-            DFY(IJ+NJ)=DFY(IJ+NJ)-DFYE
-        end do
+            DFX(IJK)=DFX(IJK)+DFXE
+            DFY(IJK)=DFY(IJK)+DFYE
+            DFZ(IJK)=DFZ(IJK)+DFZE
+            DFX(IJK+NJ)=DFX(IJK+NJ)-DFXE
+            DFY(IJK+NJ)=DFY(IJK+NJ)-DFYE
+            DFZ(IJK+NJ)=DFZ(IJK+NJ)-DFZE
     end do
-    !print *, DFX(6), DFX(10), DFY(6), DFY(10)
+    end do
+    end do
+
 !
 !.....CONTRRIBUTION FROM INNER NORTH SIDES
 !
+    do K=2,NKM
     do I=2,NIM
-        do IJ=LI(I)+2,LI(I)+NJM-1
+    do J=2,NJM-1
+            IJK=LK(K)+LI(I)+J
             FIN=FI(IJ+1)*FY(IJ)+FI(IJ)*(1.0d0-FY(IJ))
-            SX=Y(IJ-NJ)-Y(IJ)
-            SY=X(IJ)-X(IJ-NJ)
+
+            IJK3=IJK
+            IJK4=IJK3-NJ
+            IJK2=IJK3-NIJ
+            IJK1=IJK4-NIJ
+            !
+            call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+            !
+            SX=AR*NX
+            SY=AR*NY
+            SZ=AR*NZ
+
             DFXN=FIN*SX
             DFYN=FIN*SY
+            DFZN=FIN*SZ
 
-            DFX(IJ)=DFX(IJ)+DFXN
-            DFY(IJ)=DFY(IJ)+DFYN
-            DFX(IJ+1)=DFX(IJ+1)-DFXN
-            DFY(IJ+1)=DFY(IJ+1)-DFYN
-        end do
+            DFX(IJK)=DFX(IJK)+DFXN
+            DFY(IJK)=DFY(IJK)+DFYN
+            DFZ(IJK)=DFZ(IJK)+DFZN
+            DFX(IJK+1)=DFX(IJK+1)-DFXN
+            DFY(IJK+1)=DFY(IJK+1)-DFYN
+            DFZ(IJK+1)=DFZ(IJK+1)-DFZN
     end do
-    !print *, DFX(6), DFX(10), DFY(6), DFY(10)
+    end do
+    end do
+!
+!.....CONTRRIBUTION FROM INNER TOP SIDES
+!
+    do K=2,NKM-1
+    do I=2,NIM
+    do J=2,NJM
+            IJK=LK(K)+LI(I)+J
+            FIN=FI(IJK+NIJ)*FZ(IJK)+FI(IJK)*(1.0d0-FZ(IJK))
+
+            IJK4=IJK
+            IJK3=IJK4-NJ
+            IJK1=IJK4-1
+            IJK2=IJK3-1
+            !
+            call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+            !
+            SX=AR*NX
+            SY=AR*NY
+            SZ=AR*NZ
+
+            DFXN=FIN*SX
+            DFYN=FIN*SY
+            DFZN=FIN*SZ
+
+            DFX(IJK)=DFX(IJK)+DFXN
+            DFY(IJK)=DFY(IJK)+DFYN
+            DFZ(IJK)=DFZ(IJK)+DFZN
+            DFX(IJK+1)=DFX(IJK+1)-DFXN
+            DFY(IJK+1)=DFY(IJK+1)-DFYN
+            DFZ(IJK+1)=DFZ(IJK+1)-DFZN
+    end do
+    end do
+    end do
 !
 !.....CONTRIBUTION FROM WALL BOUNDARIES
 !
-    do I=1,1+NWALI
-        SX=Y(IJW1(I))-Y(IJW2(I))
-        SY=X(IJW2(I))-X(IJW1(I))
-        DFX(IJPW(I))=DFX(IJPW(I))+FI(IJW(I))*SX
-        DFY(IJPW(I))=DFY(IJPW(I))+FI(IJW(I))*SY
+    do I=1,NWALI
+        IJKB=IJKW(I)
+        IJKP=IJKPW(I)
+        !IJK1=IJKW1(I)
+        IJK2=IJKW2(I)
+        IJK3=IJKW3(I)
+        IJK4=IJKW4(I)
+        !
+        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        !
+        SX=AR*NX
+        SY=AR*NY
+        SZ=AR*NZ
+
+        DFX(IJKPW(I))=DFX(IJKPW(I))+FI(IJKW(I))*SX
+        DFY(IJKPW(I))=DFY(IJKPW(I))+FI(IJKW(I))*SY
+        DFZ(IJKPW(I))=DFZ(IJKPW(I))+FI(IJKW(I))*SZ
     end do
-    !print *, DFX(6), DFX(10), DFY(6), DFY(10)
 
 !
 !.....CALCULATE GRADIENT COMPONENTS AT CV-CENTERS
 !
+    do K=2,NKM
     do I=2,NIM
-        do IJ=LI(I)+2,LI(I)+NJM
-            DFX(IJ)=DFX(IJ)/VOL
-            DFY(IJ)=DFY(IJ)/VOL
-        end do
+    do J=2,NJM
+        IJK=LK(K)+LI(I)+J
+        DFX(IJK)=DFX(IJK)/VOL
+        DFY(IJK)=DFY(IJK)/VOL
+        DFZ(IJK)=DFZ(IJK)/VOL
     end do
+    end do
+    end do
+
 
 end subroutine gradfi
 
 !################################################################
-    subroutine fluxSc(IJP, IJN, IJ1, IJ2, FM, FAC, CAP, CAN)
+    subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
 !################################################################
         
         use bc
@@ -480,47 +653,47 @@ end subroutine gradfi
         use flux
         use geo
         use sc
+        use param
         use var
         implicit none
-        real*8, intent(in) :: FM, FAC
-        real*8, intent(in out) :: CAP, CAN
-        integer, intent(in) :: IJP, IJN, IJ1, IJ2
+        real(KIND=PREC), intent(in) :: FM,FAC
+        real(KIND=PREC) :: AR,NX,NY,NZ,DN
+        real(KIND=PREC), parameter :: SMALL=1.0E-20
+        integer, intent(in) :: IJKP,IJKN,IJK2,IJK3,IJK4
+        real(KIND=PREC), intent(out) :: CAN, CAP
 
         G=1.0d0
 
         FACP=1.0d0-FAC
-        FII=T(IJN)*FAC+T(IJP)*FACP
-        DFXI=DTX(IJN)*FAC+DTX(IJP)*FACP
-        DFYI=DTY(IJN)*FAC+DTY(IJP)*FACP
-        !print *, DFXI, DFYI, DTX(IJN), DTX(IJP), FAC
+        FII=T(IJKN)*FAC+T(IJKP)*FACP
+        DFXI=DTX(IJKN)*FAC+DTX(IJKP)*FACP
+        DFYI=DTY(IJKN)*FAC+DTY(IJKP)*FACP
+        DFZI=DTZ(IJKN)*FAC+DTZ(IJKP)*FACP
         
     !
     !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
     !
-        SX=(Y(IJ1)-Y(IJ2))
-        SY=(X(IJ2)-X(IJ1))
-        XPN=XC(IJN)-XC(IJP)
-        YPN=YC(IJN)-YC(IJP)
-        VSOL=ALPHA*SQRT((SX**2+SY**2)/(XPN**2+YPN**2))
+        call normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        !
+        VSOL=ALPHA*(AR/DN+SMALL)
     !
     !.....EXPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
         FCFIE=FM*FII
-        FDFIE=ALPHA*(DFXI*SX+DFYI*SY)
-        !print *, DFXI, SX, DFYI, SY,FDFIE
+        FDFIE=ALPHA*(DFXI*AR*NX+DFYI*AR*NY+DFZI*AR*NZ)
     !
     !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
-        FCFII=MIN(FM,ZERO)*T(IJN)+MAX(FM,ZERO)*T(IJP)
-        FDFII=VSOL*(DFXI*XPN+DFYI*YPN)
+        FCFII=MIN(FM,ZERO)*T(IJKN)+MAX(FM,ZERO)*T(IJKP)
+        FDFII=VSOL*(DFXI*DN*NX+DFYI*DN*NY+DFZI*DN*NZ)
     !
     !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
     !
         CAN=-VSOL+MIN(FM,ZERO)
         CAP=-VSOL-MAX(FM,ZERO)
         FFIC=G*(FCFIE-FCFII)
-        Q(IJP)=Q(IJP)-FFIC+FDFIE-FDFII
-        Q(IJN)=Q(IJN)+FFIC-FDFIE+FDFII
+        Q(IJKP)=Q(IJKP)-FFIC+FDFIE-FDFII
+        Q(IJKN)=Q(IJKN)+FFIC-FDFIE+FDFII
 
 end subroutine fluxsc
 
@@ -533,32 +706,36 @@ subroutine temp
     use geo
     use ind
     use sc
+    use param
     use var
     implicit none
 
-    real*8 :: COEFC,COEFD,ZERO
-    integer :: IJ1, IJ2
+    real(KIND=PREC) :: COEFC,COEFD,ZERO, NX, NY, NZ, AR, DN
+    integer :: IJK1, IJK2, IJK3, IJK4
     ZERO=0.0d0
 
 !
 !.....DIRICHLET BOUNDARY CONDITION (NO WALL!)
 !
-      DO IW=1,NWALI
-        IJP=IJPW(IW)
-        IJB=IJW(IW)
-        IJ1=IJW1(IW)
-        IJ2=IJW2(IW)
-        SX=(Y(IJ1)-Y(IJ2))
-        SY=(X(IJ2)-X(IJ1))
-        COEFC=RHO*(SX*VX+SY*VY)
-        COEFD=ALPHA*SRDW(IW)
-        AP(IJP)=AP(IJP)+COEFD-COEFC
-        Q(IJP)=Q(IJP)+(COEFD-COEFC)*T(IJB)
-        !print *, IJP, COEFD, Q(IJP), T(IJB), XC(IJB), YC(IJB)
-        !Q(IJP)=Q(IJP)+COEFD*T(IJB)
-        !print *, IJP, Q(IJP)
+      DO I=1,NWALI
+        IJKP=IJKPW(I)
+        IJKB=IJKW(I)
+        !IJK1=IJKW1(I)
+        IJK2=IJKW2(I)
+        IJK3=IJKW3(I)
+        IJK4=IJKW4(I)
+        !
+        call normalArea(IJKB,IJKP,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        !
+        SX=AR*NX
+        SY=AR*NY
+        SZ=AR*NZ
+        !
+        COEFC=RHO*(SX*VX+SY*VY+SZ*VZ)
+        COEFD=ALPHA*SRDW(I)
+        AP(IJKP)=AP(IJKP)+COEFD-COEFC
+        Q(IJKP)=Q(IJKP)+(COEFD-COEFC)*T(IJKB)
       END DO
-      !print *, COEFF
 
 end subroutine temp
 
@@ -570,21 +747,22 @@ subroutine calcErr
     use ind
     use logic
     use mms
+    use param
     use var
     implicit none
 
-    real*8 :: E,ER
+    real(KIND=PREC) :: E,ER
     E=0.0d0
     ER=0.0d0
 
-
-    do I=2,NIM
-        do IJ=LI(I)+2,LI(I)+NIM
-            !ER=T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME)
-            !E=abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
-            E=E+abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
-            !ER=max(E,ER)
-            !print *, T(IJ), XC(IJ), YC(IJ), phi(XC(IJ),YC(IJ),0.0d0,TIME),ER
+    do K=2,NKM
+        do I=2,NIM
+            do IJK=LK(K)+LI(I)+2,LK(K)+LI(I)+NIM
+                !ER=T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME)
+                !E=abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
+                E=E+abs(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))
+                !ER=max(E,ER)
+            end do
         end do
     end do
     
@@ -600,14 +778,15 @@ end subroutine calcErr
 subroutine linSys(N,A,B,X) 
 !################################################################
     
+    use param
     implicit none
     integer, intent(in) :: N
-    real*8, dimension(N, N), intent(in) :: A
-    real*8, dimension(N), intent(in) :: B
-    real*8, dimension(N), intent(inout) :: X
+    real(KIND=PREC), dimension(N, N), intent(in) :: A
+    real(KIND=PREC), dimension(N), intent(in) :: B
+    real(KIND=PREC), dimension(N), intent(inout) :: X
     integer :: K, I, J
-    real*8, dimension(N) :: X_0
-    real*8 :: SIGMA, EPS, R
+    real(KIND=PREC), dimension(N) :: X_0
+    real(KIND=PREC) :: SIGMA, EPS, R
     
     EPS=1e-6
     R=EPS
@@ -623,7 +802,6 @@ subroutine linSys(N,A,B,X)
     do 
         if (R.GE.EPS) then
             K=K+1
-            !print *, K
             do I=1,N
                 X_0(I)=X(I)
             end do
@@ -647,5 +825,4 @@ subroutine linSys(N,A,B,X)
     end do
 
 end subroutine linSys
-
 

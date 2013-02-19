@@ -1,4 +1,7 @@
+!#########################################################
 module mms
+!#########################################################
+
     implicit none
     
 contains
@@ -13,7 +16,7 @@ function phi(x,y,z,t) result(phi_res)
     real*8, intent(in) :: x, y, z, t
     real*8 :: phi_res 
 
-    PHI_RES = X**2+Y**2
+    PHI_RES = X**2+Y**2+Z**2
 
 end function phi
 
@@ -27,12 +30,7 @@ function src(x,y,z,t) result(src_res)
     real*8, intent(in) :: x,y,z,t
     real*8 :: src_res
     
-    !SRC_RES = x*2.0d0+y*2.0d0-4.0d0
-    SRC_RES = x*2.0d0-4.0d0
-    !SRC_RES=-4.0d0
-    !SRC_RES=x*sin(pi*x)*2.0d0+pi*cos(pi*x)*(x**2+y**2)-4.0d0
-    !SRC_RES=0
-
+    SRC_RES = (x+y+z)*2.0d0-6.0d0
 
 end function src
 
