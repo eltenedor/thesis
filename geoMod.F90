@@ -8,13 +8,14 @@ module geo
                         XC(NXYZA),YC(NXYZA),ZC(NXYZA), &
                         XXS,XXE,YYS,YYE,ZZS,ZZE, &
                         DX,DY,DZ, &
+                        AR,DN,NX,NY,NZ,&
                         VOL,XPN,YPN,ZPN,SX,SY,SZ,&
                         FX(NXYZA),FY(NXYZA),FZ(NXYZA)
                         
 contains
 
 !#########################################################
-subroutine normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+subroutine normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,ARR,DNN,NXX,NYY,NZZ)
 !#########################################################
 ! THIS ROUTINE CALCULATES THE AREA SPANNED BY TWO VECTORS
 ! AND THE COMPONENTS OF THE RESPECTIVE NORMAL VECTOR USING
@@ -22,7 +23,7 @@ subroutine normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
     
     implicit none
     integer, intent(in) :: IJKP,IJKN,IJK2,IJK3,IJK4
-    real(KIND=PREC), intent(in out) :: AR,DN,NX,NY,NZ
+    real(KIND=PREC), intent(in out) :: ARR,DNN,NXX,NYY,NZZ
     real(KIND=PREC) :: X2,X3,X4,Y2,Y3,Y4,Z2,Z3,Z4
     
     ! BOUNDARY NODES OF CELL FACE
@@ -40,23 +41,23 @@ subroutine normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
     !
     ! CROSS PRODUCT
     !
-    NX = -(Y2-Y3)*(Z3-Z4)+(Y3-Y4)*(Z2-Z3)
-    NY = (X2-X3)*(Z3-Z4)-(X3-X4)*(Z2-Z3)
-    NZ = -(X2-X3)*(Y3-Y4)+(X3-X4)*(Y2-Y3)
+    NXX = -(Y2-Y3)*(Z3-Z4)+(Y3-Y4)*(Z2-Z3)
+    NYY = (X2-X3)*(Z3-Z4)-(X3-X4)*(Z2-Z3)
+    NZZ = -(X2-X3)*(Y3-Y4)+(X3-X4)*(Y2-Y3)
     !
-    AR = SQRT(NX**2+NY**2+NZ**2)
+    ARR = SQRT(NXX**2+NYY**2+NZZ**2)
     !            
     ! UNITY NORMAL VECTOR OF FACE
     !
-    NX = NX/AR
-    NY = NY/AR
-    NZ = NZ/AR
+    NXX = NXX/AR
+    NYY = NYY/AR
+    NZZ = NZZ/AR
     !
     ! CALCULATE NORMAL DISTANCE BETWEEN ADJACENT CVS
     !              
-    DN=SQRT(((XC(IJKN)-XC(IJKP))*NX)**2+&
-            ((YC(IJKN)-YC(IJKP))*NY)**2+&
-            ((ZC(IJKN)-ZC(IJKP))*NZ)**2)
+    DNN=SQRT(((XC(IJKN)-XC(IJKP))*NXX)**2+&
+            ((YC(IJKN)-YC(IJKP))*NYY)**2+&
+            ((ZC(IJKN)-ZC(IJKP))*NZZ)**2)
     !
 end subroutine normalArea
 
