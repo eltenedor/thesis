@@ -2,13 +2,21 @@
 program grgen
 !########################################################
 
+    use ind
     implicit none
 
-    call readData
-    call cartesian
-    call setBc
-    call calcG
-    call gridExport
+    print *, ' TOTAL NUMBER OF BLOCKS: '
+    read(*,*) NB
+
+    ! Create one grid.out and grid.vtk for each block
+    do B=1,NB
+        call readData
+        call cartesian
+        call setBc
+        call calcG
+        call gridExport
+    end do
+    call writeParamMod
 
 end program grgen
 
@@ -72,12 +80,20 @@ subroutine readData
         READ(2,*) ZZS,ZZE,NKCV
     END IF
 
-    PRINT *, ' ENTER> BOUNDARY TYPE N S W E T B:  '
+    PRINT *, ' ENTER> BOUNDARY TYPE S N W E B T:  (1 - DIRICHLET, 2 - BLOCK)'
     IF(ITYP.EQ.1) THEN
         READ(*,*) BTYP(1:6)
-        WRITE(1,*) BTYP(1:6),  '   SBTYP, NBTYP, WBTYP, EBTYP, TBTYP, BBTYP '
+        WRITE(1,*) BTYP(1:6),  '   SBTYP, NBTYP, WBTYP, EBTYP,  BBTYP ,TBTYP '
     ELSE
         READ(2,*) BTYP(1:6)
+    END IF
+    
+    PRINT *, ' ENTER> NEIGHBOUR INDEX N S W E T B:  (-1 - NO NEIGHBOUR)'
+    IF(ITYP.EQ.1) THEN
+        READ(*,*) NEIGH(B,1:6)
+        WRITE(1,*) NEIGH(B,1:6),  '   SNEIGH, NNEIGH, WNEIGH, ENEIGH, BNEIGH, TNEIGH '
+    ELSE
+        READ(2,*) NEIGH(B,1:6)
     END IF
        
 end subroutine readData
@@ -89,6 +105,14 @@ subroutine cartesian
     use geo
     use ind
     implicit none
+    
+    ! Initialize all values with zero
+    X=0.0d0
+    Y=0.0d0
+    Z=0.0d0
+    XC=0.0d0
+    YC=0.0d0
+    ZC=0.0d0
 
     DX=(XXE-XXS)/dble(NICV)
     DY=(YYE-YYS)/dble(NJCV)
@@ -103,8 +127,14 @@ subroutine cartesian
     NIM=NI-1
     NJM=NJ-1
     NKM=NK-1
-    IJST=1
     N=NICV*NJCV*NKCV
+
+    !Update global values
+    NIA=NIA+NI
+    NJA=NJA+NJ
+    NKA=NKA+NK
+    NIJA=NIJA+NIJ
+    NIJKA=NIJKA+NIJK
 
     do I=1,NI
         LI(I)=(I-1)*NJ
@@ -114,9 +144,6 @@ subroutine cartesian
         LK(K)=(K-1)*NJ*NI
     end do
 
-    call createMapping
-    
-    !print *, YYS
     do K=1,NKM
     do I=1,NIM
     do J=1,NJM
@@ -131,95 +158,65 @@ subroutine cartesian
 end subroutine cartesian
 
 !########################################################
-subroutine createMapping
-!########################################################
-
-    use ind
-    use geo
-    implicit none
-
-    ! PETSc routines indices start from O!!
-    IJKP=-1
-    do K=2,NKM
-    do I=2,NIM
-    do J=2,NJM
-        IJKP=IJKP+1
-        IJK=LK(K)+LI(I)+J
-        CTD(IJKP)=IJK
-        DTC(IJK)=IJKP
-    end do
-    end do
-    end do
-
-end subroutine createMapping
-
-!########################################################
 subroutine gridExport
 !########################################################
 
     use bc
+    use ch
     use geo
     use ind
     implicit none
 
+    character(10) :: OUT_CH
+
     DX=(XXE-XXS)/dble(NICV)
     DY=(YYE-YYS)/dble(NJCV)
     DZ=(ZZE-ZZS)/dble(NKCV)
-!...Create solver file
-    !OPEN(UNIT=9,FILE='../../../pet_src/paramMod.F90')
-    OPEN(UNIT=9,FILE='paramMod.F90')
-    REWIND 9
-    write(9,'(A16)') 'module param'
-    write(9,'(A18)') '  implicit none'
-    write(9,'(A22 A4 I9 A5 I9 A5 I9 A7 I9 A6 I9 A6 I9)') 'integer, parameter :: ', &
-                    'NXA=', NI, &
-                    ',NYA=', NJ, &
-                    ',NZA=', NK, &
-                    ',NXYZA=', NIJK, &
-                    ',NDIR=', NDIRA, &
-                    ',PREC=',PREC
-    write(9,'(A)') 'end module param'
-
-    write(3,*)  (ITB(1,I),IK=1,NI*NK)
-    write(3,*)  (ITB(2,I),IK=1,NI*NK)
-    write(3,*)  (JTB(1,J),JK=1,NJ*NK)
-    write(3,*)  (JTB(2,J),JK=1,NJ*NK)
-    write(3,*)  (KTB(1,K),IJ=1,NI*NJ)
-
-    write(3,*)  (KTB(2,K),IJ=1,NI*NJ)
+    
+    write(3,*)  NI,NJ,NK,NIJK,NBLOCK,NDIR
+    write(3,*)  (NEIGH(B,I),I=1,6)
+    print *, (NEIGH(B,I),I=1,6)
     write(3,*)  (LK(K),K=1,NK)
     write(3,*)  (LI(I),I=1,NI)
-    write(3,*)  (CTD(I),I=0,NIJK-1)
-    write(3,*)  (DTC(I),I=1,NIJK)
 
-    write(3,*)  (IJKD(I),I=1,NDIRA)
-    write(3,*)  (IJKPD(I),I=1,NDIRA)
-    write(3,*)  (IJKD1(I),I=1,NDIRA)
-    write(3,*)  (IJKD2(I),I=1,NDIRA)
-    write(3,*)  (IJKD3(I),I=1,NDIRA)
-
-    write(3,*)  (IJKD4(I),I=1,NDIRA)
     write(3,*)  (X(I),I=1,NIJK)
     write(3,*)  (Y(I),I=1,NIJK)
     write(3,*)  (Z(I),I=1,NIJK)
     write(3,*)  (XC(I),I=1,NIJK)
-
     write(3,*)  (YC(I),I=1,NIJK)
     write(3,*)  (ZC(I),I=1,NIJK)
+
+    write(3,*)  (IJKBL(I),I=1,NBLOCK)
+    write(3,*)  (IJKPBL(I),I=1,NBLOCK)
+    write(3,*)  (IJKBL1(I),I=1,NBLOCK)
+    write(3,*)  (IJKBL2(I),I=1,NBLOCK)
+    write(3,*)  (IJKBL3(I),I=1,NBLOCK)
+    write(3,*)  (IJKBL4(I),I=1,NBLOCK)
+    
+    write(3,*)  (IJKDI(I),I=1,NDIR)
+    write(3,*)  (IJKPDI(I),I=1,NDIR)
+    write(3,*)  (IJKDI1(I),I=1,NDIR)
+    write(3,*)  (IJKDI2(I),I=1,NDIR)
+    write(3,*)  (IJKDI3(I),I=1,NDIR)
+    write(3,*)  (IJKDI4(I),I=1,NDIR)
+
     write(3,*)  (FX(I), I=1,NIJK)
     write(3,*)  (FY(I), I=1,NIJK)
     write(3,*)  (FZ(I), I=1,NIJK)
 
     write(3,*)  DX,DY,DZ, VOL
-    write(3,*)  (SRDD(I),I=1,NDIRA)
+    write(3,*)  (SRDDI(I),I=1,NDIR)
 
     !do I=1,NIJK
     !    write(3,*) XC(I), YC(I), ZC(I)
     !end do
 
+    write(OUT_CH,'(I1)') B
+    VTKFILE='grid_'//trim(OUT_CH)//'.vtk'
+
 !...Create .vtk file
     print *, ' *** GENERATING .VTK *** '
-    open (unit=4,FILE='grid.vtk')
+    open (unit=4,FILE=VTKFILE)
     write(4,'(A)') '# vtk DataFile Version 3.0'
     write(4,'(A)') 'grid'
     write(4,'(A)') 'ASCII'
@@ -227,12 +224,12 @@ subroutine gridExport
     write(4,'(A I6 I6 I6)') 'DIMENSIONS', NIM,NJM,NKM
     write(4,'(A I10 A)') 'Points ', NIM*NJM*NKM, ' float'
     do K=1,NKM
-        DO I=1,NIM
-            DO J=1,NJM
-                IJK=LK(K)+LI(I)+J
-                write(4,'(E20.10,1X,E20.10,1X,E20.10)'), X(IJK), Y(IJK),Z(IJK)
-            END DO
-        END DO
+    do I=1,NIM
+    do J=1,NJM
+        IJK=LK(K)+LI(I)+J
+        write(4,'(E20.10,1X,E20.10,1X,E20.10)'), X(IJK), Y(IJK),Z(IJK)
+    end do
+    end do
     end do
 
 end subroutine gridExport
@@ -244,7 +241,6 @@ subroutine setBc
     use bc
     use ind
     implicit none
-
 
     do L=1,6
         if(L.LE.2) then
@@ -274,7 +270,10 @@ subroutine setBc
         end if
     end do
 
-    call defbc(1, NDIRA, IJKD, IJKPD, IJKD1, IJKD2, IJKD3, IJKD4)
+    call defbc(1,NDIR,IJKDI,IJKPDI,IJKDI1,IJKDI2,IJKDI3,IJKDI4)
+    NDIRA=NDIRA+NDIR
+    call defbc(2,NBLOCK,IJKBL,IJKPBL,IJKBL1,IJKBL2,IJKBL3,IJKBL4)
+    NBLOCKA=NBLOCKA+NBLOCK
 
 end subroutine setBc
 
@@ -615,18 +614,44 @@ subroutine calcG
 !
 !....Normal distance from cell face center to cell center
 !
-    do ID=1,NDIRA
-        IJKB=IJKD(ID)
-        IJKP=IJKPD(ID)
-        !IJK1=IJKD1(ID)
-        IJK2=IJKD2(ID)
-        IJK3=IJKD3(ID)
-        IJK4=IJKD4(ID)
+    do IDI=1,NDIR
+        IJKB=IJKDI(IDI)
+        IJKP=IJKPDI(IDI)
+        !IJK1=IJKDI1(IDI)
+        IJK2=IJKDI2(IDI)
+        IJK3=IJKDI3(IDI)
+        IJK4=IJKDI4(IDI)
         !
         call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
         !
-        SRDD(ID)=AR/(DN+SMALL)
+        SRDDI(IDI)=AR/(DN+SMALL)
     end do
 
 end subroutine calcG
 
+!########################################################
+subroutine writeParamMod
+!########################################################
+
+    use bc
+    use geo
+    use ind
+    implicit none
+
+!...Create solver file
+    !OPEN(UNIT=9,FILE='../../../pet_src/paramMod.F90')
+    OPEN(UNIT=9,FILE='paramMod.F90')
+    REWIND 9
+    write(9,'(A16)') 'module param'
+    write(9,'(A18)') '  implicit none'
+    write(9,'(A22 A4 I6 A1 A5 I9 A5 I9 A7 I9 A8 I9 A10 I9 A9 I9 A6 I9)') 'integer, parameter :: ', 'NXA=', NIA,'&' 
+    write(9,'(A5 I6 A1)') ',NYA=', NJA, '&'
+    write(9,'(A5 I6 A1)') ',NZA=', NKA, '&'
+    write(9,'(A7 I6 A1)') ',NXYZA=', NIJKA, '&'
+    write(9,'(A8 I6 A1)') ',NDIRAL=', NDIRA,'&'
+    write(9,'(A10 I6 A1)') ',NBLOCKAL=', NBLOCKA, '&'
+    write(9,'(A9 I6 A1)')   ',NBLOCKS=',NB,'&'
+    write(9,'(A6 I1)') ',PREC=',PREC
+    write(9,'(A)') 'end module param'
+
+end subroutine writeParamMod

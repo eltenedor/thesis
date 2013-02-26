@@ -80,28 +80,7 @@ subroutine init
 
     PetscErrorCode :: ierr
 
-    NI=NXA
-    NJ=NYA
-    NK=NZA
-    NIJ=NI*NJ
-    NIJK=NXYZA
-    NIM=NI-1
-    NJM=NJ-1
-    NKM=NK-1
-    NICV=NIM-1
-    NJCV=NJM-1
-    NKCV=NKM-1
-    N=NICV*NJCV*NKCV
-    NDIRA=NDIR
-    NIJCV=NICV*NJCV
-
-    read(2,*)  (ITB(1,I),IK=1,NI*NK)
-    read(2,*)  (ITB(2,I),IK=1,NI*NK)
-    read(2,*)  (JTB(1,J),JK=1,NJ*NK)
-    read(2,*)  (JTB(2,J),JK=1,NJ*NK)
-    read(2,*)  (KTB(1,K),IJ=1,NI*NJ)
-
-    read(2,*)  (KTB(2,K),IJ=1,NI*NJ)
+    read(2,*)  NI,NJ,NK,NIJK,NDIRA,NBLOCKA
     read(2,*)  (LK(K),K=1,NK)
     read(2,*)  (LI(I),I=1,NI)
     read(2,*)  (CTD(I),I=0,NIJK-1)
@@ -126,7 +105,7 @@ subroutine init
     read(2,*)  (FZ(I), I=1,NIJK)
 
     read(2,*)  DX,DY,DZ, VOL
-    read(2,*)  (SRDD(I),I=1,NDIRA)
+    read(2,*)  (SRDDI(I),I=1,NDIR)
 
     TIME=1.0d0
 
@@ -670,6 +649,7 @@ end subroutine gradfi
     
     !
     !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
+    ! Diffusive Flüsse müssen nicht explizit verwendet werden
     !
     call normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
     !

@@ -17,7 +17,7 @@ else
 fi
 
 
-expath=../order_verification/test_3d
+expath=../order_verification/blockStructured
 
 if [ ! -d $expath ]
 then

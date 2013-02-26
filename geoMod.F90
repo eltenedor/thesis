@@ -6,6 +6,9 @@ module geo
     implicit none
     real(KIND=PREC) ::  X(NXYZA),Y(NXYZA),Z(NXYZA), &
                         XC(NXYZA),YC(NXYZA),ZC(NXYZA), &
+                        ! Anstatt der 100 ein variabler Maximalwert oder allocatable
+                        XL(100),YL(100),ZL(100),XR(100),YR(100),ZR(100),&
+                        XF(100),YF(100),ZF(100),&
                         XXS,XXE,YYS,YYE,ZZS,ZZE, &
                         DX,DY,DZ, &
                         AR,DN,NX,NY,NZ,&
