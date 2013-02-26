@@ -515,7 +515,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
         IJK2=IJK3-NIJ
         IJK1=IJK4-NIJ
         !
-        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)  
         !
         SX=AR*NX
         SY=AR*NY
@@ -549,7 +549,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
         IJK2=IJK3-NIJ
         IJK1=IJK4-NIJ
         !
-        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY
@@ -582,7 +582,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
         IJK1=IJK4-1
         IJK2=IJK3-1
         !
-        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY
@@ -612,7 +612,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
         IJK3=IJKD3(I)
         IJK4=IJKD4(I)
         !
-        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY
@@ -671,7 +671,7 @@ end subroutine gradfi
     !
     !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
     !
-    call normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+    call normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
     !
     VSOL=ALPHA*(AR/DN+SMALL)
     !
@@ -683,7 +683,7 @@ end subroutine gradfi
     !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
     FCFII=MIN(FM,ZERO)*T(IJKN)+MAX(FM,ZERO)*T(IJKP)
-    FDFII=VSOL*(DFXI*DN*NX+DFYI*DN*NY+DFZI*DN*NZ)
+    FDFII=VSOL*(DFXI*XPN+DFYI*YPN+DFZI*ZPN)
     !
     !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
     !
@@ -723,7 +723,7 @@ subroutine temp
         IJK3=IJKD3(I)
         IJK4=IJKD4(I)
         !
-        call normalArea(IJKB,IJKP,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJKB,IJKP,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY

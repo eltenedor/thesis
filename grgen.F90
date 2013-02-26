@@ -72,7 +72,7 @@ subroutine readData
         READ(2,*) ZZS,ZZE,NKCV
     END IF
 
-    PRINT *, ' ENTER> BOUNDARY TYPE N S W E T B:  '
+    PRINT *, ' ENTER> BOUNDARY TYPE S N W E T B:  '
     IF(ITYP.EQ.1) THEN
         READ(*,*) BTYP(1:6)
         WRITE(1,*) BTYP(1:6),  '   SBTYP, NBTYP, WBTYP, EBTYP, TBTYP, BBTYP '
@@ -623,7 +623,7 @@ subroutine calcG
         IJK3=IJKD3(ID)
         IJK4=IJKD4(ID)
         !
-        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SRDD(ID)=AR/(DN+SMALL)
     end do
