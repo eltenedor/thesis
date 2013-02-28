@@ -622,7 +622,7 @@ subroutine calcG
         IJK3=IJKDI3(IDI)
         IJK4=IJKDI4(IDI)
         !
-        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SRDDI(IDI)=AR/(DN+SMALL)
     end do

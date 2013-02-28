@@ -113,6 +113,7 @@ subroutine findNeighbours
                         !
                         !..........SOUTH..........
                         !
+                        IJKPLST=IJKSTL+IJKPLE
                         K1=0
                         do KL=1,NKML
                             IJKL=IJKSTL+LK(KSTL+KL)+LI(ISTL+1)+1
@@ -125,6 +126,9 @@ subroutine findNeighbours
                             I1=I1+1
                             XL(I1)=X(IJKL)
                         end do
+                        IJKPLE=IJKPLST+(K1-1)*(I1-1)
+                        NIJKPL=IJKPLE-IJKPLST
+                        IJKPRST=IJKSTR+IJKPRE
                         K2=0
                         do KR=1,NKMR
                             IJKR=IJKSTR+LK(KSTR+KR)+LI(ISTR+1)+1
@@ -137,7 +141,10 @@ subroutine findNeighbours
                             I2=I2+1
                             XR(I2)=X(IJKR)
                         end do
+                        IJKPRE=IJKPRST+(K2-1)*(I2-1)
+                        NIJKPR=IJKPRE-IJKPRST
                         call calcFace(XL,ZL,XR,ZR,I1,K1,I2,K2,XF,ZF,NIJF)
+                        call findConnectivity(IJKPBL(IJKPLST+1:IJKPLE),IJKBL3(IJKPLST+1:IJKPLE),NIJKPL,IJKPBL(IJKPRST+1:IJKPRE),IJKBL4(IJKPRST+1:IJKPRE),NIJKPR,X,Z,XF,ZF,NIMF,NJMF,NIJK,L(FST+1:FE),R(FST+1:FE),NIJF)
                     case(2) 
                         !
                         !..........NORTH..........
@@ -370,3 +377,37 @@ subroutine calcFace(XL,YL,XR,YR,NIL,NJL,NIR,NJR,XF,YF,NIJF)
     end do
 
 end subroutine calcFace
+
+!########################################################
+subroutine findConnectivity(IJKPL,IJK3L,NIJKL,IJKPR,IJK4R,NIJKR,X,Y,XF,YF,NIMF,NJMF,NIJK,L,R,NIJF)
+!########################################################
+
+    implicit none
+    integer,intent(in)  :: NIJKL,NIJKR,NIMF,NJMF,NIJK,NIJF
+    integer,intent(in)  :: IJKPL(NIJKL),IJK3L(NIJKL),IJKPR(NIJKR),IJK4R(NIJKR)
+    integer,intent(out) :: L(NIJF),R(NIJF)
+    integer :: F,IJKL,IJKR,I,J,IJ,IJKPLL,IJKPRR,IJK3LL,IJK4RR
+    real,intent(in) :: X(NIJK),Y(NIJK),XF((NIMF+1)*(NJMF+1)),YF((NIMF+1)*(NJMF+1))
+
+    F=0
+    IJKL=1
+    IJKR=1
+    do I=2,NIMF
+    do J=2,NJMF
+        IJ=(I-1)*NJ+J
+        F=F+1
+        !
+        IJKPLL=IJKPL(IJKL)
+        IJKPRR=IJKPR(IJKR)
+        IJK3LL=IJK3L(IJKL)
+        IJK4RR=IJK4R(IJKR)
+        !
+        L(F)=IJKPLL
+        R(F)=IJKPRR
+        !
+        if (XF(IJ).eq.X(IJK3LL).and.YF(IJ).eq.Y(IJK3LL)) IJKL=IJKL+1
+        if (XF(IJ).eq.X(IJK4RR).and.YF(IJ).eq.Y(IJK4RR)) IJKR=IJKR+1
+    end do
+    end do
+
+end subroutine findConnectivity

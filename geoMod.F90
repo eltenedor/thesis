@@ -18,7 +18,7 @@ module geo
 contains
 
 !#########################################################
-subroutine normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,ARR,DNN,DNXX,DNYY,DNZZ,NXX,NYY,NZZ)
+subroutine normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,ARR,DNN,XPNN,YPNN,ZPNN,NXX,NYY,NZZ)
 !#########################################################
 ! THIS ROUTINE CALCULATES THE AREA SPANNED BY TWO VECTORS
 ! AND THE COMPONENTS OF THE RESPECTIVE NORMAL VECTOR USING
@@ -26,7 +26,7 @@ subroutine normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,ARR,DNN,DNXX,DNYY,DNZZ,NXX,NYY,NZ
     
     implicit none
     integer, intent(in) :: IJKP,IJKN,IJK2,IJK3,IJK4
-    real(KIND=PREC), intent(in out) :: ARR,DNN,DNXX,DNYY,DNZZ,NXX,NYY,NZZ
+    real(KIND=PREC), intent(in out) :: ARR,DNN,XPNN,YPNN,ZPNN,NXX,NYY,NZZ
     real(KIND=PREC) :: X2,X3,X4,Y2,Y3,Y4,Z2,Z3,Z4
     
     ! BOUNDARY NODES OF CELL FACE
@@ -58,11 +58,11 @@ subroutine normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,ARR,DNN,DNXX,DNYY,DNZZ,NXX,NYY,NZ
     !
     ! CALCULATE NORMAL DISTANCE BETWEEN ADJACENT CVS
     !              
-    DNXX=XC(IJKN)-XC(IJKP)
-    DNYY=YC(IJKN)-YC(IJKP)
-    DNZZ=ZC(IJKN)-ZC(IJKP)
+    XPNN=XC(IJKN)-XC(IJKP)
+    YPNN=YC(IJKN)-YC(IJKP)
+    ZPNN=ZC(IJKN)-ZC(IJKP)
     !
-    DNN=SQRT(DNXX**2+DNYY**2+DNZZ**2)
+    DNN=SQRT(XPNN**2+YPNN**2+ZPNN**2)
     !
 end subroutine normalArea
 

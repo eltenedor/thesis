@@ -494,7 +494,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
         IJK2=IJK3-NIJ
         IJK1=IJK4-NIJ
         !
-        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY
@@ -649,7 +649,7 @@ end subroutine gradfi
     
     !
     !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
-    ! Diffusive Flüsse müssen nicht explizit verwendet werden
+    !
     !
     call normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
     !
