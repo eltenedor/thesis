@@ -88,7 +88,7 @@ subroutine readData
         READ(2,*) BTYP(1:6)
     END IF
     
-    PRINT *, ' ENTER> NEIGHBOUR INDEX N S W E T B:  (-1 - NO NEIGHBOUR)'
+    PRINT *, ' ENTER> NEIGHBOUR INDEX S N W E T B:  (-1 - NO NEIGHBOUR)'
     IF(ITYP.EQ.1) THEN
         READ(*,*) NEIGH(B,1:6)
         WRITE(1,*) NEIGH(B,1:6),  '   SNEIGH, NNEIGH, WNEIGH, ENEIGH, BNEIGH, TNEIGH '
@@ -186,14 +186,14 @@ subroutine gridExport
     write(3,*)  (YC(I),I=1,NIJK)
     write(3,*)  (ZC(I),I=1,NIJK)
 
-    write(3,*)  (IJKBL(I),I=1,NBLOCK)
+    write(3,*)  (IJKBBL(I),I=1,NBLOCK)
     write(3,*)  (IJKPBL(I),I=1,NBLOCK)
     write(3,*)  (IJKBL1(I),I=1,NBLOCK)
     write(3,*)  (IJKBL2(I),I=1,NBLOCK)
     write(3,*)  (IJKBL3(I),I=1,NBLOCK)
     write(3,*)  (IJKBL4(I),I=1,NBLOCK)
     
-    write(3,*)  (IJKDI(I),I=1,NDIR)
+    write(3,*)  (IJKBDI(I),I=1,NDIR)
     write(3,*)  (IJKPDI(I),I=1,NDIR)
     write(3,*)  (IJKDI1(I),I=1,NDIR)
     write(3,*)  (IJKDI2(I),I=1,NDIR)
@@ -270,9 +270,9 @@ subroutine setBc
         end if
     end do
 
-    call defbc(1,NDIR,IJKDI,IJKPDI,IJKDI1,IJKDI2,IJKDI3,IJKDI4)
+    call defbc(1,NDIR,IJKBDI,IJKPDI,IJKDI1,IJKDI2,IJKDI3,IJKDI4)
     NDIRA=NDIRA+NDIR
-    call defbc(2,NBLOCK,IJKBL,IJKPBL,IJKBL1,IJKBL2,IJKBL3,IJKBL4)
+    call defbc(2,NBLOCK,IJKBBL,IJKPBL,IJKBL1,IJKBL2,IJKBL3,IJKBL4)
     NBLOCKA=NBLOCKA+NBLOCK
 
 end subroutine setBc
@@ -615,7 +615,7 @@ subroutine calcG
 !....Normal distance from cell face center to cell center
 !
     do IDI=1,NDIR
-        IJKB=IJKDI(IDI)
+        IJKB=IJKBDI(IDI)
         IJKP=IJKPDI(IDI)
         !IJK1=IJKDI1(IDI)
         IJK2=IJKDI2(IDI)

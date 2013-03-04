@@ -33,6 +33,7 @@ grgen_src = \
 
 preprocessing_src = \
 	${expath}/paramMod.F90 \
+	bcMod.F90 \
 	geoMod.F90 \
 	preProcIndMod.F90 \
 	preprocessing.F90 \

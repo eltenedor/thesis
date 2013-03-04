@@ -11,10 +11,15 @@ module preProcInd
                 IL,JL,KL,IJKL,IR,JR,KR,IJKR,&
                 NIL,NJL,NKL,NIJKL,ISTL,JSTL,KSTL,IJKSTL,NIML,NJML,NKML,&
                 NIR,NJR,NKR,NIJKR,ISTR,JSTR,KSTR,IJKSTR,NIMR,NJMR,NKMR,&
+                NIMF,NJMF,NIJF,&
+                IJKPLST,IJKPLE,IJKPRST,IJKPRE,NIJKPL,NIJKPR,&
+                FBL(NBLOCKS),NFBL(NBLOCKS),FST,FE,&
+                IJKBLOCKSTL,IJKBLOCKSTR,NBLOCKL,NBLOCKR,NBLOCK,&
                 LK(100), LI(100),&
                 IBL(NBLOCKS),JBL(NBLOCKS),KBL(NBLOCKS),IJKBL(NBLOCKS),&
                 NIBL(NBLOCKS),NJBL(NBLOCKS),NKBL(NBLOCKS),NIJKBL(NBLOCKS),&
-                NIJF
+                IJKBLOCKBL(NBLOCKS),NBLOCKBL(NBLOCKS),&
+                L(1000),R(1000)
                 
 contains
 
@@ -33,9 +38,11 @@ subroutine setBlockInd(BL,BR)
     JSTL=JBL(BL)
     KSTL=KBL(BL)
     IJKSTL=IJKBL(BL)
+    IJKBLOCKSTL=IJKBLOCKBL(BL)
     NIML=NIL-1
     NJML=NJL-1
     NKML=NKL-1
+    NBLOCKL=NBLOCKBL(BL)
 
     NIR=NIBL(BR)
     NJR=NJBL(BR)
@@ -45,9 +52,11 @@ subroutine setBlockInd(BL,BR)
     JSTR=JBL(BR)
     KSTR=KBL(BR)
     IJKSTR=IJKBL(BR)
+    IJKBLOCKSTR=IJKBLOCKBL(BR)
     NIMR=NIR-1
     NJMR=NJR-1
     NKMR=NKR-1
+    NBLOCKR=NBLOCKBL(BR)
 
 end subroutine setBlockInd
                 

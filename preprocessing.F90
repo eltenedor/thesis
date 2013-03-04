@@ -11,9 +11,10 @@ end program main
 subroutine readData
 !#########################################################
 
+    use bc
     use geo
-    use preProcInd
     use param
+    use preProcInd
     implicit none
 
     integer :: BLOCKUNIT,OFFSET
@@ -27,16 +28,19 @@ subroutine readData
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
-    read(BLOCKUNIT,*)   NI,NJ,NK,NIJK
+    read(BLOCKUNIT,*)   NI,NJ,NK,NIJK,NBLOCK
     
     IBL(1)=0
     JBL(1)=0
     KBL(1)=0
     IJKBL(1)=0
+    IJKBLOCKBL(1)=0
     NIBL(1)=NI
     NJBL(1)=NJ
     NKBL(1)=NK
     NIJKBL(1)=NIJK
+    NBLOCKBL(1)=NBLOCK
+    print *, IJKBLOCKBL(1),NBLOCK
     
     do B=2,NB
         BLOCKUNIT=OFFSET+B
@@ -44,17 +48,21 @@ subroutine readData
         BLOCKFILE='grid_'//trim(UNIT_CH)//'.out'
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         rewind BLOCKUNIT
-        read(BLOCKUNIT,*)   NI,NJ,NK,NIJK
+        read(BLOCKUNIT,*)   NI,NJ,NK,NIJK,NBLOCK
+        !print *, NIJK
 
         BB=B-1
         IBL(B)=IBL(BB)+NIBL(BB)
         JBL(B)=JBL(BB)+NJBL(BB)
         KBL(B)=KBL(BB)+NKBL(BB)
         IJKBL(B)=IJKBL(BB)+NIJKBL(BB)
+        IJKBLOCKBL(B)=IJKBLOCKBL(BB)+NBLOCKBL(BB)
         NIBL(B)=NI
         NJBL(B)=NJ
         NKBL(B)=NK
         NIJKBL(B)=NIJK
+        NBLOCKBL(B)=NBLOCK
+        print *, IJKBLOCKBL(B),NBLOCK
     end do
     
     do B=1,NB
@@ -69,22 +77,36 @@ subroutine readData
         read(BLOCKUNIT,*)   (XC(IJKSTL+IJK),IJK=1,NIJKL)
         read(BLOCKUNIT,*)   (YC(IJKSTL+IJK),IJK=1,NIJKL)
         read(BLOCKUNIT,*)   (ZC(IJKSTL+IJK),IJK=1,NIJKL)
+        read(BLOCKUNIT,*)   (IJKBBL(IJKBLOCKSTL+IJK),IJK=1,NBLOCKL)
+        read(BLOCKUNIT,*)   (IJKPBL(IJKBLOCKSTL+IJK),IJK=1,NBLOCKL)
+        print *, (IJKPBL(IJKBLOCKSTL+IJK),IJK=1,NBLOCKL)
+        read(BLOCKUNIT,*)   (IJKBL1(IJKBLOCKSTL+IJK),IJK=1,NBLOCKL)
+        read(BLOCKUNIT,*)   (IJKBL2(IJKBLOCKSTL+IJK),IJK=1,NBLOCKL)
+        read(BLOCKUNIT,*)   (IJKBL3(IJKBLOCKSTL+IJK),IJK=1,NBLOCKL)
+        read(BLOCKUNIT,*)   (IJKBL4(IJKBLOCKSTL+IJK),IJK=1,NBLOCKL)
     end do
 
-    !do B=1,2
-    !do I=1,6
-        !print *, B,I,NEIGH(B,I)
-    !end do
-    !end do
-!
-    !print *, 1,NIJKBL(2)
-    !do B=1,NB
-    !call setBlockInd(B,B)
-    !do IJK=1,NIJKL
-        !print *, IJKSTL+IJK, X(IJKSTL+IJK),Y(IJKSTL+IJK),Z(IJKSTL+IJK)
-    !end do
-    !end do
-    !stop
+    ! Remap values for IJKBL1-4
+    print *, 'REMAPPING VALUES'
+    do B=1,NB
+        call setBlockInd(B,B)
+        do IJK=1,NBLOCKL
+            IJKBBL(IJKBLOCKSTL+IJK)=IJKBBL(IJKBLOCKSTL+IJK)+IJKSTL
+            IJKPBL(IJKBLOCKSTL+IJK)=IJKPBL(IJKBLOCKSTL+IJK)+IJKSTL
+            IJKBL1(IJKBLOCKSTL+IJK)=IJKBL1(IJKBLOCKSTL+IJK)+IJKSTL
+            IJKBL2(IJKBLOCKSTL+IJK)=IJKBL2(IJKBLOCKSTL+IJK)+IJKSTL
+            IJKBL3(IJKBLOCKSTL+IJK)=IJKBL3(IJKBLOCKSTL+IJK)+IJKSTL
+            print *, IJK,IJKBLOCKSTL,IJKBL4(IJKBLOCKSTL+IJK),IJKSTL
+            IJKBL4(IJKBLOCKSTL+IJK)=IJKBL4(IJKBLOCKSTL+IJK)+IJKSTL
+            print *, IJKBL4(IJKBLOCKSTL+IJK)
+        end do
+    end do
+
+    print *, 'REMAPPED VALUES'
+    do B=1,NB
+        call setBlockInd(B,B)
+        print *,IJKSTL, (IJKPBL(IJKBLOCKSTL+IJK),IJK=1,NBLOCKL)
+    end do
 
 end subroutine readData
 
@@ -92,6 +114,7 @@ end subroutine readData
 subroutine findNeighbours
 !#########################################################
 
+    use bc
     use geo
     use preProcInd
     implicit none
@@ -99,21 +122,28 @@ subroutine findNeighbours
     NIB=1
     NJB=2
     NKB=1
+    IJKPLE=0
+    IJKPRE=0
+    FE=0
 
+    ! use other block loop: B=1,NB
     do KB=1,NKB
     do IB=1,NIB
     do JB=1,NJB
         IJKB=(KB-1)*NIB*NJB+(IB-1)*NIB+JB
+        FBL(IJKB)=FE
         print *, 'BLOCK: ',IJKB
         neighbour: do INEIGH=1,6
             if (NEIGH(IJKB,INEIGH) .gt. 0) then
                 call setBlockInd(IJKB,NEIGH(IJKB,INEIGH))
+                IJKPLST=IJKSTL+IJKPLE
+                IJKPRST=IJKSTR+IJKPRE
+                FST=FST+FE
                 select case (INEIGH)
                     case (1)
                         !
                         !..........SOUTH..........
                         !
-                        IJKPLST=IJKSTL+IJKPLE
                         K1=0
                         do KL=1,NKML
                             IJKL=IJKSTL+LK(KSTL+KL)+LI(ISTL+1)+1
@@ -126,9 +156,6 @@ subroutine findNeighbours
                             I1=I1+1
                             XL(I1)=X(IJKL)
                         end do
-                        IJKPLE=IJKPLST+(K1-1)*(I1-1)
-                        NIJKPL=IJKPLE-IJKPLST
-                        IJKPRST=IJKSTR+IJKPRE
                         K2=0
                         do KR=1,NKMR
                             IJKR=IJKSTR+LK(KSTR+KR)+LI(ISTR+1)+1
@@ -141,39 +168,74 @@ subroutine findNeighbours
                             I2=I2+1
                             XR(I2)=X(IJKR)
                         end do
+                        call calcFace(XL,ZL,XR,ZR,I1,K1,I2,K2,XF,ZF,NIJF,NIMF,NJMF)
+                        print *, NIJF
+                        NFBL(NBLOCKS)=NFBL(NBLOCKS)+NIJF
+                        IJKPLE=IJKPLST+(K1-1)*(I1-1)
+                        NIJKPL=IJKPLE-IJKPLST
                         IJKPRE=IJKPRST+(K2-1)*(I2-1)
                         NIJKPR=IJKPRE-IJKPRST
-                        call calcFace(XL,ZL,XR,ZR,I1,K1,I2,K2,XF,ZF,NIJF)
-                        call findConnectivity(IJKPBL(IJKPLST+1:IJKPLE),IJKBL3(IJKPLST+1:IJKPLE),NIJKPL,IJKPBL(IJKPRST+1:IJKPRE),IJKBL4(IJKPRST+1:IJKPRE),NIJKPR,X,Z,XF,ZF,NIMF,NJMF,NIJK,L(FST+1:FE),R(FST+1:FE),NIJF)
+                        print *,IJKPLST,IJKPLE
+                        do IJK=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                            print *, IJKPBL(IJK),X(IJKPBL(IJK))
+                        end do
+                            
+                        call findConnectivity &
+                            (IJKPBL(IJKPLST+1:IJKPLE),&
+                            IJKBL1(IJKPLST+1:IJKPLE),IJKBL4(IJKPLST+1:IJKPLE),IJKBL3(IJKPLST+1:IJKPLE),NIJKPL,&
+                            IJKPBL(IJKPRST+1:IJKPRE),&
+                            IJKBL2(IJKPRST+1:IJKPRE),IJKBL3(IJKPRST+1:IJKPRE),IJKBL4(IJKPRST+1:IJKPRE),NIJKPR,&
+                            X,Z,XF,ZF,NIMF,NJMF,NIJK,L(FST+1:FE),R(FST+1:FE),NIJF)
+                        do IR=1,NIJF
+                            !print *, L(IR)
+                        end do
                     case(2) 
                         !
                         !..........NORTH..........
                         !
+                        print *, 'NORTH'
                         K1=0
                         do KL=1,NKML
                             IJKL=IJKSTL+LK(KSTL+KL)+LI(ISTL+1)+NJML
-                            K1=K1+1                            
                             ZL(K1)=Z(IJKL)
                         end do
                         I1=0
                         do IL=1,NIML
                             IJKL=IJKSTL+LK(KSTL+1)+LI(ISTL+IL)+NJML
-                            I1=I1+1
                             XL(I1)=X(IJKL)
                         end do
                         K2=0
                         do KR=1,NKMR
                             IJKR=IJKSTR+LK(KSTR+KR)+LI(ISTR+1)+NJMR
-                            K2=K2+1                            
                             ZR(K2)=Z(IJKR)
                         end do
                         I2=0
                         do IR=1,NIMR
                             IJKR=IJKSTR+LK(KSTR+1)+LI(ISTR+IR)+NJMR
-                            I2=I2+1
                             XR(I2)=X(IJKR)
                         end do
-                        call calcFace(XL,ZL,XR,ZR,I1,K1,I2,K2,XF,ZF,NIJF)
+                        call calcFace(XL,ZL,XR,ZR,NIML,NKML,NIMR,NKMR,XF,ZF,NIJF,NIMF,NJMF)
+                        print *, NIJF
+                        NFBL(NBLOCKS)=NFBL(NBLOCKS)+NIJF
+                        IJKPLE=IJKPLST+(K1-1)*(I1-1)
+                        NIJKPL=IJKPLE-IJKPLST
+                        IJKPRE=IJKPRST+(K2-1)*(I2-1)
+                        NIJKPR=IJKPRE-IJKPRST
+                        print *,IJKPLST,IJKPLE
+                        
+                        do IJK=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                            print *, IJKPBL(IJK),X(IJKPBL(IJK))
+                        end do
+
+                        call findConnectivity &
+                            (IJKPBL(IJKPLST+1:IJKPLE),&
+                            IJKBL2(IJKPLST+1:IJKPLE),IJKBL3(IJKPLST+1:IJKPLE),IJKBL4(IJKPLST+1:IJKPLE),NIJKPL,&
+                            IJKPBL(IJKPRST+1:IJKPRE),&
+                            IJKBL1(IJKPRST+1:IJKPRE),IJKBL4(IJKPRST+1:IJKPRE),IJKBL3(IJKPRST+1:IJKPRE),NIJKPR,&
+                            X,Z,XF,ZF,NIMF,NJMF,NIJK,L(FST+1:FE),R(FST+1:FE),NIJF)
+                        do IR=1,NIJF
+                            print *, L(IR)
+                        end do
                     case(3)
                         print *, 'WEST'
                         !
@@ -203,7 +265,18 @@ subroutine findNeighbours
                             J2=J2+1
                             YR(J2)=Y(IJKR)
                         end do
-                        call calcFace(YL,ZL,YR,ZR,J1,K1,J2,K2,YF,ZF,NIJF)
+                        call calcFace(YL,ZL,YR,ZR,J1,K1,J2,K2,YF,ZF,NIJF,NIMF,NJMF)
+                        NFBL(NBLOCKS)=NFBL(NBLOCKS)+NIJF
+                        IJKPLE=IJKPLST+(K1-1)*(J1-1)
+                        NIJKPL=IJKPLE-IJKPLST
+                        IJKPRE=IJKPRST+(K2-1)*(J2-1)
+                        NIJKPR=IJKPRE-IJKPRST
+                        call findConnectivity &
+                            (IJKPBL(IJKPLST+1:IJKPLE),&
+                            IJKBL2(IJKPLST+1:IJKPLE),IJKBL3(IJKPLST+1:IJKPLE),IJKBL4(IJKPLST+1:IJKPLE),NIJKPL,&
+                            IJKPBL(IJKPRST+1:IJKPRE),&
+                            IJKBL1(IJKPRST+1:IJKPRE),IJKBL4(IJKPRST+1:IJKPRE),IJKBL3(IJKPRST+1:IJKPRE),NIJKPR,&
+                            Y,Z,YF,ZF,NIMF,NJMF,NIJK,L(FST+1:FE),R(FST+1:FE),NIJF)
                     case(4)
                         print *, 'EAST' 
                         !
@@ -233,7 +306,18 @@ subroutine findNeighbours
                             J2=J2+1
                             YR(J2)=Y(IJKR)
                         end do
-                        call calcFace(YL,ZL,YR,ZR,J1,K1,J2,K2,YF,ZF,NIJF)
+                        call calcFace(YL,ZL,YR,ZR,J1,K1,J2,K2,YF,ZF,NIJF,NIMF,NJMF)
+                        NFBL(NBLOCKS)=NFBL(NBLOCKS)+NIJF
+                        IJKPLE=IJKPLST+(K1-1)*(J1-1)
+                        NIJKPL=IJKPLE-IJKPLST
+                        IJKPRE=IJKPRST+(K2-1)*(J2-1)
+                        NIJKPR=IJKPRE-IJKPRST
+                        call findConnectivity &
+                            (IJKPBL(IJKPLST+1:IJKPLE),&
+                            IJKBL1(IJKPLST+1:IJKPLE),IJKBL4(IJKPLST+1:IJKPLE),IJKBL3(IJKPLST+1:IJKPLE),NIJKPL,&
+                            IJKPBL(IJKPRST+1:IJKPRE),&
+                            IJKBL2(IJKPRST+1:IJKPRE),IJKBL3(IJKPRST+1:IJKPRE),IJKBL4(IJKPRST+1:IJKPRE),NIJKPR,&
+                            Y,Z,YF,ZF,NIMF,NJMF,NIJK,L(FST+1:FE),R(FST+1:FE),NIJF)
                     case(5)
                         !
                         !..........BOTTOM..........
@@ -262,7 +346,18 @@ subroutine findNeighbours
                             J2=J2+1
                             YR(J2)=Y(IJKR)
                         end do
-                        call calcFace(XL,YL,XR,YR,I1,J1,I2,J2,XF,YF,NIJF)
+                        call calcFace(XL,YL,XR,YR,I1,J1,I2,J2,XF,YF,NIJF,NIMF,NJMF)
+                        NFBL(NBLOCKS)=NFBL(NBLOCKS)+NIJF
+                        IJKPLE=IJKPLST+(K1-1)*(J1-1)
+                        NIJKPL=IJKPLE-IJKPLST
+                        IJKPRE=IJKPRST+(K2-1)*(J2-1)
+                        NIJKPR=IJKPRE-IJKPRST
+                        call findConnectivity &
+                            (IJKPBL(IJKPLST+1:IJKPLE),&
+                            IJKBL2(IJKPLST+1:IJKPLE),IJKBL3(IJKPLST+1:IJKPLE),IJKBL4(IJKPLST+1:IJKPLE),NIJKPL,&
+                            IJKPBL(IJKPRST+1:IJKPRE),&
+                            IJKBL1(IJKPRST+1:IJKPRE),IJKBL4(IJKPRST+1:IJKPRE),IJKBL3(IJKPRST+1:IJKPRE),NIJKPR,&
+                            Y,Z,YF,ZF,NIMF,NJMF,NIJK,L(FST+1:FE),R(FST+1:FE),NIJF)
                     case(6) 
                         !
                         !..........TOP..........
@@ -291,7 +386,18 @@ subroutine findNeighbours
                             J2=J2+1
                             YR(J2)=Y(IJKR)
                         end do
-                        call calcFace(XL,YL,XR,YR,I1,J1,I2,J2,XF,YF,NIJF)
+                        call calcFace(XL,YL,XR,YR,I1,J1,I2,J2,XF,YF,NIJF,NIMF,NJMF)
+                        NFBL(NBLOCKS)=NFBL(NBLOCKS)+NIJF
+                        IJKPLE=IJKPLST+(K1-1)*(J1-1)
+                        NIJKPL=IJKPLE-IJKPLST
+                        IJKPRE=IJKPRST+(K2-1)*(J2-1)
+                        NIJKPR=IJKPRE-IJKPRST
+                        call findConnectivity &
+                            (IJKPBL(IJKPLST+1:IJKPLE),&
+                            IJKBL1(IJKPLST+1:IJKPLE),IJKBL4(IJKPLST+1:IJKPLE),IJKBL3(IJKPLST+1:IJKPLE),NIJKPL,&
+                            IJKPBL(IJKPRST+1:IJKPRE),&
+                            IJKBL2(IJKPRST+1:IJKPRE),IJKBL3(IJKPRST+1:IJKPRE),IJKBL4(IJKPRST+1:IJKPRE),NIJKPR,&
+                            X,Y,XF,YF,NIMF,NJMF,NIJK,L(FST+1:FE),R(FST+1:FE),NIJF)
                 end select
             end if
         end do neighbour
@@ -302,17 +408,17 @@ subroutine findNeighbours
 end subroutine findNeighbours
 
 !########################################################
-subroutine calcFace(XL,YL,XR,YR,NIL,NJL,NIR,NJR,XF,YF,NIJF)
+subroutine calcFace(XL,YL,XR,YR,NIL,NJL,NIR,NJR,XF,YF,NIJF,NIMF,NJMF)
 !########################################################
 
     implicit none
     real*8,intent(in) :: XL(NIL),YL(NJL),XR(NIR),YR(NIL)
     integer,intent(in) :: NIL,NJL,NIR,NJR
     real*8,intent(out) :: XF((NIL+NIR)*(NJL+NJR)),YF((NIL+NIR)*(NJL+NJR))
-    integer,intent(out) :: NIJF
+    integer,intent(out) :: NIJF,NIMF,NJMF
 
     real*8 :: XB(NIL+NIR),YB(NJL+NJR)
-    integer :: I,IL,IR,J,JL,JR,IJ,NIF,NJF,NIMF,NJMF
+    integer :: I,IL,IR,J,JL,JR,IJ,NIF,NJF
 
     XB(1)=XL(1)
     I=1
@@ -345,7 +451,6 @@ subroutine calcFace(XL,YL,XR,YR,NIL,NJL,NIR,NJR,XF,YF,NIJF)
         if (YL(JL).lt.YR(JR)) then
             J=J+1
             YB(J)=YL(JL)
-            print *, YL(JL)
             JL=JL+1
         else if (YL(JL).gt.YR(JR)) then
             J=J+1
@@ -366,47 +471,68 @@ subroutine calcFace(XL,YL,XR,YR,NIL,NJL,NIR,NJR,XF,YF,NIJF)
     NJMF=J
     NIF=I+1
     NJF=J+1
-    NIJF=(NIF)*(NJF)
+    NIJF=(NIMF-1)*(NJMF-1)
     do I=1,NIMF
     do J=1,NJMF
         IJ=(I-1)*NJF+J
         XF(IJ)=XB(I)
         YF(IJ)=YB(J)
-        print *, IJ, XF(IJ),YF(IJ)
     end do
     end do
 
 end subroutine calcFace
 
 !########################################################
-subroutine findConnectivity(IJKPL,IJK3L,NIJKL,IJKPR,IJK4R,NIJKR,X,Y,XF,YF,NIMF,NJMF,NIJK,L,R,NIJF)
+subroutine findConnectivity(IJKPL,IJK2L,IJK3L,IJK4L,NIJKL,IJKPR,IJK2R,IJK3R,IJK4R,NIJKR,X,Y,XF,YF,NIMF,NJMF,NIJK,L,R,NIJF)
 !########################################################
+! Beispiel: NORTH FACE -> 2 recht unten, 3 rechts oben, 4 links oben
 
     implicit none
     integer,intent(in)  :: NIJKL,NIJKR,NIMF,NJMF,NIJK,NIJF
-    integer,intent(in)  :: IJKPL(NIJKL),IJK3L(NIJKL),IJKPR(NIJKR),IJK4R(NIJKR)
-    integer,intent(out) :: L(NIJF),R(NIJF)
-    integer :: F,IJKL,IJKR,I,J,IJ,IJKPLL,IJKPRR,IJK3LL,IJK4RR
+    integer,intent(in)  :: IJKPL(NIJKL),IJK2L(NIJKL),IJK3L(NIJKL),IJK4L(NIJKL),IJKPR(NIJKR),IJK2R(NIJKR),IJK3R(NIJKR),IJK4R(NIJKR)
+    integer,intent(in out) :: L(NIJF),R(NIJF)
+    integer :: F,IJKL,IJKR,I,J,IJ,NJ,IJKPLL,IJKPRR,IJK2LL,IJK3LL,IJK4LL,IJK2RR,IJK3RR,IJK4RR
     real,intent(in) :: X(NIJK),Y(NIJK),XF((NIMF+1)*(NJMF+1)),YF((NIMF+1)*(NJMF+1))
 
     F=0
-    IJKL=1
-    IJKR=1
+    NJ=NJMF+1
     do I=2,NIMF
     do J=2,NJMF
         IJ=(I-1)*NJ+J
         F=F+1
         !
-        IJKPLL=IJKPL(IJKL)
-        IJKPRR=IJKPR(IJKR)
-        IJK3LL=IJK3L(IJKL)
-        IJK4RR=IJK4R(IJKR)
-        !
-        L(F)=IJKPLL
         R(F)=IJKPRR
         !
-        if (XF(IJ).eq.X(IJK3LL).and.YF(IJ).eq.Y(IJK3LL)) IJKL=IJKL+1
-        if (XF(IJ).eq.X(IJK4RR).and.YF(IJ).eq.Y(IJK4RR)) IJKR=IJKR+1
+        do IJKL=1,NIJKL
+            IJKPLL=IJKPL(IJKL)
+            IJK2LL=IJK2L(IJKL)
+            IJK3LL=IJK3L(IJKL)
+            IJK4LL=IJK4L(IJKL)
+            print *, IJK3LL,X(IJK3LL),Y(IJK3LL)
+            !
+            if ((XF(IJ).ge.X(IJK2LL).and.YF(IJ).le.Y(IJK2LL)).and. &
+                (XF(IJ).le.X(IJK3LL).and.YF(IJ).le.Y(IJK3LL)).and. &
+                (XF(IJ).le.X(IJK4LL).and.YF(IJ).ge.Y(IJK4LL)))  then
+            !
+                L(F)=IJKPLL
+                exit
+            end if
+        end do
+
+        do IJKR=1,NIJKR
+            IJKPRR=IJKPR(IJKR)
+            IJK2RR=IJK2R(IJKR)
+            IJK3RR=IJK3R(IJKR)
+            IJK4RR=IJK4R(IJKR)
+            !
+            if ((XF(IJ).ge.X(IJK2RR).and.YF(IJ).le.Y(IJK2RR)).and. &
+                (XF(IJ).le.X(IJK3RR).and.YF(IJ).le.Y(IJK3RR)).and. &
+                (XF(IJ).le.X(IJK4RR).and.YF(IJ).ge.Y(IJK4RR)))  then
+            !
+                R(F)=IJKPRR
+                exit
+            end if
+        end do
     end do
     end do
 
