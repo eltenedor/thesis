@@ -396,7 +396,7 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
             IJK4(NBCF)=IJKBP(NBCF)
             IJK3(NBCF)=IJK4(NBCF)-NJ
             IJK1(NBCF)=IJK4(NBCF)-1
-            IJK2(NBCF)=IJK4(NBCF)-1
+            IJK2(NBCF)=IJK3(NBCF)-1
         end if
     end do
     end do
@@ -651,7 +651,8 @@ subroutine writeParamMod
     write(9,'(A8 I6 A1)') ',NDIRAL=', NDIRA,'&'
     write(9,'(A10 I6 A1)') ',NBLOCKAL=', NBLOCKA, '&'
     write(9,'(A9 I6 A1)')   ',NBLOCKS=',NB,'&'
-    write(9,'(A6 I1)') ',PREC=',PREC
+    write(9,'(A6 I1 A1)') ',PREC=',PREC,'&'
+    write(9,'(A9 I5 A1)') ',NFACEAL=',10000
     write(9,'(A)') 'end module param'
 
 end subroutine writeParamMod

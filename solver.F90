@@ -651,7 +651,7 @@ end subroutine gradfi
     !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
     !
     !
-    call normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+    call normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
     !
     VSOL=ALPHA*(AR/DN+SMALL)
     !
@@ -663,7 +663,7 @@ end subroutine gradfi
     !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
     !
     FCFII=MIN(FM,ZERO)*T(IJKN)+MAX(FM,ZERO)*T(IJKP)
-    FDFII=VSOL*(DFXI*DNX+DFYI*DNY+DFZI*DNZ)
+    FDFII=VSOL*(DFXI*XPN+DFYI*YPN+DFZI*ZPN)
     !
     !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
     !
@@ -752,55 +752,3 @@ subroutine calcErr
     !print *,'ERROR: ', ER
 
 end subroutine calcErr
-
-!################################################################
-subroutine linSys(N,A,B,X) 
-!################################################################
-    
-    use param
-    implicit none
-    integer, intent(in) :: N
-    real(KIND=PREC), dimension(N, N), intent(in) :: A
-    real(KIND=PREC), dimension(N), intent(in) :: B
-    real(KIND=PREC), dimension(N), intent(inout) :: X
-    integer :: K, I, J
-    real(KIND=PREC), dimension(N) :: X_0
-    real(KIND=PREC) :: SIGMA, EPS, R
-    
-    EPS=1e-6
-    R=EPS
-    
-    open(unit=11,FILE='coef.out')
-
-    do I=1,N
-        X(I)=0
-        write(11, *), (A(I,J), J=1,N), B(I)
-    end do
-    K=0
-
-    do 
-        if (R.GE.EPS) then
-            K=K+1
-            do I=1,N
-                X_0(I)=X(I)
-            end do
-            do I=1,N
-                SIGMA=0
-                do J=1,N
-                    if(J.NE.I) then
-                            SIGMA=SIGMA+A(I,J)*X_0(J)
-                    end if
-                end do
-                X(I)=(B(I)-SIGMA)/A(I,I)
-            end do
-            R=0
-            do I=1,N
-                R=R+abs(X(I)-X_0(I))
-            end do
-            R=R/N
-        else
-            exit
-        end if
-    end do
-
-end subroutine linSys

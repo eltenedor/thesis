@@ -1,0 +1,60 @@
+INCLUDES := -I/usr/include/opencascade
+
+LIBS := -lTKBinXCAF -lTKIGES -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTL -lTKVRML-6.3.0 -lTKXCAF -lTKXCAFSchema -lTKXDEIGES -lTKXDESTEP -lTKXSBase -lTKXmlXCAF
+
+CFORT := gfortran
+CFORTFLAGS := -c -Wall -Wno-unused-variable
+
+CCPP := g++
+CCPPFLAGS := -c -Wall -Wno-unused-variable
+
+DPATH := ../../order_verification/blockStructured/2/
+
+OBJS := \
+	param.o \
+	bc.o \
+	geo.o \
+	preprocind.o \
+	occtFunc.o \
+	preprocessing.o \
+
+
+all: preprocessing
+
+preprocessing: $(OBJS)
+	@echo
+	@echo 'Invoking Fortran Linker'
+	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
+	@echo
+	@echo 'DONE'
+    
+param.o: $(DPATH)paramMod.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+	
+preprocind.o: preProcIndMod.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+	
+preprocessing.o: preprocessing.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+
+occtFunc.o: occtFunc.cpp
+	@echo
+	@echo 'Invoking C++ Compiler'
+	$(CCPP) $(CCPPFLAGS) $(INCLUDES) $< -o $@
+	
+# Compile Modules
+%.o: %Mod.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+	
+
+clean:
+	rm -rf *.o *.mod
+
