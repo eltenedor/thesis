@@ -7,7 +7,7 @@ module ind
                 NIA,NJA,NKA,NIJA,NIJKA,NDIRA,NBLOCKA, &
                 NIJ,NIJK,NIM,NJM,NKM, &
                 NICV,NJCV,NKCV,NDIR,NBLOCK,NIJCV,&
-                L,N,&
+                P,N,&
                 ITIM,ITIMS,ITIME, & 
                 IJST,IJEN,IP,IDI,IBL,IJKB,IJKP, &
                 LI(NXA), LK(NZA),&

@@ -242,21 +242,21 @@ subroutine setBc
     use ind
     implicit none
 
-    do L=1,6
-        if(L.LE.2) then
+    do P=1,6
+        if(P.LE.2) then
             IK=0
             do K=2,NKM
             do I=2,NIM
                 IK=IK+1
-                ITB(L,IK)=BTYP(L)
+                ITB(P,IK)=BTYP(P)
             end do
             end do
-        elseif(L.LE.4) then
+        elseif(P.LE.4) then
             JK=0
             do K=2,NKM
             do J=2,NJM
                 JK=JK+1
-                JTB(L-2,JK)=BTYP(L)
+                JTB(P-2,JK)=BTYP(P)
             end do
             end do
         else
@@ -264,7 +264,7 @@ subroutine setBc
             do I=2,NIM
             do J=2,NJM
                 IJ=IJ+1
-                KTB(L-4,IJ)=BTYP(L)
+                KTB(P-4,IJ)=BTYP(P)
             end do
             end do
         end if

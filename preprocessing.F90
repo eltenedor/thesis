@@ -178,10 +178,6 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
-                                    !print *,NF,L(NF),R(NF)
-                                    !print *,XF(NF),YF(NF),ZF(NF)
-                                    !print *, DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF)
-                                    !print *, FF(NF)
                                 end if
                             end do
                         end do
