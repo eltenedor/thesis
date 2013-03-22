@@ -1,3 +1,4 @@
+!############### BLOCK STRUCUTRED VERSION ################
 !#########################################################
 program main
 !#########################################################
@@ -79,6 +80,58 @@ subroutine init
 #include <finclude/petscpc.h>
 
     PetscErrorCode :: ierr
+    integer :: BLOCKUNIT,OFFSET,PROC,PROCUNIT
+    character(len=20) :: BLOCKFILE,BLOCK_CH,PROCFILE,PROC_CH
+
+    PROC=0
+    PROCOFFSET=10
+    BLOCKOFFSET=20
+    write(PROC_CH,'(I1)') PROC
+    PROCUNIT=PROC+OFFSET
+    PROCFILE='proc_'//trim(PROC_CH)//'.inp'
+
+    open(UNIT=PROCUNIT,FILE=PROCFILE)
+    rewind PROCUNIT 
+
+    read(PROCUNIT,*) NB_LOC
+    read(PROCUNIT,*) B_GLO
+    !
+    write(BLOCK_CH,'(I1)') B_GLO
+    BLOCKUNIT=BLOCKOFFSET+B_GLO
+    BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
+    open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
+    rewind BLOCKUNIT
+    read(BLOCKUNIT,*)   NI,NJ,NK,NIJK
+    
+    IBL(1)=0
+    JBL(1)=0
+    KBL(1)=0
+    IJKBL(1)=0
+    IJKBLOCKBL(1)=0
+    NIBL(1)=NI
+    NJBL(1)=NJ
+    NKBL(1)=NK
+    NIJKBL(1)=NIJK
+
+    do B=2,NB_LOC
+        read(PROCUNIT,*) B_GLO
+        BLOCKUNIT=BLOCKOFFSET+B_GLO
+        write(BLOCK_CH,'(I1)') B_GLO
+        BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
+        open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
+        read(BLOCKUNIT,*)   NI,NJ,NK,NIJK
+
+        BB=B-1
+        IBL(B)=IBL(BB)+NIBL(BB)
+        JBL(B)=JBL(BB)+NJBL(BB)
+        KBL(B)=KBL(BB)+NKBL(BB)
+        IJKBL(B)=IJKBL(BB)+NIJKBL(BB)
+        IJKBLOCKBL(B)=IJKBLOCKBL(BB)+NBLOCKBL(BB)
+        NIBL(B)=NI
+        NJBL(B)=NJ
+        NKBL(B)=NK
+        NIJKBL(B)=NIJK
+        
 
     read(2,*)  NI,NJ,NK,NIJK,NDIRA,NBLOCKA
     read(2,*)  (LK(K),K=1,NK)

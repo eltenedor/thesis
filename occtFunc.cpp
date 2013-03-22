@@ -63,9 +63,10 @@ void commonFace(double XYZL[], double XYZR[], double XYZCommon[], double &AR, do
     TopoDS_Wire aWireF2 = BRepBuilderAPI_MakeWire(aEdge1F2 , aEdge2F2 , aEdge3F2, aEdge4F2);
     TopoDS_Face aFaceF2 = BRepBuilderAPI_MakeFace(aWireF2);
     TopoDS_Shape S2 = aFaceF2;
-
+    
     //calculation of common part
     TopoDS_Shape SC = BRepAlgoAPI_Common(S1,S2);
+    
 
     GProp_GProps sprops;
     BRepGProp::SurfaceProperties(SC, sprops);
@@ -115,6 +116,5 @@ void commonFace(double XYZL[], double XYZR[], double XYZCommon[], double &AR, do
 
     }
     else AR=-1.0;
-
     return;
 }

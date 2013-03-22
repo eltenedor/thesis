@@ -5,7 +5,7 @@ module bc
     integer ::  IJKBDI(NDIRAL), IJKPDI(NDIRAL), IJKDI1(NDIRAL), IJKDI2(NDIRAL), IJKDI3(NDIRAL), IJKDI4(NDIRAL), &
     
     !
-    ! block boundary related data (only needed for grid generation and preprocessing
+    ! block boundary related data (only needed for grid generation and preprocessing)
     !
                 IJKBBL(NBLOCKAL), IJKPBL(NBLOCKAL), IJKBL1(NBLOCKAL), IJKBL2(NBLOCKAL), IJKBL3(NBLOCKAL), IJKBL4(NBLOCKAL), &
                 BTYP(6),&
