@@ -1,0 +1,49 @@
+INCLUDES :=
+LIBS :=
+
+CFORT := gfortran
+CFORTFLAGS := -c -Wall -Wno-unused-variable
+
+CCPP := g++
+CCPPFLAGS := -c -Wall -Wno-unused-variable
+
+DPATH := ../order_verification/blockStructured/2/
+
+OBJS := \
+	param.o \
+	bc.o \
+	ch.o \
+	geo.o \
+	ind.o \
+	grgen.o \
+	
+all: grgen
+
+grgen: $(OBJS)
+	@echo
+	@echo 'Invoking Fortran Linker'
+	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
+	@rm -rf param.o
+	@echo
+	@echo 'DONE'
+
+#special rules	
+param.o: paramIng.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+	
+grgen.o: grgen.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+	
+#normal rule (Modules)
+%.o: %Mod.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+	
+clean:
+	rm -rf *.o *.mod
+

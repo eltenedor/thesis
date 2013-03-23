@@ -1,0 +1,74 @@
+INCLUDES := -I/home/fabian/util/petsc/petsc-3.3-p6/include -I/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/include
+LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -Wl,-rpath,/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib -lflapack -lfblas -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpichf90 -lgfortran -lm -lm -ldl -lmpich -lopa -lmpl -lrt -lpthread -lgcc_s -ldl
+
+CFORT := gfortran
+CFORTFLAGS := -c -Wall -Wno-unused-variable
+
+CCPP := g++
+CCPPFLAGS := -c -Wall -Wno-unused-variable
+
+CMPIF := /home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/bin/mpif90
+
+CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
+
+DPATH := ../order_verification/blockStructured/2/
+
+OBJS := \
+	param.o \
+	logic.o \
+	bc.o \
+	ch.o \
+	flux.o \
+	geo.o \
+	grad.o \
+	ind.o \
+	preProcInd.o \
+	var.o \
+	sc.o \
+	mms.o \
+	petsc_ksp_module.o \
+	coef.o \
+	solver.o \
+	
+all: solver
+
+solver: $(OBJS)
+	@echo
+	@echo 'Invoking MPIF90 Linker'
+	$(CMPIF) $^ -o $(DPATH)$@ $(LIBS)
+	@rm -rf param.o
+	@echo
+	@echo 'DONE'
+	
+#default for modules (no-petsc modules!)
+%.o: %Mod.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+	
+#petsc modules
+petsc_ksp_module.o: petsc_ksp_module.F90
+	@echo
+	@echo 'Invoking MPIF90 Compiler'
+	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
+
+coef.o: coefMod.F90
+	@echo
+	@echo 'Invoking MPIF90 Compiler'
+	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@	
+	
+#special treatment for param.o
+param.o: $(DPATH)paramMod.F90
+	@echo
+	@echo 'Invoking Fortran Compiler'
+	$(CFORT) $(CFORTFLAGS) $< -o $@
+	
+#compile solver.F90
+solver.o: solver.F90
+	@echo
+	@echo 'Invoking MPF90 Compiler'
+	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
+
+clean:
+	@rm -rf *.o *.mod
+
