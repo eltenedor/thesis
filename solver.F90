@@ -15,11 +15,11 @@ program main
 
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
 
-    open(unit=2,FILE='grid.out')
-    rewind 2
+    !open(unit=2,FILE='grid.out')
+    !rewind 2
 
-    open(unit=10,FILE='ERR.out')
-    rewind 10
+    !open(unit=10,FILE='ERR.out')
+    !rewind 10
 
     call init
     call setUpKSP
@@ -33,7 +33,8 @@ program main
             do K=1,NK
             do I=1,NI
             do J=1,NJ
-                IJK=LK(K)+LI(I)+J
+                !IJK=LK(K)+LI(I)+J
+                IJK=(K-1)*NK*NI+(I-1)*NI+J
                 TO(IJK)=T(IJK)
             end do
             end do
@@ -58,7 +59,7 @@ program main
 
     ! Free work space
 
-    call cleanUp(A,b,sol)
+    call cleanUp(Amat,bvec,solvec)
     call PetscFinalize(ierr)
 
 end program main
@@ -70,7 +71,8 @@ subroutine init
     use bc
     use coef
     use geo
-    use ind
+    !use ind
+    use preProcInd
     use logic
     use param
     use var
@@ -80,85 +82,125 @@ subroutine init
 #include <finclude/petscpc.h>
 
     PetscErrorCode :: ierr
-    integer :: BLOCKUNIT,OFFSET,PROC,PROCUNIT
+    integer :: BLOCKUNIT,PROC,PROCUNIT
+    !integer, dimension(:), allocatable :: B_GLO
     character(len=20) :: BLOCKFILE,BLOCK_CH,PROCFILE,PROC_CH
 
     PROC=0
-    PROCOFFSET=10
-    BLOCKOFFSET=20
     write(PROC_CH,'(I1)') PROC
-    PROCUNIT=PROC+OFFSET
+    PROCUNIT=PROC+PROCOFFSET
     PROCFILE='proc_'//trim(PROC_CH)//'.inp'
 
     open(UNIT=PROCUNIT,FILE=PROCFILE)
     rewind PROCUNIT 
 
-    read(PROCUNIT,*) NB_LOC
-    read(PROCUNIT,*) B_GLO
+    read(PROCUNIT,*) NB
+    print *, NB
     !
-    write(BLOCK_CH,'(I1)') B_GLO
-    BLOCKUNIT=BLOCKOFFSET+B_GLO
+    !allocate(B_GLO(NB))
+    !
+    read(PROCUNIT,*) (B_GLO(B),B=1,NB)
+    print *, (B_GLO(B),B=1,NB)
+
+    write(BLOCK_CH,'(I1)') B_GLO(1)
+    BLOCKUNIT=BLOCKOFFSET+B_GLO(1)
     BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
-    read(BLOCKUNIT,*)   NI,NJ,NK,NIJK
+    read(BLOCKUNIT,*)   NI,NJ,NK,NIJK,NDIR,NFACE,N,IJKST
     
     IBL(1)=0
     JBL(1)=0
     KBL(1)=0
     IJKBL(1)=0
-    IJKBLOCKBL(1)=0
+    IJKDIRBL(1)=0
     NIBL(1)=NI
     NJBL(1)=NJ
     NKBL(1)=NK
     NIJKBL(1)=NIJK
+    NDIRBL(1)=NDIR
+    NFACEBL(1)=NFACE
+    IJKBL_GLO(1)=IJKST
+    NBL(1)=N
 
-    do B=2,NB_LOC
-        read(PROCUNIT,*) B_GLO
-        BLOCKUNIT=BLOCKOFFSET+B_GLO
-        write(BLOCK_CH,'(I1)') B_GLO
+    do B=2,NB
+        !read(PROCUNIT,*) B_GLO(B)
+        BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
+        write(BLOCK_CH,'(I1)') B_GLO(B)
         BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
+        print *, BLOCKFILE
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
-        read(BLOCKUNIT,*)   NI,NJ,NK,NIJK
+        read(BLOCKUNIT,*)   NI,NJ,NK,NIJK,NDIR,NFACE,N,IJKST
 
         BB=B-1
         IBL(B)=IBL(BB)+NIBL(BB)
         JBL(B)=JBL(BB)+NJBL(BB)
         KBL(B)=KBL(BB)+NKBL(BB)
         IJKBL(B)=IJKBL(BB)+NIJKBL(BB)
-        IJKBLOCKBL(B)=IJKBLOCKBL(BB)+NBLOCKBL(BB)
+        IJKDIRBL(B)=IJKDIRBL(BB)+NDIRBL(BB)
+        FACEBL(B)=FACEBL(BB)+NFACEBL(BB)
         NIBL(B)=NI
         NJBL(B)=NJ
         NKBL(B)=NK
         NIJKBL(B)=NIJK
-        
+        NDIRBL(B)=NDIR
+        NFACEBL(B)=NFACEBL(BB)
+        IJKBL_GLO(B)=IJKST
+        NBL(B)=N
+    end do
+    
+    ! calculate processor load
+    N=sum(NBL)
 
-    read(2,*)  NI,NJ,NK,NIJK,NDIRA,NBLOCKA
-    read(2,*)  (LK(K),K=1,NK)
-    read(2,*)  (LI(I),I=1,NI)
-    read(2,*)  (CTD(I),I=0,NIJK-1)
-    read(2,*)  (DTC(I),I=1,NIJK)
+    print *, N
 
-    read(2,*)  (IJKD(I),I=1,NDIRA)
-    read(2,*)  (IJKPD(I),I=1,NDIRA)
-    read(2,*)  (IJKD1(I),I=1,NDIRA)
-    read(2,*)  (IJKD2(I),I=1,NDIRA)
-    read(2,*)  (IJKD3(I),I=1,NDIRA)
+    !call indAllocate
 
-    read(2,*)  (IJKD4(I),I=1,NDIRA)
-    read(2,*)  (X(I),I=1,NIJK)
-    read(2,*)  (Y(I),I=1,NIJK)
-    read(2,*)  (Z(I),I=1,NIJK)
-    read(2,*)  (XC(I),I=1,NIJK)
+    do B=1,NB
+        BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
+        call setBlockInd(B)
+        !read(BLOCKUNIT,*) (LK(KST+K),K=1,NK)
+        !read(BLOCKUNIT,*) (LI(IST+I),I=1,NI)
+        read(BLOCKUNIT,*) (X(IJKST+IJK),IJK=1,NIJK)
+        read(BLOCKUNIT,*) (Y(IJKST+IJK),IJK=1,NIJK)
+        read(BLOCKUNIT,*) (Z(IJKST+IJK),IJK=1,NIJK)
+        read(BLOCKUNIT,*) (XC(IJKST+IJK),IJK=1,NIJK)
+        read(BLOCKUNIT,*) (YC(IJKST+IJK),IJK=1,NIJK)
+        read(BLOCKUNIT,*) (ZC(IJKST+IJK),IJK=1,NIJK)
+        read(BLOCKUNIT,*) (IJKBDI(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKPDI(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKDI1(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKDI2(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKDI3(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKDI4(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (FX(IJKST+IJK), IJK=1,NIJK)
+        read(BLOCKUNIT,*) (FY(IJKST+IJK), IJK=1,NIJK)
+        read(BLOCKUNIT,*) (FZ(IJKST+IJK), IJK=1,NIJK)
+        read(BLOCKUNIT,*) !DX(B),DY(B),DZ(B),VOL(B)
+        read(BLOCKUNIT,*) (SRDDI(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (L(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) !(R(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (XF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (YF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (ZF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (FF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (ARF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (DNF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (XPNF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (YPNF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (ZPNF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (NXF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (NYF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT,*) (NZF(FACEST+I),I=1,NFACE)
+    end do
+    
+    BLOCKUNIT=BLOCKOFFSET+B_GLO(1)
+    read(BLOCKUNIT,*) (MIJK(IJK),IJK=1,NXYZA)
 
-    read(2,*)  (YC(I),I=1,NIJK)
-    read(2,*)  (ZC(I),I=1,NIJK)
-    read(2,*)  (FX(I), I=1,NIJK)
-    read(2,*)  (FY(I), I=1,NIJK)
-    read(2,*)  (FZ(I), I=1,NIJK)
-
-    read(2,*)  DX,DY,DZ, VOL
-    read(2,*)  (SRDDI(I),I=1,NDIR)
+    do B=1,NB
+        BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
+        close(UNIT=BLOCKUNIT)
+    end do
 
     TIME=1.0d0
 
@@ -168,19 +210,21 @@ subroutine init
     end if
 
     ! Create Matrix
-    call MatCreate(PETSC_COMM_WORLD,A,ierr)
-    call MatSetType(A,MATSEQAIJ,ierr)
-    call MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,N,N,ierr)
-    call MatSetFromOptions(A,ierr) 
+    call MatCreate(PETSC_COMM_WORLD,Amat,ierr)
+    call MatSetType(Amat,MATSEQAIJ,ierr)
+    call MatSetSizes(Amat,PETSC_DECIDE,PETSC_DECIDE,N,N,ierr)
+    call MatSetFromOptions(Amat,ierr) 
     
     ! Increase performance during matrix assembly due to preallocation
-    call MatSeqAIJSetPreallocation(A,i7,PETSC_NULL_INTEGER,ierr)
+    call MatSeqAIJSetPreallocation(Amat,i7,PETSC_NULL_INTEGER,ierr)
 
     ! Create Vector
-    call VecCreate(PETSC_COMM_WORLD,sol,ierr)
-    call VecSetSizes(sol,PETSC_DECIDE,N,ierr)
-    call VecSetFromOptions(sol,ierr)
-    call VecDuplicate(sol,b,ierr)
+    call VecCreate(PETSC_COMM_WORLD,solvec,ierr)
+    call VecSetSizes(solvec,PETSC_DECIDE,N,ierr)
+    call VecSetFromOptions(solvec,ierr)
+    call VecDuplicate(solvec,bvec,ierr)
+
+    stop
 
 end subroutine init
 
@@ -241,7 +285,7 @@ subroutine writeVtk
     do K=2,NKM
     do I=2,NIM
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         write(4,'(F12.8)') T(IJK)
     end do
     end do
@@ -264,8 +308,8 @@ subroutine updateBd
     real(KIND=PREC) :: XE,YE,ZE,XN,YN,ZN,XT,YT,ZT
 
 !...Dirichlet BC
-    do ID=1,NDIRA
-        IJKB=IJKD(ID)
+    do IDI=1,NDIRA
+        IJKB=IJKBDI(IDI)
         T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
     end do
 
@@ -273,7 +317,7 @@ subroutine updateBd
     do K=2,NKM
     do I=2,NIM-1
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         F1(IJK)=RHO*DY*DZ*VX
     end do
     end do
@@ -282,7 +326,7 @@ subroutine updateBd
     do K=2,NKM
     do I=2,NIM
     do J=2,NJM-1
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         F2(IJK)=RHO*DX*DZ*VY
     end do
     end do
@@ -291,7 +335,7 @@ subroutine updateBd
     do K=2,NKM-1
     do I=2,NIM
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         F3(IJK)=RHO*DX*DY*VZ
     end do
     end do
@@ -308,7 +352,8 @@ subroutine calcSc
     use coef
     use geo
     use grad
-    use ind
+    use ind, only : NDIRA,NJCV,NIJCV,LS
+    use preProcInd
     use mms
     use petsc_ksp_module
     use sc
@@ -330,7 +375,7 @@ subroutine calcSc
     do K=2,NKM
     do I=2,NIM
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         Q(IJK)=src(XC(IJK), YC(IJK), ZC(IJK), TIME)*VOL
         AP(IJK)=0.0d0
     end do
@@ -341,7 +386,7 @@ subroutine calcSc
     do K=2,NKM
     do I=2,NIM-1
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         call fluxsc(IJK,IJK+NJ,IJK-NIJ-1,IJK-1,IJK,F1(IJK),FX(IJK),AW(IJK+NJ),AE(IJK))
     end do
     end do
@@ -352,7 +397,7 @@ subroutine calcSc
     do K=2,NKM
     do I=2,NIM
     do J=2,NJM-1
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         call fluxsc(IJK,IJK+1,IJK-NIJ,IJK,IJK-NJ,F2(IJK),FY(IJK),AS(IJK+1),AN(IJK))
     end do
     end do
@@ -362,7 +407,7 @@ subroutine calcSc
     do K=2,NKM-1
     do I=2,NIM
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         call fluxsc(IJK,IJK+NIJ,IJK-NJ-1,IJK-NJ,IJK,F3(IJK),FZ(IJK),AB(IJK+NIJ),AT(IJK))
     end do
     end do
@@ -375,7 +420,7 @@ subroutine calcSc
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
-            IJK=LK(K)+LI(I)+J
+            IJK=(K-1)*NI*NJ+(I-1)*NI+J
             APT=RHO*VOL/DT
             Q(IJK)=Q(IJK)+APT*TO(IJK)
             AP(IJK)=AP(IJK)+APT
@@ -392,7 +437,7 @@ subroutine calcSc
     do K=2,NKM
     do I=2,NIM
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         AP(IJK)=(AP(IJK)-AE(IJK)-AW(IJK)-AN(IJK)-AS(IJK)-AT(IJK)-AB(IJK))/URF
         Q(IJK)=Q(IJK)+(1.0d0-URF)*AP(IJK)*T(IJK)
     end do
@@ -406,8 +451,8 @@ subroutine calcSc
     do K=3,NKM-1
     do I=3,NIM-1
     do J=3,NJM-1
-        IJK=LK(K)+LI(I)+J
-        IJKP=DTC(IJK)
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
+        IJKP=MIJK(IJK)
         row=IJKP
         !
         col(1)=IJKP-NIJCV
@@ -427,8 +472,8 @@ subroutine calcSc
         val(7)=AT(IJK)
         valq=Q(IJK)
         !
-        call MatSetValues(A,i1,row,i7,col,val,INSERT_VALUES,ierr)
-        call VecSetValue(b,row,valq,INSERT_VALUES,ierr)
+        call MatSetValues(Amat,i1,row,i7,col,val,INSERT_VALUES,ierr)
+        call VecSetValue(bvec,row,valq,INSERT_VALUES,ierr)
         !
     end do
     end do
@@ -436,9 +481,9 @@ subroutine calcSc
 
     ! Assembly matrix coefficients of boundary cv
 
-    do ID=1,NDIRA
-        IJK=IJKPD(ID)
-        IJKP=DTC(IJK)
+    do IDI=1,NDIRA
+        IJK=IJKPDI(IDI)
+        IJKP=MIJK(IJK)
         row=IJKP
         col=(/-1,-1,-1,IJKP,-1,-1,-1/)
         !
@@ -470,21 +515,21 @@ subroutine calcSc
             col(7)=IJKP+NIJCV
         end if
         !
-        call MatSetValues(A,i1,row,i7,col,val,INSERT_VALUES,ierr)
-        call VecSetValue(b,row,valq,INSERT_VALUES,ierr)
+        call MatSetValues(Amat,i1,row,i7,col,val,INSERT_VALUES,ierr)
+        call VecSetValue(bvec,row,valq,INSERT_VALUES,ierr)
         !
     end do
 
 
     ! assembly matrix and right hand vector
 
-    call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr)
-    call VecAssemblyBegin(b,ierr)
-    call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr)
-    call VecAssemblyEnd(b,ierr)
+    call MatAssemblyBegin(Amat,MAT_FINAL_ASSEMBLY,ierr)
+    call VecAssemblyBegin(bvec,ierr)
+    call MatAssemblyEnd(Amat,MAT_FINAL_ASSEMBLY,ierr)
+    call VecAssemblyEnd(bvec,ierr)
 
     call PetscGetCPUTime(time1,ierr)
-    call solveSys(A,b,sol,N,LS,tol)
+    call solveSys(Amat,bvec,solvec,N,LS,tol)
     call PetscGetCPUTime(time2,ierr)
 
     if (CONVERGED) then
@@ -496,15 +541,15 @@ subroutine calcSc
     do K=2,NIM
     do I=2,NIM
         do J=2,NJM
-            IJK=LK(K)+LI(I)+J
-            row=DTC(IJK)
-            call VecGetValues(sol,i1,row,valt,ierr)
+            IJK=(K-1)*NI*NJ+(I-1)*NI+J
+            row=MIJK(IJK)
+            call VecGetValues(solvec,i1,row,valt,ierr)
             T(IJK)=valt
         end do
     end do
     end do
 
-    call calcErr
+    !call calcErr
 
 end subroutine calcSc
 
@@ -539,7 +584,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
     do K=2,NKM
     do I=2,NIM-1
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         FIE=FI(IJ+NJ)*FX(IJ)+FI(IJ)*(1.0d0-FX(IJ))
 
         IJK4=IJK
@@ -573,7 +618,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
     do K=2,NKM
     do I=2,NIM
     do J=2,NJM-1
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         FIN=FI(IJ+1)*FY(IJ)+FI(IJ)*(1.0d0-FY(IJ))
 
         IJK3=IJK
@@ -581,7 +626,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
         IJK2=IJK3-NIJ
         IJK1=IJK4-NIJ
         !
-        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY
@@ -606,7 +651,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
     do K=2,NKM-1
     do I=2,NIM
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         FIN=FI(IJK+NIJ)*FZ(IJK)+FI(IJK)*(1.0d0-FZ(IJK))
 
         IJK4=IJK
@@ -614,7 +659,7 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
         IJK1=IJK4-1
         IJK2=IJK3-1
         !
-        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY
@@ -636,23 +681,23 @@ subroutine gradfi(FI,DFX,DFY,DFZ)
 !
 !.....CONTRIBUTION FROM WALL BOUNDARIES
 !
-    do I=1,NDIRA
-        IJKB=IJKD(I)
-        IJKP=IJKPD(I)
-        !IJK1=IJKD1(I)
-        IJK2=IJKD2(I)
-        IJK3=IJKD3(I)
-        IJK4=IJKD4(I)
+    do IDI=1,NDIRA
+        IJKB=IJKBDI(IDI)
+        IJKP=IJKPDI(IDI)
+        !IJK1=IJKDI1(IDI)
+        IJK2=IJKDI2(IDI)
+        IJK3=IJKDI3(IDI)
+        IJK4=IJKDI4(IDI)
         !
-        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY
         SZ=AR*NZ
 
-        DFX(IJKPD(I))=DFX(IJKPD(I))+FI(IJKD(I))*SX
-        DFY(IJKPD(I))=DFY(IJKPD(I))+FI(IJKD(I))*SY
-        DFZ(IJKPD(I))=DFZ(IJKPD(I))+FI(IJKD(I))*SZ
+        DFX(IJKPDI(IDI))=DFX(IJKPDI(IDI))+FI(IJKBDI(IDI))*SX
+        DFY(IJKPDI(IDI))=DFY(IJKPDI(IDI))+FI(IJKBDI(IDI))*SY
+        DFZ(IJKPDI(IDI))=DFZ(IJKPDI(IDI))+FI(IJKBDI(IDI))*SZ
     end do
 
 !
@@ -748,22 +793,22 @@ subroutine temp
 !
 !.....DIRICHLET BOUNDARY CONDITION (NO WALL!)
 !
-    do I=1,NDIRA
-        IJKP=IJKPD(I)
-        IJKB=IJKD(I)
-        !IJK1=IJKD1(I)
-        IJK2=IJKD2(I)
-        IJK3=IJKD3(I)
-        IJK4=IJKD4(I)
+    do IDI=1,NDIRA
+        IJKP=IJKPDI(IDI)
+        IJKB=IJKBDI(IDI)
+        !IJK1=IJKDI1(IDI)
+        IJK2=IJKDI2(IDI)
+        IJK3=IJKDI3(IDI)
+        IJK4=IJKDI4(IDI)
         !
-        call normalArea(IJKB,IJKP,IJK2,IJK3,IJK4,AR,DN,NX,NY,NZ)
+        call normalArea(IJKB,IJKP,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
         SX=AR*NX
         SY=AR*NY
         SZ=AR*NZ
         !
         COEFC=RHO*(SX*VX+SY*VY+SZ*VZ)
-        COEFD=ALPHA*SRDD(I)
+        COEFD=ALPHA*SRDDI(IDI)
         AP(IJKP)=AP(IJKP)+COEFD-COEFC
         Q(IJKP)=Q(IJKP)+(COEFD-COEFC)*T(IJKB)
     end do

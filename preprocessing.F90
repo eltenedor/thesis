@@ -40,7 +40,7 @@ subroutine readData
     OFFSET=20
     BLOCKUNIT=OFFSET+1
     write(UNIT_CH,'(I1)') (BLOCKUNIT-OFFSET)
-    BLOCKFILE='grid_'//trim(UNIT_CH)//'.out'
+    BLOCKFILE='grid_'//trim(UNIT_CH)//'.pre'
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
@@ -63,7 +63,7 @@ subroutine readData
     do B=2,NB
         BLOCKUNIT=OFFSET+B
         write(UNIT_CH,'(I1)') (BLOCKUNIT-OFFSET)
-        BLOCKFILE='grid_'//trim(UNIT_CH)//'.out'
+        BLOCKFILE='grid_'//trim(UNIT_CH)//'.pre'
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         rewind BLOCKUNIT
         read(BLOCKUNIT,*)   NI,NJ,NK,NIJK,NBLOCK,NDIR
@@ -82,13 +82,15 @@ subroutine readData
         NBLOCKBL(B)=NBLOCK
         NDIRBL(B)=NDIR
     end do
-    
+
+    call createMapping
+
     do B=1,NB
         call setBlockInd(B)
         BLOCKUNIT=OFFSET+B
         read(BLOCKUNIT,*)   (NEIGH(B,I),I=1,6)
-        read(BLOCKUNIT,*)   (LK(KST+K),K=1,NK)
-        read(BLOCKUNIT,*)   (LI(IST+I),I=1,NI)
+        !read(BLOCKUNIT,*)   (LK(KST+K),K=1,NK)
+        !read(BLOCKUNIT,*)   (LI(IST+I),I=1,NI)
         read(BLOCKUNIT,*)   (X(IJKST+IJK),IJK=1,NIJK)
         read(BLOCKUNIT,*)   (Y(IJKST+IJK),IJK=1,NIJK)
         read(BLOCKUNIT,*)   (Z(IJKST+IJK),IJK=1,NIJK)
@@ -127,12 +129,12 @@ subroutine readData
             IJKDI3(IJKDIRST+IJK)=IJKDI3(IJKDIRST+IJK)+IJKST
             IJKDI4(IJKDIRST+IJK)=IJKDI4(IJKDIRST+IJK)+IJKST
         end do
-        do K=1,NK
-            LK(KST+K)=LK(KST+K)+IJKST
-        end do
-        do I=1,NI
-            LI(IST+I)=LI(IST+I)+IJKST
-        end do
+        !do K=1,NK
+        !    LK(KST+K)=LK(KST+K)+IJKST
+        !end do
+        !do I=1,NI
+        !    LI(IST+I)=LI(IST+I)+IJKST
+        !end do
     end do
 
     !print *, 'REMAPPED VALUES'
@@ -170,7 +172,7 @@ subroutine findNeighbours
     NF=0
     ! use other block loop: B=1,NB
     do B=1,NB
-        FACESTBL(B)=NF
+        FACEBL(B)=NF
         print *, 'BLOCK: ',B
         neighbour: do INEIGH=1,6
             if (NEIGH(B,INEIGH).gt.0) then
@@ -393,7 +395,7 @@ subroutine findNeighbours
                 end select
             end if
         end do neighbour
-        NFACEBL(B)=NF-FACESTBL(B)
+        NFACEBL(B)=NF-FACEBL(B)
         call writeBlockData(B)
     end do
 
@@ -409,6 +411,7 @@ subroutine writeBlockData(IB)
     implicit none
     integer,intent(in) :: IB
     integer :: BLOCKUNIT,OFFSET
+    character(len=20) :: UNIT_CH,BLOCKFILE
     OFFSET=20
     BLOCKUNIT=OFFSET+IB
     call setBlockInd(IB)
@@ -423,10 +426,16 @@ subroutine writeBlockData(IB)
     !
     ! overwrite data back to input file
     !
-    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NBLOCK,NDIR,NFACE
-    write(BLOCKUNIT,*) (NEIGH(B,I),I=1,6)
-    write(BLOCKUNIT,*) (LK(KST+K),K=1,NK)
-    write(BLOCKUNIT,*) (LI(IST+I),I=1,NI)
+    write(UNIT_CH,'(I1)') IB
+    BLOCKFILE='grid_'//trim(UNIT_CH)//'.out'
+    
+    open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
+    rewind BLOCKUNIT
+    N=(NK-2)*(NI-2)*(NJ-2)
+    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NFACE,N,IJKST
+    !write(BLOCKUNIT,*) (NEIGH(B,I),I=1,6)
+    !write(BLOCKUNIT,*) (LK(KST+K),K=1,NK)
+    !write(BLOCKUNIT,*) (LI(IST+I),I=1,NI)
     write(BLOCKUNIT,*) (X(IJKST+IJK),IJK=1,NIJK)
     write(BLOCKUNIT,*) (Y(IJKST+IJK),IJK=1,NIJK)
     write(BLOCKUNIT,*) (Z(IJKST+IJK),IJK=1,NIJK)
@@ -462,9 +471,36 @@ subroutine writeBlockData(IB)
     write(BLOCKUNIT,*) (NYF(FACEST+I),I=1,NFACE)
     write(BLOCKUNIT,*) (NZF(FACEST+I),I=1,NFACE)
     !
-    ! update block data
+    ! Map
     !
+    write(BLOCKUNIT,*) (MIJK(IJK),IJK=1,NXYZA)
+
     rewind BLOCKUNIT
     close (unit=BLOCKUNIT)
     
 end subroutine writeBlockData
+
+!#####################################################
+subroutine createMapping
+!#####################################################
+    
+    use preProcInd
+    implicit none
+
+    IJK_GLO=-1
+    do B=1,NB
+        NBL(B)=0
+        call setBlockInd(B)
+        do K=2,NK-1
+        do I=2,NI-1
+        do J=2,NJ-1
+            NBL(B)=NBL(B)+1
+            IJK_GLO=IJK_GLO+1
+            IJK_LOC=IJKST+(K-1)*NI*NJ+(I-1)*NI+J
+            MIJK(IJK_LOC)=IJK_GLO
+        end do
+        end do
+        end do
+    end do
+
+end subroutine createMapping

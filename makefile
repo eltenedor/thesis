@@ -16,6 +16,7 @@ solver_src = \
 	geoMod.F90 \
 	gradMod.F90 \
 	indMod.F90 \
+	preProcIndMod.F90 \
 	varMod.F90 \
 	scMod.F90 \
 	mmsMod.F90 \

@@ -136,18 +136,19 @@ subroutine cartesian
     NIJA=NIJA+NIJ
     NIJKA=NIJKA+NIJK
 
-    do I=1,NI
-        LI(I)=(I-1)*NJ
-    end do
+    !do I=1,NI
+    !    !LI(I)=(I-1)*NJ
+    !end do
 
-    do K=1,NK
-        LK(K)=(K-1)*NJ*NI
-    end do
+    !do K=1,NK
+    !    LK(K)=(K-1)*NJ*NI
+    !end do
 
     do K=1,NKM
     do I=1,NIM
     do J=1,NJM
-        IJK=LK(K)+LI(I)+J
+        !IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         X(IJK)=XXS+dble(I-1)*DX
         Y(IJK)=YYS+dble(J-1)*DY 
         Z(IJK)=ZZS+dble(K-1)*DZ
@@ -176,8 +177,8 @@ subroutine gridExport
     write(3,*)  NI,NJ,NK,NIJK,NBLOCK,NDIR
     write(3,*)  (NEIGH(B,I),I=1,6)
     print *, (NEIGH(B,I),I=1,6)
-    write(3,*)  (LK(K),K=1,NK)
-    write(3,*)  (LI(I),I=1,NI)
+    !write(3,*)  (LK(K),K=1,NK)
+    !write(3,*)  (LI(I),I=1,NI)
 
     write(3,*)  (X(I),I=1,NIJK)
     write(3,*)  (Y(I),I=1,NIJK)
@@ -226,7 +227,7 @@ subroutine gridExport
     do K=1,NKM
     do I=1,NIM
     do J=1,NJM
-        IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
         write(4,'(E20.10,1X,E20.10,1X,E20.10)'), X(IJK), Y(IJK),Z(IJK)
     end do
     end do
@@ -300,7 +301,8 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         IK=IK+1
         IF(ITB(1,IK).EQ.LT) THEN
           NBCF=NBCF+1
-          IJKBB(NBCF)=LK(K)+LI(I)+1
+          !IJKBB(NBCF)=LK(K)+LI(I)+1
+          IJKBB(NBCF)=(K-1)*NI*NJ+(I-1)*NI+1
           IJKBP(NBCF)=IJKBB(NBCF)+1
           IJK4(NBCF)=IJKBB(NBCF)
           IJK3(NBCF)=IJK4(NBCF)-NJ
@@ -318,7 +320,8 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         IK=IK+1
         IF(ITB(2,IK).EQ.LT) THEN
             NBCF=NBCF+1
-            IJKBB(NBCF)=LK(K)+LI(I)+NJ
+            !IJKBB(NBCF)=LK(K)+LI(I)+NJ
+            IJKBB(NBCF)=(K-1)*NI*NJ+(I-1)*NI+NJ
             IJKBP(NBCF)=IJKBB(NBCF)-1
             IJK3(NBCF)=IJKBP(NBCF)
             IJK4(NBCF)=IJK3(NBCF)-NJ
@@ -337,7 +340,8 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         JK=JK+1
         IF(JTB(1,JK).EQ.LT) THEN
             NBCF=NBCF+1
-            IJKBB(NBCF)=LK(K)+LI(1)+J
+            !IJKBB(NBCF)=LK(K)+LI(1)+J
+            IJKBB(NBCF)=(K-1)*NI*NJ+J
             IJKBP(NBCF)=IJKBB(NBCF)+NJ
             IJK3(NBCF)=IJKBB(NBCF)
             IJK4(NBCF)=IJK3(NBCF)-1
@@ -355,7 +359,8 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         JK=JK+1
         IF(JTB(2,JK).EQ.LT) THEN
             NBCF=NBCF+1
-            IJKBB(NBCF)=LK(K)+LI(NI)+J
+            !IJKBB(NBCF)=LK(K)+LI(NI)+J
+            IJKBB(NBCF)=(K-1)*NI*NJ+(NI-1)*NI+J
             IJKBP(NBCF)=IJKBB(NBCF)-NJ
             IJK4(NBCF)=IJKBP(NBCF)
             IJK3(NBCF)=IJK4(NBCF)-1
@@ -373,7 +378,8 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         IJ=IJ+1
         if (KTB(1,IJ).EQ.LT) then
             NBCF=NBCF+1
-            IJKBB(NBCF)=LK(1)+LI(I)+J
+            !IJKBB(NBCF)=LK(1)+LI(I)+J
+            IJKBB(NBCF)=(I-1)*NI+J
             IJKBP(NBCF)=IJKBB(NBCF)+NIJ
             IJK3(NBCF)=IJKBB(NBCF)
             IJK4(NBCF)=IJK3(NBCF)-NJ
@@ -391,7 +397,8 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         IJ=IJ+1
         if (KTB(2,I).EQ.LT) then
             NBCF=NBCF+1
-            IJKBB(NBCF)=LK(NK)+LI(I)+J
+            !IJKBB(NBCF)=LK(NK)+LI(I)+J
+            IJKBB(NBCF)=(NK-1)*NI*NJ+(I-1)*NI+LI(I)+J
             IJKBP(NBCF)=IJKBB(NBCF)-NIJ
             IJK4(NBCF)=IJKBP(NBCF)
             IJK3(NBCF)=IJK4(NBCF)-NJ
@@ -420,42 +427,50 @@ subroutine calcG
 
 !.....CALCULATION OF NODE COORDINATES: CORNER (DUMMY) NODES
 !
-    IJK=LK(1)+LI(1)+1
+    !IJK=LK(1)+LI(1)+1
+    IJK=1
     XC(IJK)=X(IJK)
     YC(IJK)=Y(IJK)
     ZC(IJK)=Z(IJK)
 !
-    IJK=LK(1)+LI(NIM)+1
+    !IJK=LK(1)+LI(NIM)+1
+    IJK=(NIM-1)*NI+1
     XC(IJK+NJ)=X(IJK)
     YC(IJK+NJ)=Y(IJK)
     ZC(IJK+NJ)=Z(IJK)
 !
-    IJK=LK(1)+LI(1)+NJM
+    !IJK=LK(1)+LI(1)+NJM
+    IJK=NJM
     XC(IJK+1)=X(IJK)
     YC(IJK+1)=Y(IJK)
     ZC(IJK+1)=Z(IJK)
 !
-    IJK=LK(1)+LI(NIM)+NJM
+    !IJK=LK(1)+LI(NIM)+NJM
+    IJK=(NIM-1)*NI+NJM
     XC(IJK+NJ+1)=X(IJK)
     YC(IJK+NJ+1)=Y(IJK)
     ZC(IJK+NJ+1)=Z(IJK)
 !
-    IJK=LK(NKM)+LI(1)+1
+    !IJK=LK(NKM)+LI(1)+1
+    IJK=(NKM-1)*NI*NJ+1
     XC(IJK+NIJ)=X(IJK)
     YC(IJK+NIJ)=Y(IJK)
     ZC(IJK+NIJ)=Z(IJK)
 !
-    IJK=LK(NKM)+LI(NIM)+1
+    !IJK=LK(NKM)+LI(NIM)+1
+    IJK=(NKM-1)*NI*NJ+(NIM-1)*NI+1
     XC(IJK+NIJ+NJ)=X(IJK)
     YC(IJK+NIJ+NJ)=Y(IJK)
     ZC(IJK+NIJ+NJ)=Z(IJK)
 !
-    IJK=LK(NKM)+LI(1)+NJM
+    !IJK=LK(NKM)+LI(1)+NJM
+    IJK=(NKM-1)*NI*NJ+NJM
     XC(IJK+NIJ+1)=X(IJK)
     YC(IJK+NIJ+1)=Y(IJK)
     ZC(IJK+NIJ+1)=Z(IJK)
 !
-    IJK=LK(NKM)+LI(NIM)+NJM
+    !IJK=LK(NKM)+LI(NIM)+NJM
+    IJK=(NKM-1)*NI*NJ+(NIM-1)*NI+NJM
     XC(IJK+NIJ+NJ+1)=X(IJK)
     YC(IJK+NIJ+NJ+1)=Y(IJK)
     ZC(IJK+NIJ+NJ+1)=Z(IJK)
@@ -464,57 +479,69 @@ subroutine calcG
 !.....CALCULATION OF NODE COORDINATES: BOUNDARY EDGE NODES
 !               
     do I=2,NIM
-        IJK=LK(1)+LI(I)+1
+        !IJK=LK(1)+LI(I)+1
+        IJK=(I-1)*NI+1
         XC(IJK)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NJ))
-        IJK=LK(1)+LI(I)+NJM
+        !IJK=LK(1)+LI(I)+NJM
+        IJK=(I-1)*NI+NJM
         XC(IJK+1)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+1)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK+1)=0.5*(Z(IJK)+Z(IJK-NJ))
-        IJK=LK(NKM)+LI(I)+1
+        !IJK=LK(NKM)+LI(I)+1
+        IJK=(NKM-1)*NI*NJ+(I-1)*NI+1
         XC(IJK+NIJ)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+NIJ)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK+NIJ)=0.5*(Z(IJK)+Z(IJK-NJ))
-        IJK=LK(NKM)+LI(I)+NJM
+        !IJK=LK(NKM)+LI(I)+NJM
+        IJK=(NKM-1)*NI*NJ+(I-1)*NI+NJM
         XC(IJK+NIJ+1)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+NIJ+1)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK+NIJ+1)=0.5*(Z(IJK)+Z(IJK-NJ))
     end do
 
     do J=2,NJM
-        IJK=LK(1)+LI(NIM)+J
+        !IJK=LK(1)+LI(NIM)+J
+        IJK=(NIM-1)*NI+J
         XC(IJK+NJ)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK+NJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NJ)=0.5*(Z(IJK)+Z(IJK-1))
-        IJK=LK(1)+LI(1)+J
+        !IJK=LK(1)+LI(1)+J
+        IJK=J
         XC(IJK)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-1))
-        IJK=LK(NKM)+LI(NIM)+J
+        !IJK=LK(NKM)+LI(NIM)+J
+        IJK=(NKM-1)*NI*NJ+(NIM-1)*NI+J
         XC(IJK+NIJ+NJ)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK+NIJ+NJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NIJ+NJ)=0.5*(Z(IJK)+Z(IJK-1))
-        IJK=LK(NKM)+LI(1)+J
+        !IJK=LK(NKM)+LI(1)+J
+        IJK=(NKM-1)*NI*NJ+J
         XC(IJK+NIJ)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK+NIJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NIJ)=0.5*(Z(IJK)+Z(IJK-1))
     end do
 
     do K=2,NKM
-        IJK=LK(K)+LI(NIM)+1
+        !IJK=LK(K)+LI(NIM)+1
+        IJK=(K-1)*NI*NJ+(NIM-1)*NI*NJ+1
         XC(IJK+NJ)=0.5*(X(IJK)+X(IJK-NIJ))
         YC(IJK+NJ)=0.5*(Y(IJK)+Y(IJK-NIJ))
         ZC(IJK+NJ)=0.5*(Z(IJK)+Z(IJK-NIJ))
-        IJK=LK(K)+LI(1)+1
+        !IJK=LK(K)+LI(1)+1
+        IJK=(K-1)*NI*NJ+1
         XC(IJK)=0.5*(X(IJK)+X(IJK+NIJ))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK+NIJ))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NIJ))
-        IJK=LK(K)+LI(NIM)+NJM
+        !IJK=LK(K)+LI(NIM)+NJM
+        IJK=(K-1)*NI*NJ+(NIM-1)*NI+NJM
         XC(IJK+NJ+1)=0.5*(X(IJK)+X(IJK-NIJ))
         YC(IJK+NJ+1)=0.5*(Y(IJK)+Y(IJK-NIJ))
         ZC(IJK+NJ+1)=0.5*(Z(IJK)+Z(IJK-NIJ))
-        IJK=LK(K)+LI(1)+NJM
+        !IJK=LK(K)+LI(1)+NJM
+        IJK=(K-1)*NI*NJ+NJM
         XC(IJK+1)=0.5*(X(IJK)+X(IJK-NIJ))
         YC(IJK+1)=0.5*(Y(IJK)+Y(IJK-NIJ))
         ZC(IJK+1)=0.5*(Z(IJK)+Z(IJK-NIJ))
@@ -524,11 +551,13 @@ subroutine calcG
 !
     do I=2,NIM
     do J=2,NJM
-        IJK=LK(1)+LI(I)+J
+        !IJK=LK(1)+LI(I)+J
+        IJK=(I-1)*NI+J
         XC(IJK)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NJ))
-        IJK=LK(NKM)+LI(I)+J
+        !IJK=LK(NKM)+LI(I)+J
+        IJK=(NKM-1)*NI*NJ+(I-1)*NI+J
         XC(IJK+NIJ)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+NIJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NIJ)=0.5*(Z(IJK)+Z(IJK-NJ))
@@ -537,11 +566,13 @@ subroutine calcG
     
     do J=2,NJM
     do K=2,NKM
-        IJK=LK(K)+LI(NIM)+J
+        !IJK=LK(K)+LI(NIM)+J
+        IJK=(K-1)*NI*NJ+(NIM-1)*NI+J
         XC(IJK+NJ)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK+NJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NJ)=0.5*(Z(IJK)+Z(IJK-NIJ))
-        IJK=LK(K)+LI(1)+J
+        !IJK=LK(K)+LI(1)+J
+        IJK=(K-1)*NI*NJ+J
         XC(IJK)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NIJ))
@@ -550,11 +581,13 @@ subroutine calcG
             
     do K=2,NKM
     do I=2,NIM
-        IJK=LK(K)+LI(I)+1
+        !IJK=LK(K)+LI(I)+1
+        IJK=(K-1)*NI*NJ+(I-1)*NI+1
         XC(IJK)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NIJ))
-        IJK=LK(K)+LI(I)+NJM
+        !IJK=LK(K)+LI(I)+NJM
+        IJK=(K-1)*NI*NJ+(I-1)*NI+NJM
         XC(IJK+1)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+1)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK+1)=0.5*(Z(IJK)+Z(IJK-NIJ))
@@ -566,7 +599,8 @@ subroutine calcG
     do K=2,NKM
     do I=2,NIM
     do J=2,NJM
-          IJK=LK(K)+LI(I)+J
+          !IJK=LK(K)+LI(I)+J
+          IJK=(K-1)*NI*NJ+(I-1)*NI+J
           XC(IJK)=0.5d0*(X(IJK)+X(IJK-NJ))
           YC(IJK)=0.5d0*(Y(IJK)+Y(IJK-1))
           ZC(IJK)=0.5d0*(Z(IJK)+Z(IJK-NIJ))
@@ -579,7 +613,8 @@ subroutine calcG
     do K=2,NKM
     do I=2,NIM
     do J=2,NJM
-        IJK=LK(K)+LI(I)+J
+        !IJK=LK(K)+LI(I)+J
+        IJK=(K-1)*NI*NJ+(I-1)*NI+J
 !
 !.....INTERPOLATION IN I-DIRECTION: FX = Pe/PE
 !
