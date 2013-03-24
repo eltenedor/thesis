@@ -8,9 +8,10 @@ module geo
                         XC(NXYZA),YC(NXYZA),ZC(NXYZA), &
                         XYZL(12),XYZR(12),XYZCommon(12),XYZF(3),&
                         XXS,XXE,YYS,YYE,ZZS,ZZE, &
-                        DX,DY,DZ, &
+                        DX,DY,DZ,VOL, &
+                        DXBL(NBLOCKS),DYBL(NBLOCKS),DZBL(NBLOCKS),VOLBL(NBLOCKS),&
                         AR,DN,NX,NY,NZ,&
-                        VOL,XPN,YPN,ZPN,SX,SY,SZ,&
+                        XPN,YPN,ZPN,SX,SY,SZ,&
                         FX(NXYZA),FY(NXYZA),FZ(NXYZA)
                         
     public :: normalArea,calcGrad

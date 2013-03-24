@@ -20,6 +20,7 @@ program main
 
     call readData
     call findNeighbours
+    call writeParam
 
 end program main
 
@@ -30,7 +31,7 @@ subroutine readData
     use bc
     use geo
     use param
-    use preProcInd
+    use indMod
     implicit none
 
     integer :: BLOCKUNIT,OFFSET
@@ -89,6 +90,7 @@ subroutine readData
         call setBlockInd(B)
         BLOCKUNIT=OFFSET+B
         read(BLOCKUNIT,*)   (NEIGH(B,I),I=1,6)
+        !print *, (NEIGH(B,I),I=1,6)
         !read(BLOCKUNIT,*)   (LK(KST+K),K=1,NK)
         !read(BLOCKUNIT,*)   (LI(IST+I),I=1,NI)
         read(BLOCKUNIT,*)   (X(IJKST+IJK),IJK=1,NIJK)
@@ -152,7 +154,7 @@ subroutine findNeighbours
     use iso_c_binding
     use bc
     use geo
-    use preProcInd
+    use indMod
     implicit none
 
     interface cpp_interface
@@ -407,7 +409,7 @@ subroutine writeBlockData(IB)
 
     use bc
     use geo
-    use preProcInd
+    use indMod
     implicit none
     integer,intent(in) :: IB
     integer :: BLOCKUNIT,OFFSET
@@ -484,7 +486,7 @@ end subroutine writeBlockData
 subroutine createMapping
 !#####################################################
     
-    use preProcInd
+    use indMod
     implicit none
 
     IJK_GLO=-1
@@ -504,3 +506,27 @@ subroutine createMapping
     end do
 
 end subroutine createMapping
+
+!#####################################################
+subroutine writeParam
+!#####################################################
+
+    use indMod
+    implicit none
+
+    OPEN(UNIT=9,FILE='paramMod.F90')
+    REWIND 9
+    read(9,*) !'module param'
+    read(9,*) !'  implicit none'
+    read(9,*) !'integer, parameter :: ', 'NXA=', NIA,'&' 
+    read(9,*) !',NYA=', NJA, '&'
+    read(9,*) !',NZA=', NKA, '&'
+    read(9,*) !',NXYZA=', NIJKA, '&'
+    read(9,*) !',NDIRAL=', NDIRA,'&'
+    read(9,*) ! ',NBLOCKAL=', NBLOCKA, '&'
+    read(9,*) !  ',NBLOCKS=',NB,'&'
+    read(9,*) !',PREC=',PREC,'&'
+    write(9,'(A9 I5 A1)') ',NFACEAL=',NF
+    write(9,'(A)') 'end module param'
+
+end subroutine writeParam

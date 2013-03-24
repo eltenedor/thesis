@@ -1,5 +1,5 @@
 !########################################################
-module preProcInd
+module indMod
 !########################################################
 
     use param
@@ -8,7 +8,7 @@ module preProcInd
                 ! Time stepping indices
                 ITIM,ITIMS,ITIME,&
                 ! Regular Indices block independent
-                I,J,K,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,N,IDI,IJKB,IJKP,&
+                I,J,K,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKB,IJKP,&
                 ! Indices for complete Blocks
                 B,BB,NB,&
                 ! Indices inside Blocks
@@ -20,6 +20,7 @@ module preProcInd
                 JST,JBL(NBLOCKS),NJBL(NBLOCKS),&
                 KST,KBL(NBLOCKS),NKBL(NBLOCKS),&
                 IJKST,IJKBL(NBLOCKS),NIJKBL(NBLOCKS),NBL(NBLOCKS),&
+                !NICVBL(NBLOCKS),NJCVBL(NBLOCKS),NKCVBL(NBLOCKS),&
                 !LI(1000),LK(1000),&
                 ! block dependent indices (dirichlet boundary)
                 IJKDIRST,IJKDIRBL(NBLOCKS),NDIRBL(NBLOCKS),NDIR,&
@@ -32,7 +33,9 @@ module preProcInd
                 ! mapping related indices
                 IJK_GLO,IJK_LOC,MIJK(NXYZA),&
                 B_GLO(NBLOCKS),& !NBL(NBLOCKS),
-                IJKBL_GLO(NBLOCKS)
+                IJKPROC,&
+                ! indices for outer iterations
+                LS,LSG
                 
                 
     public :: setBlockInd
@@ -63,6 +66,7 @@ end subroutine setBlockInd2Int
 subroutine setBlockInd1Int(B)
 !########################################################
 
+    use geo, only : DX,DY,DZ,VOL,DXBL,DYBL,DZBL,VOLBL
     implicit none
     integer, intent(in) :: B
     
@@ -75,6 +79,11 @@ subroutine setBlockInd1Int(B)
     NJM=NJ-1
     NK=NKBL(B)
     NKM=NK-1
+    NIJ=NI*NJ
+    NICV=NIM-1
+    NJCV=NJM-1
+    NKCV=NKM-1
+    NIJCV=NICV*NJCV
 
     IJKST=IJKBL(B)
     NIJK=NIJKBL(B)
@@ -88,6 +97,12 @@ subroutine setBlockInd1Int(B)
     FACEST=FACEBL(B)
     NFACE=NFACEBL(B)
 
+    ! GEOMETRY RELATED DATA
+    DX=DXBL(B)
+    DY=DYBL(B)
+    DZ=DZBL(B)
+    VOL=VOLBL(B)
+
 end subroutine setBlockInd1Int
 
-end module preProcInd
+end module indMod

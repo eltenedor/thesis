@@ -1,7 +1,7 @@
 module logic
 
     implicit none
-    logical, parameter :: LTIME=.false.
+    logical, parameter :: LTIME=.true.
     logical :: CONVERGED=.false.
     integer :: pcInd, kspInd
     integer :: reasonInt, itsInt

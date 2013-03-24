@@ -11,7 +11,7 @@ CMPIF := /home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/bin/mpif90
 
 CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
 
-DPATH := ../order_verification/blockStructured/2/
+DPATH := ../order_verification/blockStructured/0.03125/
 
 OBJS := \
 	param.o \

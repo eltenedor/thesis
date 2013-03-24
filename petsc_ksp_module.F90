@@ -130,7 +130,6 @@ end subroutine solveSys
 subroutine cleanUp(A,b,x)
 !#########################################################
 
-    
     implicit none
 #include <finclude/petscsys.h>
 #include <finclude/petscvec.h>

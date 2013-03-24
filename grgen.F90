@@ -205,7 +205,7 @@ subroutine gridExport
     write(3,*)  (FY(I), I=1,NIJK)
     write(3,*)  (FZ(I), I=1,NIJK)
 
-    write(3,*)  DX,DY,DZ, VOL
+    write(3,*)  DX,DY,DZ,VOL
     write(3,*)  (SRDDI(I),I=1,NDIR)
 
     !do I=1,NIJK
@@ -682,7 +682,7 @@ subroutine writeParamMod
     write(9,'(A22 A4 I6 A1 A5 I9 A5 I9 A7 I9 A8 I9 A10 I9 A9 I9 A6 I9)') 'integer, parameter :: ', 'NXA=', NIA,'&' 
     write(9,'(A5 I6 A1)') ',NYA=', NJA, '&'
     write(9,'(A5 I6 A1)') ',NZA=', NKA, '&'
-    write(9,'(A7 I6 A1)') ',NXYZA=', NIJKA, '&'
+    write(9,'(A7 I9 A1)') ',NXYZA=', NIJKA, '&'
     write(9,'(A8 I6 A1)') ',NDIRAL=', NDIRA,'&'
     write(9,'(A10 I6 A1)') ',NBLOCKAL=', NBLOCKA, '&'
     write(9,'(A9 I6 A1)')   ',NBLOCKS=',NB,'&'

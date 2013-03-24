@@ -7,7 +7,7 @@ CFORTFLAGS := -c -Wall -Wno-unused-variable
 CCPP := g++
 CCPPFLAGS := -c -Wall -Wno-unused-variable
 
-DPATH := ../order_verification/blockStructured/2/
+DPATH := ../order_verification/blockStructured/0.03125/
 
 OBJS := \
 	param.o \
@@ -23,7 +23,7 @@ grgen: $(OBJS)
 	@echo
 	@echo 'Invoking Fortran Linker'
 	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
-	@rm -rf param.o
+	@rm -rf *.o *.mod
 	@echo
 	@echo 'DONE'
 
