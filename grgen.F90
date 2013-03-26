@@ -148,10 +148,11 @@ subroutine cartesian
     do I=1,NIM
     do J=1,NJM
         !IJK=LK(K)+LI(I)+J
-        IJK=(K-1)*NI*NJ+(I-1)*NI+J
+        IJK=(K-1)*NI*NJ+(I-1)*NJ+J
         X(IJK)=XXS+dble(I-1)*DX
         Y(IJK)=YYS+dble(J-1)*DY 
         Z(IJK)=ZZS+dble(K-1)*DZ
+        !print *, X(IJK), Y(IJK), Z(IJK)
     end do
     end do
     end do
@@ -176,7 +177,7 @@ subroutine gridExport
     
     write(3,*)  NI,NJ,NK,NIJK,NBLOCK,NDIR
     write(3,*)  (NEIGH(B,I),I=1,6)
-    print *, (NEIGH(B,I),I=1,6)
+    !print *, (NEIGH(B,I),I=1,6)
     !write(3,*)  (LK(K),K=1,NK)
     !write(3,*)  (LI(I),I=1,NI)
 
@@ -225,9 +226,9 @@ subroutine gridExport
     write(4,'(A I6 I6 I6)') 'DIMENSIONS', NIM,NJM,NKM
     write(4,'(A I10 A)') 'Points ', NIM*NJM*NKM, ' float'
     do K=1,NKM
-    do I=1,NIM
     do J=1,NJM
-        IJK=(K-1)*NI*NJ+(I-1)*NI+J
+    do I=1,NIM
+        IJK=(K-1)*NI*NJ+(I-1)*NJ+J
         write(4,'(E20.10,1X,E20.10,1X,E20.10)'), X(IJK), Y(IJK),Z(IJK)
     end do
     end do
@@ -302,7 +303,7 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         IF(ITB(1,IK).EQ.LT) THEN
           NBCF=NBCF+1
           !IJKBB(NBCF)=LK(K)+LI(I)+1
-          IJKBB(NBCF)=(K-1)*NI*NJ+(I-1)*NI+1
+          IJKBB(NBCF)=(K-1)*NI*NJ+(I-1)*NJ+1
           IJKBP(NBCF)=IJKBB(NBCF)+1
           IJK4(NBCF)=IJKBB(NBCF)
           IJK3(NBCF)=IJK4(NBCF)-NJ
@@ -321,7 +322,7 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         IF(ITB(2,IK).EQ.LT) THEN
             NBCF=NBCF+1
             !IJKBB(NBCF)=LK(K)+LI(I)+NJ
-            IJKBB(NBCF)=(K-1)*NI*NJ+(I-1)*NI+NJ
+            IJKBB(NBCF)=(K-1)*NI*NJ+(I-1)*NJ+NJ
             IJKBP(NBCF)=IJKBB(NBCF)-1
             IJK3(NBCF)=IJKBP(NBCF)
             IJK4(NBCF)=IJK3(NBCF)-NJ
@@ -360,7 +361,7 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         IF(JTB(2,JK).EQ.LT) THEN
             NBCF=NBCF+1
             !IJKBB(NBCF)=LK(K)+LI(NI)+J
-            IJKBB(NBCF)=(K-1)*NI*NJ+(NI-1)*NI+J
+            IJKBB(NBCF)=(K-1)*NI*NJ+(NI-1)*NJ+J
             IJKBP(NBCF)=IJKBB(NBCF)-NJ
             IJK4(NBCF)=IJKBP(NBCF)
             IJK3(NBCF)=IJK4(NBCF)-1
@@ -379,7 +380,7 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         if (KTB(1,IJ).EQ.LT) then
             NBCF=NBCF+1
             !IJKBB(NBCF)=LK(1)+LI(I)+J
-            IJKBB(NBCF)=(I-1)*NI+J
+            IJKBB(NBCF)=(I-1)*NJ+J
             IJKBP(NBCF)=IJKBB(NBCF)+NIJ
             IJK3(NBCF)=IJKBB(NBCF)
             IJK4(NBCF)=IJK3(NBCF)-NJ
@@ -398,7 +399,7 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         if (KTB(2,I).EQ.LT) then
             NBCF=NBCF+1
             !IJKBB(NBCF)=LK(NK)+LI(I)+J
-            IJKBB(NBCF)=(NK-1)*NI*NJ+(I-1)*NI+LI(I)+J
+            IJKBB(NBCF)=(NK-1)*NI*NJ+(I-1)*NJ+J
             IJKBP(NBCF)=IJKBB(NBCF)-NIJ
             IJK4(NBCF)=IJKBP(NBCF)
             IJK3(NBCF)=IJK4(NBCF)-NJ
@@ -434,7 +435,7 @@ subroutine calcG
     ZC(IJK)=Z(IJK)
 !
     !IJK=LK(1)+LI(NIM)+1
-    IJK=(NIM-1)*NI+1
+    IJK=(NIM-1)*NJ+1
     XC(IJK+NJ)=X(IJK)
     YC(IJK+NJ)=Y(IJK)
     ZC(IJK+NJ)=Z(IJK)
@@ -446,7 +447,7 @@ subroutine calcG
     ZC(IJK+1)=Z(IJK)
 !
     !IJK=LK(1)+LI(NIM)+NJM
-    IJK=(NIM-1)*NI+NJM
+    IJK=(NIM-1)*NJ+NJM
     XC(IJK+NJ+1)=X(IJK)
     YC(IJK+NJ+1)=Y(IJK)
     ZC(IJK+NJ+1)=Z(IJK)
@@ -458,7 +459,7 @@ subroutine calcG
     ZC(IJK+NIJ)=Z(IJK)
 !
     !IJK=LK(NKM)+LI(NIM)+1
-    IJK=(NKM-1)*NI*NJ+(NIM-1)*NI+1
+    IJK=(NKM-1)*NI*NJ+(NIM-1)*NJ+1
     XC(IJK+NIJ+NJ)=X(IJK)
     YC(IJK+NIJ+NJ)=Y(IJK)
     ZC(IJK+NIJ+NJ)=Z(IJK)
@@ -470,7 +471,7 @@ subroutine calcG
     ZC(IJK+NIJ+1)=Z(IJK)
 !
     !IJK=LK(NKM)+LI(NIM)+NJM
-    IJK=(NKM-1)*NI*NJ+(NIM-1)*NI+NJM
+    IJK=(NKM-1)*NI*NJ+(NIM-1)*NJ+NJM
     XC(IJK+NIJ+NJ+1)=X(IJK)
     YC(IJK+NIJ+NJ+1)=Y(IJK)
     ZC(IJK+NIJ+NJ+1)=Z(IJK)
@@ -480,22 +481,22 @@ subroutine calcG
 !               
     do I=2,NIM
         !IJK=LK(1)+LI(I)+1
-        IJK=(I-1)*NI+1
+        IJK=(I-1)*NJ+1
         XC(IJK)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NJ))
         !IJK=LK(1)+LI(I)+NJM
-        IJK=(I-1)*NI+NJM
+        IJK=(I-1)*NJ+NJM
         XC(IJK+1)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+1)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK+1)=0.5*(Z(IJK)+Z(IJK-NJ))
         !IJK=LK(NKM)+LI(I)+1
-        IJK=(NKM-1)*NI*NJ+(I-1)*NI+1
+        IJK=(NKM-1)*NI*NJ+(I-1)*NJ+1
         XC(IJK+NIJ)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+NIJ)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK+NIJ)=0.5*(Z(IJK)+Z(IJK-NJ))
         !IJK=LK(NKM)+LI(I)+NJM
-        IJK=(NKM-1)*NI*NJ+(I-1)*NI+NJM
+        IJK=(NKM-1)*NI*NJ+(I-1)*NJ+NJM
         XC(IJK+NIJ+1)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+NIJ+1)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK+NIJ+1)=0.5*(Z(IJK)+Z(IJK-NJ))
@@ -503,7 +504,7 @@ subroutine calcG
 
     do J=2,NJM
         !IJK=LK(1)+LI(NIM)+J
-        IJK=(NIM-1)*NI+J
+        IJK=(NIM-1)*NJ+J
         XC(IJK+NJ)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK+NJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NJ)=0.5*(Z(IJK)+Z(IJK-1))
@@ -513,7 +514,7 @@ subroutine calcG
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-1))
         !IJK=LK(NKM)+LI(NIM)+J
-        IJK=(NKM-1)*NI*NJ+(NIM-1)*NI+J
+        IJK=(NKM-1)*NI*NJ+(NIM-1)*NJ+J
         XC(IJK+NIJ+NJ)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK+NIJ+NJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NIJ+NJ)=0.5*(Z(IJK)+Z(IJK-1))
@@ -526,7 +527,7 @@ subroutine calcG
 
     do K=2,NKM
         !IJK=LK(K)+LI(NIM)+1
-        IJK=(K-1)*NI*NJ+(NIM-1)*NI*NJ+1
+        IJK=(K-1)*NI*NJ+(NIM-1)*NJ+1
         XC(IJK+NJ)=0.5*(X(IJK)+X(IJK-NIJ))
         YC(IJK+NJ)=0.5*(Y(IJK)+Y(IJK-NIJ))
         ZC(IJK+NJ)=0.5*(Z(IJK)+Z(IJK-NIJ))
@@ -536,7 +537,7 @@ subroutine calcG
         YC(IJK)=0.5*(Y(IJK)+Y(IJK+NIJ))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NIJ))
         !IJK=LK(K)+LI(NIM)+NJM
-        IJK=(K-1)*NI*NJ+(NIM-1)*NI+NJM
+        IJK=(K-1)*NI*NJ+(NIM-1)*NJ+NJM
         XC(IJK+NJ+1)=0.5*(X(IJK)+X(IJK-NIJ))
         YC(IJK+NJ+1)=0.5*(Y(IJK)+Y(IJK-NIJ))
         ZC(IJK+NJ+1)=0.5*(Z(IJK)+Z(IJK-NIJ))
@@ -552,12 +553,12 @@ subroutine calcG
     do I=2,NIM
     do J=2,NJM
         !IJK=LK(1)+LI(I)+J
-        IJK=(I-1)*NI+J
+        IJK=(I-1)*NJ+J
         XC(IJK)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NJ))
         !IJK=LK(NKM)+LI(I)+J
-        IJK=(NKM-1)*NI*NJ+(I-1)*NI+J
+        IJK=(NKM-1)*NI*NJ+(I-1)*NJ+J
         XC(IJK+NIJ)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+NIJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NIJ)=0.5*(Z(IJK)+Z(IJK-NJ))
@@ -567,7 +568,7 @@ subroutine calcG
     do J=2,NJM
     do K=2,NKM
         !IJK=LK(K)+LI(NIM)+J
-        IJK=(K-1)*NI*NJ+(NIM-1)*NI+J
+        IJK=(K-1)*NI*NJ+(NIM-1)*NJ+J
         XC(IJK+NJ)=0.5*(X(IJK)+X(IJK-1))
         YC(IJK+NJ)=0.5*(Y(IJK)+Y(IJK-1))
         ZC(IJK+NJ)=0.5*(Z(IJK)+Z(IJK-NIJ))
@@ -582,12 +583,12 @@ subroutine calcG
     do K=2,NKM
     do I=2,NIM
         !IJK=LK(K)+LI(I)+1
-        IJK=(K-1)*NI*NJ+(I-1)*NI+1
+        IJK=(K-1)*NI*NJ+(I-1)*NJ+1
         XC(IJK)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK)=0.5*(Z(IJK)+Z(IJK-NIJ))
         !IJK=LK(K)+LI(I)+NJM
-        IJK=(K-1)*NI*NJ+(I-1)*NI+NJM
+        IJK=(K-1)*NI*NJ+(I-1)*NJ+NJM
         XC(IJK+1)=0.5*(X(IJK)+X(IJK-NJ))
         YC(IJK+1)=0.5*(Y(IJK)+Y(IJK-NJ))
         ZC(IJK+1)=0.5*(Z(IJK)+Z(IJK-NIJ))
@@ -600,7 +601,7 @@ subroutine calcG
     do I=2,NIM
     do J=2,NJM
           !IJK=LK(K)+LI(I)+J
-          IJK=(K-1)*NI*NJ+(I-1)*NI+J
+          IJK=(K-1)*NI*NJ+(I-1)*NJ+J
           XC(IJK)=0.5d0*(X(IJK)+X(IJK-NJ))
           YC(IJK)=0.5d0*(Y(IJK)+Y(IJK-1))
           ZC(IJK)=0.5d0*(Z(IJK)+Z(IJK-NIJ))
@@ -614,7 +615,7 @@ subroutine calcG
     do I=2,NIM
     do J=2,NJM
         !IJK=LK(K)+LI(I)+J
-        IJK=(K-1)*NI*NJ+(I-1)*NI+J
+        IJK=(K-1)*NI*NJ+(I-1)*NJ+J
 !
 !.....INTERPOLATION IN I-DIRECTION: FX = Pe/PE
 !
@@ -677,9 +678,10 @@ subroutine writeParamMod
     !OPEN(UNIT=9,FILE='../../../pet_src/paramMod.F90')
     OPEN(UNIT=9,FILE='paramMod.F90')
     REWIND 9
+    
     write(9,'(A16)') 'module param'
     write(9,'(A18)') '  implicit none'
-    write(9,'(A22 A4 I6 A1 A5 I9 A5 I9 A7 I9 A8 I9 A10 I9 A9 I9 A6 I9)') 'integer, parameter :: ', 'NXA=', NIA,'&' 
+    write(9,'(A22 A4 I6 A1)') 'integer, parameter :: ', 'NXA=', NIA,'&' 
     write(9,'(A5 I6 A1)') ',NYA=', NJA, '&'
     write(9,'(A5 I6 A1)') ',NZA=', NKA, '&'
     write(9,'(A7 I9 A1)') ',NXYZA=', NIJKA, '&'

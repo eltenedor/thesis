@@ -110,14 +110,14 @@ subroutine solveSys(A,b,x,N,LS,tol)
 
     ! View solver info
 
-    call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    if(N.le.64) then
+    !call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    if(N.le.32) then
         print *, 'Matrix A:'
         call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        !print *, 'Vector vt2:'
-        !call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        !print *, 'Vector res:'
-        !call VecView(res,PETSC_VIEWER_STDOUT_WORLD,ierr)
+        print *, 'Vector vt2:'
+        call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
+        print *, 'Vector res:'
+        call VecView(res,PETSC_VIEWER_STDOUT_WORLD,ierr)
         print *, 'Vector x:'
         call VecView(x,PETSC_VIEWER_STDOUT_WORLD,ierr)
         print *, 'Vector b:'

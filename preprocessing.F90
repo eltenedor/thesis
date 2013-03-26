@@ -45,7 +45,7 @@ subroutine readData
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
-    read(BLOCKUNIT,*)   NI,NJ,NK,NIJK,NBLOCK,NDIR
+    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NBLOCK,NDIR
     
     IBL(1)=0
     JBL(1)=0
@@ -67,7 +67,7 @@ subroutine readData
         BLOCKFILE='grid_'//trim(UNIT_CH)//'.pre'
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         rewind BLOCKUNIT
-        read(BLOCKUNIT,*)   NI,NJ,NK,NIJK,NBLOCK,NDIR
+        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NBLOCK,NDIR
 
         BB=B-1
         IBL(B)=IBL(BB)+NIBL(BB)
@@ -117,19 +117,22 @@ subroutine readData
     print *, 'REMAPPING VALUES'
     do B=1,NB
         call setBlockInd(B)
-        do IJK=1,NBLOCK
-            IJKBBL(IJKBLOCKST+IJK)=IJKBBL(IJKBLOCKST+IJK)+IJKST
-            IJKPBL(IJKBLOCKST+IJK)=IJKPBL(IJKBLOCKST+IJK)+IJKST
-            IJKBL1(IJKBLOCKST+IJK)=IJKBL1(IJKBLOCKST+IJK)+IJKST
-            IJKBL2(IJKBLOCKST+IJK)=IJKBL2(IJKBLOCKST+IJK)+IJKST
-            IJKBL3(IJKBLOCKST+IJK)=IJKBL3(IJKBLOCKST+IJK)+IJKST
-            IJKBL4(IJKBLOCKST+IJK)=IJKBL4(IJKBLOCKST+IJK)+IJKST
-            IJKBDI(IJKDIRST+IJK)=IJKBDI(IJKDIRST+IJK)+IJKST
-            IJKPDI(IJKDIRST+IJK)=IJKPDI(IJKDIRST+IJK)+IJKST
-            IJKDI1(IJKDIRST+IJK)=IJKDI1(IJKDIRST+IJK)+IJKST
-            IJKDI2(IJKDIRST+IJK)=IJKDI2(IJKDIRST+IJK)+IJKST
-            IJKDI3(IJKDIRST+IJK)=IJKDI3(IJKDIRST+IJK)+IJKST
-            IJKDI4(IJKDIRST+IJK)=IJKDI4(IJKDIRST+IJK)+IJKST
+        do IJKBLOCK=IJKBLOCKST+1,IJKBLOCKST+NBLOCK
+            IJKBBL(IJKBLOCK)=IJKBBL(IJKBLOCK)+IJKST
+            IJKPBL(IJKBLOCK)=IJKPBL(IJKBLOCK)+IJKST
+            IJKBL1(IJKBLOCK)=IJKBL1(IJKBLOCK)+IJKST
+            IJKBL2(IJKBLOCK)=IJKBL2(IJKBLOCK)+IJKST
+            IJKBL3(IJKBLOCK)=IJKBL3(IJKBLOCK)+IJKST
+            IJKBL4(IJKBLOCK)=IJKBL4(IJKBLOCK)+IJKST
+        end do
+        !
+        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+            IJKBDI(IJKDIR)=IJKBDI(IJKDIR)+IJKST
+            IJKPDI(IJKDIR)=IJKPDI(IJKDIR)+IJKST
+            IJKDI1(IJKDIR)=IJKDI1(IJKDIR)+IJKST
+            IJKDI2(IJKDIR)=IJKDI2(IJKDIR)+IJKST
+            IJKDI3(IJKDIR)=IJKDI3(IJKDIR)+IJKST
+            IJKDI4(IJKDIR)=IJKDI4(IJKDIR)+IJKST
         end do
         !do K=1,NK
         !    LK(KST+K)=LK(KST+K)+IJKST
@@ -141,8 +144,16 @@ subroutine readData
 
     !print *, 'REMAPPED VALUES'
     !do B=1,NB
-    !    call setBlockInd(B)
-    !    print *,IJKST, (IJKPBL(IJKBLOCKST+IJK),IJK=1,NBLOCK)
+        !call setBlockInd(B)
+        !print *, 'BLOCK: ', B
+        !do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+        !    IJKBDI(IJKDIR)
+        !print *, IJKPDI(IJKDIR)
+        !    IJKDI1(IJKDIR)
+        !    IJKDI2(IJKDIR)
+        !    IJKDI3(IJKDIR)
+        !    IJKDI4(IJKDIR)
+    !    end do
     !end do
 
 end subroutine readData
@@ -434,7 +445,7 @@ subroutine writeBlockData(IB)
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
     N=(NK-2)*(NI-2)*(NJ-2)
-    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NFACE,N,IJKST
+    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NBLOCK,NDIR,NFACE,N,IJKST
     !write(BLOCKUNIT,*) (NEIGH(B,I),I=1,6)
     !write(BLOCKUNIT,*) (LK(KST+K),K=1,NK)
     !write(BLOCKUNIT,*) (LI(IST+I),I=1,NI)
@@ -444,6 +455,12 @@ subroutine writeBlockData(IB)
     write(BLOCKUNIT,*) (XC(IJKST+IJK),IJK=1,NIJK)
     write(BLOCKUNIT,*) (YC(IJKST+IJK),IJK=1,NIJK)
     write(BLOCKUNIT,*) (ZC(IJKST+IJK),IJK=1,NIJK)
+    write(BLOCKUNIT,*) (IJKBBL(IJKBLOCKST+IJK),IJK=1,NBLOCK)
+    write(BLOCKUNIT,*) (IJKPBL(IJKBLOCKST+IJK),IJK=1,NBLOCK)
+    write(BLOCKUNIT,*) (IJKBL1(IJKBLOCKST+IJK),IJK=1,NBLOCK)
+    write(BLOCKUNIT,*) (IJKBL2(IJKBLOCKST+IJK),IJK=1,NBLOCK)
+    write(BLOCKUNIT,*) (IJKBL3(IJKBLOCKST+IJK),IJK=1,NBLOCK)
+    write(BLOCKUNIT,*) (IJKBL4(IJKBLOCKST+IJK),IJK=1,NBLOCK)
     write(BLOCKUNIT,*) (IJKBDI(IJKDIRST+IJK),IJK=1,NDIR)
     write(BLOCKUNIT,*) (IJKPDI(IJKDIRST+IJK),IJK=1,NDIR)
     write(BLOCKUNIT,*) (IJKDI1(IJKDIRST+IJK),IJK=1,NDIR)
@@ -498,7 +515,7 @@ subroutine createMapping
         do J=2,NJ-1
             NBL(B)=NBL(B)+1
             IJK_GLO=IJK_GLO+1
-            IJK_LOC=IJKST+(K-1)*NI*NJ+(I-1)*NI+J
+            IJK_LOC=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             MIJK(IJK_LOC)=IJK_GLO
         end do
         end do

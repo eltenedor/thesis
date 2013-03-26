@@ -7,8 +7,8 @@ module indMod
     integer ::  &
                 ! Time stepping indices
                 ITIM,ITIMS,ITIME,&
-                ! Regular Indices block independent
-                I,J,K,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKB,IJKP,&
+                ! Regular Indices block independent (IJKB needed?)
+                I,J,K,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKB,IJKBLOCK,IJKP,&
                 ! Indices for complete Blocks
                 B,BB,NB,&
                 ! Indices inside Blocks
@@ -27,8 +27,9 @@ module indMod
                 ! block dependent indices (block boundary)
                 IJKBLOCKBL(NBLOCKS),NBLOCKBL(NBLOCKS),&
                 IJKBLOCKST,NBLOCK,IJKBLOCKSTL,NBLOCKL,IJKBLOCKSTR,NBLOCKR,&
+                IJKMARKL,IJKMARKR,&
                 ! block dependent indices (boundary faces)
-                NF,&
+                F,NF,&
                 FACEST,FACEBL(NBLOCKS),NFACEBL(NBLOCKS),NFACE,&
                 ! mapping related indices
                 IJK_GLO,IJK_LOC,MIJK(NXYZA),&

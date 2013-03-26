@@ -1,4 +1,5 @@
 INCLUDES := -I/home/fabian/util/petsc/petsc-3.3-p6/include -I/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/include
+
 LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -Wl,-rpath,/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib -lflapack -lfblas -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpichf90 -lgfortran -lm -lm -ldl -lmpich -lopa -lmpl -lrt -lpthread -lgcc_s -ldl
 
 CFORT := gfortran
@@ -11,7 +12,7 @@ CMPIF := /home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/bin/mpif90
 
 CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
 
-DPATH := ../order_verification/blockStructured/0.03125/
+DPATH := ../order_verification/blockStructured/test/
 
 OBJS := \
 	param.o \
@@ -36,7 +37,6 @@ solver: $(OBJS)
 	@echo
 	@echo 'Invoking MPIF90 Linker'
 	$(CMPIF) $^ -o $(DPATH)$@ $(LIBS)
-	@rm -rf param.o
 	@echo
 	@echo 'DONE'
 	
