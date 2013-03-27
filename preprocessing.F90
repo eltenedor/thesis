@@ -4,6 +4,7 @@ program main
 
     use iso_c_binding
     implicit none
+    real :: T1,T2
 
     interface cpp_interface
 
@@ -19,7 +20,10 @@ program main
     end interface cpp_interface
 
     call readData
+    call cpu_time(T1)
     call findNeighbours
+    call cpu_time(T2)
+    print *, 'T2-T1 = ', T2-T1
     call writeParam
 
 end program main
@@ -59,7 +63,6 @@ subroutine readData
     NIJKBL(1)=NIJK
     NBLOCKBL(1)=NBLOCK
     NDIRBL(1)=NDIR
-    !print *, IJKBLOCKBL(1),NBLOCK
     
     do B=2,NB
         BLOCKUNIT=OFFSET+B
@@ -165,8 +168,10 @@ subroutine findNeighbours
     use iso_c_binding
     use bc
     use geo
+    use logic
     use indMod
     implicit none
+    integer :: iterationsCounter
 
     interface cpp_interface
 
@@ -183,27 +188,35 @@ subroutine findNeighbours
 
 
     NF=0
+    iterationsCounter=0
     ! use other block loop: B=1,NB
     do B=1,NB
         FACEBL(B)=NF
+        call setBlockInd(B)
+        IJKSTL=IJKBLOCKST+1
+        IJKEL=IJKBLOCKST+NBLOCK
         print *, 'BLOCK: ',B
         neighbour: do INEIGH=1,6
             if (NEIGH(B,INEIGH).gt.0) then
                 call setBlockInd(B,NEIGH(B,INEIGH))
+                IJKSTR=IJKBLOCKSTR+1
+                IJKER=IJKBLOCKSTR+NBLOCKR
+                STARTED=.false.
+                FOUND=.false.
                 select case (INEIGH)
                     case (1)
                         !
                         !..........SOUTH..........
                         !
-                        !print *, IJKBLOCKSTL,NBLOCKL,IJKBLOCKSTR,NBLOCKR
-                        do IJKL=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                        SouthOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
                             XYZL(4:6)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
                             XYZL(7:9)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
                             XYZL(10:12)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
                             !
-                            do IJKR=IJKBLOCKSTR+1,IJKBLOCKSTR+NBLOCKR
+                            SouthInner: do IJKR=IJKSTR,IJKER
+                                iterationsCounter=iterationsCounter+1
                                 !
                                 XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
                                 XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
@@ -214,6 +227,8 @@ subroutine findNeighbours
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
                                 call reverseOrder(XYZCommon)
                                 if (AR.gt.0.0d0) then
+                                    STARTED=.true.
+                                    FOUND=.true.
                                     NF=NF+1
                                     L(NF)=IJKPBL(IJKL)
                                     R(NF)=IJKPBL(IJKR)
@@ -225,21 +240,32 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (AR.le.0.0d0.and.STARTED) then
+                                    IJKSTR=IJKR
+                                    STARTED=.false.
+                                    cycle SouthOuter
+                                else if (FOUND) then
+                                    IJKSTL=IJKL
+                                    FOUND=.false.
+                                    exit SouthOuter
+                                else
+                                    cycle SouthInner
                                 end if
-                            end do
-                        end do
+                            end do SouthInner
+                        end do SouthOuter
                     case(2) 
                         !
                         !..........NORTH..........
                         !
-                        do IJKL=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                        NorthOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
                             XYZL(4:6)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
                             XYZL(7:9)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
                             XYZL(10:12)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
                             !
-                            do IJKR=IJKBLOCKSTR+1,IJKBLOCKSTR+NBLOCKR
+                            NorthInner: do IJKR=IJKSTR,IJKER
+                                iterationsCounter=iterationsCounter+1
                                 !
                                 XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
                                 XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
@@ -249,6 +275,8 @@ subroutine findNeighbours
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
                                 if (AR.gt.0.0d0) then
+                                    STARTED=.true.
+                                    FOUND=.true.
                                     NF=NF+1
                                     L(NF)=IJKPBL(IJKL)
                                     R(NF)=IJKPBL(IJKR)
@@ -260,21 +288,33 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (AR.le.0.0d0.and.STARTED) then
+                                    IJKSTR=IJKR
+                                    STARTED=.false.
+                                    IJKBLOCKSTR=IJKMARKR
+                                    cycle NorthOuter
+                                else if (FOUND) then
+                                    IJKSTL=IJKL
+                                    FOUND=.false.
+                                    exit NorthOuter
+                                else
+                                    cycle NorthInner
                                 end if
-                            end do
-                        end do
+                            end do NorthInner
+                        end do NorthOuter
                     case(3)
                         !
                         !..........WEST..........
                         !
-                        do IJKL=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                        WestOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
                             XYZL(4:6)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
                             XYZL(7:9)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
                             XYZL(10:12)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
                             !
-                            do IJKR=IJKBLOCKSTR+1,IJKBLOCKSTR+NBLOCKR
+                            WestInner: do IJKR=IJKSTR,IJKER
+                                iterationsCounter=iterationsCounter+1
                                 !
                                 XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
                                 XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
@@ -285,32 +325,46 @@ subroutine findNeighbours
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
                                 call reverseOrder(XYZCommon)
                                 if (AR.gt.0.0d0) then
+                                    STARTED=.true.
+                                    FOUND=.true.
                                     NF=NF+1
                                     L(NF)=IJKPBL(IJKL)
                                     R(NF)=IJKPBL(IJKR)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
+
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (AR.le.0.0d0.and.STARTED) then
+                                    IJKSTR=IJKR
+                                    STARTED=.false.
+                                    cycle WestOuter
+                                else if (FOUND) then
+                                    IJKSTL=IJKL
+                                    FOUND=.false.
+                                    exit WestOuter
+                                else
+                                    cycle WestInner
                                 end if
-                            end do
-                        end do
+                            end do WestInner
+                        end do WestOuter
                     case(4)
                         !
                         !..........EAST..........
                         !
-                        do IJKL=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                        EastOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
                             XYZL(4:6)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
                             XYZL(7:9)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
                             XYZL(10:12)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
                             !
-                            do IJKR=IJKBLOCKSTR+1,IJKBLOCKSTR+NBLOCKR
+                            EastInner: do IJKR=IJKSTR,IJKER
+                                iterationsCounter=iterationsCounter+1
                                 !
                                 XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
                                 XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
@@ -320,6 +374,8 @@ subroutine findNeighbours
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
                                 if (AR.gt.0.0d0) then
+                                    STARTED=.true.
+                                    FOUND=.true.
                                     NF=NF+1
                                     L(NF)=IJKPBL(IJKL)
                                     R(NF)=IJKPBL(IJKR)
@@ -331,21 +387,32 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (AR.le.0.0d0.and.STARTED) then
+                                    IJKSTR=IJKR
+                                    STARTED=.false.
+                                    cycle EastOuter
+                                else if (FOUND) then
+                                    FOUND=.false.
+                                    IJKSTL=IJKL
+                                    exit EastOuter
+                                else
+                                    cycle EastInner
                                 end if
-                            end do
-                        end do
+                            end do EastInner
+                        end do EastOuter
                     case(5)
                         !
                         !..........BOTTOM..........
                         !
-                        do IJKL=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                        BottomOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
                             XYZL(4:6)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
                             XYZL(7:9)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
                             XYZL(10:12)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
                             !
-                            do IJKR=IJKBLOCKSTR+1,IJKBLOCKSTR+NBLOCKR
+                            BottomInner: do IJKR=IJKSTR,IJKER
+                                iterationsCounter=iterationsCounter+1
                                 !
                                 XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
                                 XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
@@ -356,6 +423,8 @@ subroutine findNeighbours
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
                                 call reverseOrder(XYZCommon)
                                 if (AR.gt.0.0d0) then
+                                    STARTED=.true.
+                                    FOUND=.true.
                                     NF=NF+1
                                     L(NF)=IJKPBL(IJKL)
                                     R(NF)=IJKPBL(IJKR)
@@ -367,21 +436,32 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (AR.le.0.0d0.and.STARTED) then
+                                    IJKSTR=IJKR
+                                    STARTED=.false.
+                                    cycle BottomOuter
+                                else if (FOUND) then
+                                    FOUND=.false.
+                                    IJKSTL=IJKL
+                                    exit BottomOuter
+                                else
+                                    cycle BottomInner
                                 end if
-                            end do
-                        end do
+                            end do BottomInner
+                        end do BottomOuter
                     case(6) 
                         !
                         !..........TOP..........
                         !
-                        do IJKL=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                        TopOuter: do IJKL=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
                             !
                             XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
                             XYZL(4:6)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
                             XYZL(7:9)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
                             XYZL(10:12)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
                             !
-                            do IJKR=IJKBLOCKSTR+1,IJKBLOCKSTR+NBLOCKR
+                            TopInner: do IJKR=IJKBLOCKSTR+1,IJKBLOCKSTR+NBLOCKR
+                                iterationsCounter=iterationsCounter+1
                                 !
                                 XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
                                 XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
@@ -391,6 +471,8 @@ subroutine findNeighbours
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
                                 if (AR.gt.0.0d0) then
+                                    STARTED=.true.
+                                    FOUND=.true.
                                     NF=NF+1
                                     L(NF)=IJKPBL(IJKL)
                                     R(NF)=IJKPBL(IJKR)
@@ -402,15 +484,27 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (AR.le.0.0d0.and.STARTED) then
+                                    IJKSTR=IJKR
+                                    STARTED=.false.
+                                    cycle TopOuter
+                                else if (FOUND) then
+                                    FOUND=.false.
+                                    IJKSTL=IJKL
+                                    exit TopOuter
+                                else
+                                    cycle TopInner
                                 end if
-                            end do
-                        end do
+                            end do TopInner
+                        end do TopOuter
                 end select
             end if
         end do neighbour
         NFACEBL(B)=NF-FACEBL(B)
         call writeBlockData(B)
     end do
+
+    print *, 'No. iterations: ', iterationsCounter
 
 end subroutine findNeighbours
 

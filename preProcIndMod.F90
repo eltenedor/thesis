@@ -9,6 +9,7 @@ module indMod
                 ITIM,ITIMS,ITIME,&
                 ! Regular Indices block independent (IJKB needed?)
                 I,J,K,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKB,IJKBLOCK,IJKP,&
+                IJKSTL,IJKEL,IJKSTR,IJKER,&
                 ! Indices for complete Blocks
                 B,BB,NB,&
                 ! Indices inside Blocks
