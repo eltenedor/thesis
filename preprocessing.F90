@@ -208,6 +208,7 @@ subroutine findNeighbours
                         !
                         !..........SOUTH..........
                         !
+                        print *, 'SOUTH'
                         SouthOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
@@ -217,6 +218,8 @@ subroutine findNeighbours
                             !
                             SouthInner: do IJKR=IJKSTR,IJKER
                                 iterationsCounter=iterationsCounter+1
+                                !print *, iterationsCounter
+                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
                                 !
                                 XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
                                 XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
@@ -257,6 +260,7 @@ subroutine findNeighbours
                         !
                         !..........NORTH..........
                         !
+                        print *, 'NORTH'
                         NorthOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
@@ -266,6 +270,8 @@ subroutine findNeighbours
                             !
                             NorthInner: do IJKR=IJKSTR,IJKER
                                 iterationsCounter=iterationsCounter+1
+                                !print *, iterationsCounter
+                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
                                 !
                                 XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
                                 XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
@@ -306,6 +312,7 @@ subroutine findNeighbours
                         !
                         !..........WEST..........
                         !
+                        print *, 'WEST'
                         WestOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
@@ -315,6 +322,8 @@ subroutine findNeighbours
                             !
                             WestInner: do IJKR=IJKSTR,IJKER
                                 iterationsCounter=iterationsCounter+1
+                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, iterationsCounter
                                 !
                                 XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
                                 XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
@@ -356,6 +365,7 @@ subroutine findNeighbours
                         !
                         !..........EAST..........
                         !
+                        print *, 'EAST'
                         EastOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
@@ -365,6 +375,8 @@ subroutine findNeighbours
                             !
                             EastInner: do IJKR=IJKSTR,IJKER
                                 iterationsCounter=iterationsCounter+1
+                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, iterationsCounter
                                 !
                                 XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
                                 XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
@@ -404,6 +416,7 @@ subroutine findNeighbours
                         !
                         !..........BOTTOM..........
                         !
+                        print *, 'BOTTOM'
                         BottomOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
@@ -413,6 +426,8 @@ subroutine findNeighbours
                             !
                             BottomInner: do IJKR=IJKSTR,IJKER
                                 iterationsCounter=iterationsCounter+1
+                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, iterationsCounter
                                 !
                                 XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
                                 XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
@@ -453,15 +468,18 @@ subroutine findNeighbours
                         !
                         !..........TOP..........
                         !
-                        TopOuter: do IJKL=IJKBLOCKSTL+1,IJKBLOCKSTL+NBLOCKL
+                        print *, 'TOP'
+                        TopOuter: do IJKL=IJKSTL,IJKEL
                             !
                             XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
                             XYZL(4:6)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
                             XYZL(7:9)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
                             XYZL(10:12)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
                             !
-                            TopInner: do IJKR=IJKBLOCKSTR+1,IJKBLOCKSTR+NBLOCKR
+                            TopInner: do IJKR=IJKSTR,IJKER
                                 iterationsCounter=iterationsCounter+1
+                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, iterationsCounter
                                 !
                                 XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
                                 XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
