@@ -3,10 +3,13 @@ program grgen
 !########################################################
 
     use indexModule
+    use charModule
     implicit none
 
     print *, ' TOTAL NUMBER OF BLOCKS: '
     read(*,*) NB
+    print *, ' NAME OF INPUT FILE (NAME.inp, * - KEYBOARD)'
+    read *, FILIN
 
     ! Create one grid.out and grid.vtk for each block
     do B=1,NB
@@ -32,11 +35,12 @@ subroutine readData
 
     integer :: ITYP
     
-    PRINT *, ' INPUT FILE NAME (* - KEYBOARD):  '
-    READ(*,1) FILIN
-  1 FORMAT(A12)
+    write(BLOCK_CH,'(I1)') B
+    BLOCKFILE=trim(FILIN)//'_'//trim(BLOCK_CH)//'.inp'
+    !PRINT *, ' INPUT FILE NAME (* - KEYBOARD):  '
+    !READ(*,1) FILIN
     IF(FILIN.NE.'*') THEN
-        OPEN (UNIT=2,FILE=FILIN)
+        OPEN (UNIT=2,FILE=BLOCKFILE)
         REWIND 2
         ITYP=0
     ELSE
@@ -52,6 +56,7 @@ subroutine readData
     ELSE
         READ(2,1) FILOUT
     ENDIF
+    1 FORMAT(A12)
 
     OPEN (UNIT=3,FILE=FILOUT)
     REWIND 3
@@ -687,7 +692,7 @@ subroutine writeParamMod
     write(9,'(A10 I6 A1)') ',NBLOCKAL=', NBLOCKA, '&'
     write(9,'(A9 I6 A1)')   ',NBLOCKS=',NB,'&'
     write(9,'(A6 I1 A1)') ',PREC=',PREC,'&'
-    write(9,'(A9 I5 A1)') ',NFACEAL=',10000
+    write(9,'(A9 I6 A1)') ',NFACEAL=',100000
     write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParamMod

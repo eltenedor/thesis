@@ -802,7 +802,7 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
         do I=2,NIM
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            FIN=FI(IJK+NIJ)*FZ(IJK)+FI(IJK)*(1.0d0-FZ(IJK))
+            FIT=FI(IJK+NIJ)*FZ(IJK)+FI(IJK)*(1.0d0-FZ(IJK))
 
             IJK4=IJK
             IJK3=IJK4-NJ
@@ -815,16 +815,16 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             SY=AR*NY
             SZ=AR*NZ
 
-            DFXN=FIN*SX
-            DFYN=FIN*SY
-            DFZN=FIN*SZ
+            DFXT=FIT*SX
+            DFYT=FIT*SY
+            DFZT=FIT*SZ
 
-            DFX(IJK)=DFX(IJK)+DFXN
-            DFY(IJK)=DFY(IJK)+DFYN
-            DFZ(IJK)=DFZ(IJK)+DFZN
-            DFX(IJK+1)=DFX(IJK+1)-DFXN
-            DFY(IJK+1)=DFY(IJK+1)-DFYN
-            DFZ(IJK+1)=DFZ(IJK+1)-DFZN
+            DFX(IJK)=DFX(IJK)+DFXT
+            DFY(IJK)=DFY(IJK)+DFYT
+            DFZ(IJK)=DFZ(IJK)+DFZT
+            DFX(IJK+1)=DFX(IJK+1)-DFXT
+            DFY(IJK+1)=DFY(IJK+1)-DFYT
+            DFZ(IJK+1)=DFZ(IJK+1)-DFZT
         end do
         end do
         end do
@@ -855,19 +855,19 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
     !
         !print *, '      CALC CONTRIBUTION FROM BLOCK BOUNDARIES'
         do F=FACEST+1,FACEST+NFACE
-            FIN=FIR(F)*FF(F)+FI(L(F))*(1.0d0-FF(F))
+            FIF=FIR(F)*FF(F)+FI(L(F))*(1.0d0-FF(F))
             
             SX=ARF(F)*NXF(F)
             SY=ARF(F)*NYF(F)
             SZ=ARF(F)*NZF(F)
             
-            DFXN=FIN*SX
-            DFYN=FIN*SY
-            DFZN=FIN*SZ
+            DFXF=FIF*SX
+            DFYF=FIF*SY
+            DFZF=FIF*SZ
             
-            DFX(L(F))=DFX(L(F))+DFXN
-            DFY(L(F))=DFY(L(F))+DFYN
-            DFZ(L(F))=DFZ(L(F))+DFZN
+            DFX(L(F))=DFX(L(F))+DFXF
+            DFY(L(F))=DFY(L(F))+DFYF
+            DFZ(L(F))=DFZ(L(F))+DFZF
         end do
     !
     !.....CALCULATE GRADIENT COMPONENTS AT CV-CENTERS

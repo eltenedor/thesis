@@ -23,7 +23,6 @@ grgen: $(OBJS)
 	@echo
 	@echo 'Invoking Fortran Linker'
 	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
-	@rm -rf *.o *.mod
 	@echo
 	@echo 'DONE'
 
