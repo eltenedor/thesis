@@ -1,8 +1,8 @@
 !#########################################################
-module geo
+module geoModule
 !#########################################################
 
-    use param
+    use parameterModule
     implicit none
     real(KIND=PREC) ::  X(NXYZA),Y(NXYZA),Z(NXYZA), &
                         XC(NXYZA),YC(NXYZA),ZC(NXYZA), &
@@ -104,7 +104,7 @@ subroutine normalAreaFace(XYZC,L,R,ARR,DNN,XPNN,YPNN,ZPNN,NXX,NYY,NZZ)
     NYY = (X2-X3)*(Z3-Z4)-(X3-X4)*(Z2-Z3)
     NZZ = -(X2-X3)*(Y3-Y4)+(X3-X4)*(Y2-Y3)
     !
-    ARR = SQRT(NXX**2+NYY**2+NZZ**2)
+    ARR = sqrt(NXX**2+NYY**2+NZZ**2)
     !            
     ! UNITY NORMAL VECTOR OF FACE
     !
@@ -118,7 +118,7 @@ subroutine normalAreaFace(XYZC,L,R,ARR,DNN,XPNN,YPNN,ZPNN,NXX,NYY,NZZ)
     YPNN=abs(YC(R)-YC(L))
     ZPNN=abs(ZC(R)-ZC(L))
     !
-    DNN=SQRT(XPNN**2+YPNN**2+ZPNN**2)
+    DNN=sqrt(XPNN**2+YPNN**2+ZPNN**2)
     !
 end subroutine normalAreaFace
 
@@ -145,7 +145,8 @@ end subroutine calcGrad
 subroutine reverseOrder(XYZC)
 !#########################################################
 ! Used to reverse order of face vertices
-! needed for correct calculation of normal vector
+! needed for correct calculation of normal vector:
+! normal vector has to point outwards
 
     implicit none
     real(KIND=PREC), intent(inout) :: XYZC(12)
@@ -159,4 +160,4 @@ subroutine reverseOrder(XYZC)
     
 end subroutine reverseOrder
     
-end module geo
+end module geoModule

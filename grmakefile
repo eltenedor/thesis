@@ -10,11 +10,11 @@ CCPPFLAGS := -c -Wall -Wno-unused-variable
 DPATH := ../order_verification/blockStructured/test/
 
 OBJS := \
-	param.o \
-	bc.o \
-	ch.o \
-	geo.o \
-	ind.o \
+	parameterModule.o \
+	boundaryModule.o \
+	charModule.o \
+	geoModule.o \
+	indexModule.o \
 	grgen.o \
 	
 all: grgen
@@ -27,19 +27,8 @@ grgen: $(OBJS)
 	@echo
 	@echo 'DONE'
 
-#special rules	
-param.o: paramIng.F90
-	@echo
-	@echo 'Invoking Fortran Compiler'
-	$(CFORT) $(CFORTFLAGS) $< -o $@
-	
-grgen.o: grgen.F90
-	@echo
-	@echo 'Invoking Fortran Compiler'
-	$(CFORT) $(CFORTFLAGS) $< -o $@
-	
 #normal rule (Modules)
-%.o: %Mod.F90
+%.o: %.F90
 	@echo
 	@echo 'Invoking Fortran Compiler'
 	$(CFORT) $(CFORTFLAGS) $< -o $@

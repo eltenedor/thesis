@@ -1,5 +1,5 @@
+module parameterModule
 ! File with Dummy Parameters
-module param
 
     implicit none
     !integer, parameter :: NXA=2030,NYA=2030,NXYA=4120900, NWA=9000,PREC=8
@@ -9,4 +9,4 @@ module param
     integer, parameter :: NXA=130,NYA=130,NZA=130,NXYZA=21970000,NDIRAL=983040,NBLOCKAL=983040,PREC=8,NBLOCKS=10,NFACEAL=100000
 
 
-end module param
+end module parameterModule

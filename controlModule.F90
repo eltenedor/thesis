@@ -1,4 +1,4 @@
-module logic
+module controlModule
 
     implicit none
     logical, parameter :: LTIME=.false.
@@ -9,4 +9,4 @@ module logic
     integer,parameter :: PROCOFFSET=10,BLOCKOFFSET=20
     real*8 :: tges
 
-end module logic
+end module controlModule

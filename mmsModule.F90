@@ -1,8 +1,8 @@
 !#########################################################
-module mms
+module mmsModule
 !#########################################################
 
-    use logic, only: LTIME
+    use controlModule, only: LTIME
     implicit none
     
 contains
@@ -11,7 +11,7 @@ contains
 function phi(x,y,z,t) result(phi_res)
 !####################################################
 
-    use sc
+    use scalarModule
     implicit none
     
     real*8, intent(in) :: x, y, z, t
@@ -29,7 +29,7 @@ end function phi
 function src(x,y,z,t) result(src_res)
 !####################################################
 
-    use sc
+    use scalarModule
     implicit none
     
     real*8, intent(in) :: x,y,z,t
@@ -48,7 +48,7 @@ end function src
 function vel(x,y,z,t) result(vel_res)
 !####################################################
 
-    use sc
+    use scalarModule
     implicit none
     
     real*8, intent(in) :: x,y,z,t
@@ -65,7 +65,7 @@ end function vel
 function velx(x,y) result(velx_res)
 !####################################################
 
-    use sc
+    use scalarModule
     implicit none
     
     real*8, intent(in) :: x,y
@@ -79,7 +79,7 @@ end function velx
 function vely(x,y) result(vely_res)
 !####################################################
 
-    use sc
+    use scalarModule
     implicit none
     
     real*8, intent(in) :: x,y
@@ -89,4 +89,4 @@ function vely(x,y) result(vely_res)
     
 end function vely
 
-end module mms
+end module mmsModule

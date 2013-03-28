@@ -12,11 +12,12 @@ CCPPFLAGS := -c -Wall -Wno-unused-variable
 DPATH := ../order_verification/blockStructured/test/
 
 OBJS := \
-	param.o \
-	bc.o \
-	geo.o \
-	logic.o \
-	preprocind.o \
+	$(DPATH)parameterModule.o \
+	boundaryModule.o \
+	charModule.o \
+	geoModule.o \
+	controlModule.o \
+	indexModule.o \
 	occtFunc.o \
 	preprocessing.o \
 
@@ -27,18 +28,9 @@ preprocessing: $(OBJS)
 	@echo
 	@echo 'Invoking Fortran Linker'
 	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
+	@rm -rf *.o *.mod
 	@echo
 	@echo 'DONE'
-    
-param.o: $(DPATH)paramMod.F90
-	@echo
-	@echo 'Invoking Fortran Compiler'
-	$(CFORT) $(CFORTFLAGS) $< -o $@
-	
-preprocind.o: preProcIndMod.F90
-	@echo
-	@echo 'Invoking Fortran Compiler'
-	$(CFORT) $(CFORTFLAGS) $< -o $@
 	
 preprocessing.o: preprocessing.F90
 	@echo
@@ -51,11 +43,10 @@ occtFunc.o: occtFunc.cpp
 	$(CCPP) $(CCPPFLAGS) $(INCLUDES) $< -o $@
 	
 # Compile Modules
-%.o: %Mod.F90
+%.o: %.F90
 	@echo
 	@echo 'Invoking Fortran Compiler'
 	$(CFORT) $(CFORTFLAGS) $< -o $@
-	
 
 clean:
 	rm -rf *.o *.mod

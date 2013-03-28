@@ -1,10 +1,12 @@
-module flux
+module fluxModule
     
-    use param
+    use parameterModule
     implicit none
     
     real(KIND=PREC) ::  VSOL,FACP,G,&
                         FII,DFXI,DFYI,DFZI,&
                         FCFIE,FDFIE,FCFII,FDFII,FFIC
+                        
+                        !auch anpassen an dirBdFlux
 
-end module flux
+end module fluxModule

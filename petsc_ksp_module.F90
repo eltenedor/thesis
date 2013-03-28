@@ -39,7 +39,7 @@ end subroutine setUpKSP
 subroutine solveSys(A,b,x,N,LS,tol)
 !#########################################################
 
-    use logic
+    use controlModule
     implicit none
 #include <finclude/petscsys.h>
 #include <finclude/petscvec.h>

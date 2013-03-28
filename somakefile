@@ -15,20 +15,19 @@ CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
 DPATH := ../order_verification/blockStructured/test/
 
 OBJS := \
-	param.o \
-	logic.o \
-	bc.o \
-	ch.o \
-	flux.o \
-	geo.o \
-	grad.o \
-	ind.o \
-	preProcInd.o \
-	var.o \
-	sc.o \
-	mms.o \
+	$(DPATH)parameterModule.o \
+	boundaryModule.o \
+	charModule.o \
+	controlModule.o \
+	fluxModule.o \
+	geoModule.o \
+	gradModule.o \
+	indexModule.o \
+	varModule.o \
+	scalarModule.o \
+	mmsModule.o \
 	petsc_ksp_module.o \
-	coef.o \
+	coefModule.o \
 	solver.o \
 	
 all: solver
@@ -41,7 +40,7 @@ solver: $(OBJS)
 	@echo 'DONE'
 	
 #default for modules (no-petsc modules!)
-%.o: %Mod.F90
+%.o: %.F90
 	@echo
 	@echo 'Invoking Fortran Compiler'
 	$(CFORT) $(CFORTFLAGS) $< -o $@
@@ -52,16 +51,10 @@ petsc_ksp_module.o: petsc_ksp_module.F90
 	@echo 'Invoking MPIF90 Compiler'
 	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
 
-coef.o: coefMod.F90
+coefModule.o: coefModule.F90
 	@echo
 	@echo 'Invoking MPIF90 Compiler'
 	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@	
-	
-#special treatment for param.o
-param.o: $(DPATH)paramMod.F90
-	@echo
-	@echo 'Invoking Fortran Compiler'
-	$(CFORT) $(CFORTFLAGS) $< -o $@
 	
 #compile solver.F90
 solver.o: solver.F90

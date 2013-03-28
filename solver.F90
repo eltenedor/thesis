@@ -3,20 +3,17 @@
 program main
 !#########################################################
 
-    use ch
-    use coef
-    use indMod
-    use logic
+    use charModule
+    use coefModule
+    use indexModule
+    use controlModule
     use petsc_ksp_module
-    use sc
-    use var
+    use scalarModule
+    use varModule
     implicit none
 #include <finclude/petscsys.h>
 
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-
-    !open(unit=2,FILE='grid.out')
-    !rewind 2
 
     open(unit=9,FILE='ERR.out')
     rewind 9
@@ -80,23 +77,21 @@ end program main
 subroutine init
 !#########################################################
     
-    use bc
-    use coef
-    use geo
-    use indMod
+    use boundaryModule
+    use coefModule
+    use charModule
+    use geoModule
+    use indexModule
     !use preProcInd
-    use logic
-    use param
-    use var
+    use controlModule
+    use parameterModule
+    use varModule
     implicit none
 #include <finclude/petscsys.h>
 #include <finclude/petscksp.h>
 #include <finclude/petscpc.h>
 
     PetscErrorCode :: ierr
-    integer :: BLOCKUNIT,PROC,PROCUNIT
-    !integer, dimension(:), allocatable :: B_GLO
-    character(len=20) :: BLOCKFILE,BLOCK_CH,PROCFILE,PROC_CH
 
     PROC=0
     write(PROC_CH,'(I1)') PROC
@@ -257,10 +252,10 @@ end subroutine init
 subroutine setField
 !#########################################################
 
-    use geo
-    use indMod
-    use mms
-    use var
+    use geoModule
+    use indexModule
+    use mmsModule
+    use varModule
     implicit none
 
     do B=1,NB
@@ -281,15 +276,12 @@ end subroutine setField
 subroutine writeVtk
 !#########################################################
 
-    use ch
-    use geo
-    use indMod
-    use logic
-    use var
+    use charModule
+    use geoModule
+    use indexModule
+    use controlModule
+    use varModule
     implicit none
-
-    character(10) :: TIME_CH,BLOCK_CH
-    integer :: BLOCKUNIT
 
     do B=1,NB
         call setBlockInd(B)
@@ -340,13 +332,13 @@ end subroutine writeVtk
 subroutine updateDir
 !#########################################################
 
-    use bc
-    use geo
-    use indMod
-    use mms
-    use sc
-    use param
-    use var
+    use boundaryModule
+    use geoModule
+    use indexModule
+    use mmsModule
+    use scalarModule
+    use parameterModule
+    use varModule
     implicit none
 
     do B=1,NB
@@ -364,13 +356,13 @@ end subroutine updateDir
 subroutine updateGhost
 !#########################################################
 
-    use bc
-    use geo
-    use indMod
-    use mms
-    use sc
-    use param
-    use var
+    use boundaryModule
+    use geoModule
+    use indexModule
+    use mmsModule
+    use scalarModule
+    use parameterModule
+    use varModule
     implicit none
 
     do B=1,NB
@@ -419,17 +411,17 @@ end subroutine updateGhost
 subroutine calcSc
 !#########################################################
 
-    use bc
-    use coef
-    use geo
-    use grad
-    use indMod
+    use boundaryModule
+    use coefModule
+    use geoModule
+    use gradModule
+    use indexModule
     !use preProcInd
-    use mms
+    use mmsModule
     use petsc_ksp_module
-    use sc
-    use logic
-    use var
+    use scalarModule
+    use controlModule
+    use varModule
     implicit none
 #include <finclude/petscsys.h>
 #include <finclude/petscvec.h>
@@ -710,12 +702,12 @@ end subroutine calcSc
 subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
 !################################################################
 
-    use bc
-    use geo
-    use grad
-    use indMod
-    use param
-    use sc
+    use boundaryModule
+    use geoModule
+    use gradModule
+    use indexModule
+    use parameterModule
+    use scalarModule
     implicit none
 
     real(KIND=PREC), intent(in out) :: FI(NIJK),FIR(NFACE),DFX(NIJK),DFY(NIJK),DFZ(NIJK)
@@ -898,13 +890,13 @@ end subroutine gradfi
 subroutine updateGrad
 !################################################################
 
-    use bc
-    !use geo
-    use indMod
-    !use mms
-    !use sc
-    use param
-    use var
+    use boundaryModule
+    !use geoModule
+    use indexModule
+    !use mmsModule
+    !use scalarModule
+    use parameterModule
+    use varModule
     implicit none
 
     do B=1,NB
@@ -922,14 +914,14 @@ end subroutine updateGrad
 subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
 !################################################################
         
-    use bc
-    use coef
-    use flux
-    use geo
-    use indMod, only: MIJK
-    use sc
-    use param
-    use var
+    use boundaryModule
+    use coefModule
+    use fluxModule
+    use geoModule
+    use indexModule, only: MIJK
+    use scalarModule
+    use parameterModule
+    use varModule
     implicit none
     real(KIND=PREC), intent(in) :: FM,FAC
     integer, intent(in) :: IJKP,IJKN,IJK2,IJK3,IJK4
@@ -980,13 +972,13 @@ end subroutine fluxsc
 subroutine dirBdFlux
 !################################################################
 
-    use bc
-    use coef
-    use geo
-    use indMod
-    use sc
-    use param
-    use var
+    use boundaryModule
+    use coefModule
+    use geoModule
+    use indexModule
+    use scalarModule
+    use parameterModule
+    use varModule
     implicit none
 
     real(KIND=PREC) :: COEFC,COEFD,ZERO
@@ -1023,14 +1015,14 @@ end subroutine dirBdFlux
 subroutine blockBdFlux
 !################################################################
 
-    use bc
-    use coef
-    use flux
-    use geo
-    use indMod
-    use sc
-    use param
-    use var
+    use boundaryModule
+    use coefModule
+    use fluxModule
+    use geoModule
+    use indexModule
+    use scalarModule
+    use parameterModule
+    use varModule
     implicit none
     real(KIND=PREC) :: ZERO,SMALL
     real(KIND=PREC) :: FAC,FM
@@ -1081,12 +1073,12 @@ end subroutine blockBdFlux
 subroutine calcErr
 !################################################################
 
-    use geo
-    use indMod
-    use logic
-    use mms
-    use param
-    use var
+    use geoModule
+    use indexModule
+    use controlModule
+    use mmsModule
+    use parameterModule
+    use varModule
     implicit none
 
     real(KIND=PREC) :: E,ER

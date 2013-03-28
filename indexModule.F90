@@ -1,14 +1,16 @@
 !########################################################
-module indMod
+module indexModule
 !########################################################
 
-    use param
+    use parameterModule
     implicit none
     integer ::  &
                 ! Time stepping indices
                 ITIM,ITIMS,ITIME,&
+                ! Global Size Variables
+                NIA,NJA,NKA,NIJA,NIJKA,NDIRA,NBLOCKA,&
                 ! Regular Indices block independent (IJKB needed?)
-                I,J,K,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKB,IJKBLOCK,IJKP,&
+                I,J,K,IJ,IK,JK,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKB,IJKBLOCK,IJKP,&
                 IJKSTL,IJKEL,IJKSTR,IJKER,&
                 ! Indices for complete Blocks
                 B,BB,NB,&
@@ -16,6 +18,8 @@ module indMod
                 IJKL,IJKR,&
                 ! Neighbour Block Indices
                 INEIGH,NEIGH(NBLOCKS,6),&
+                ! Indices storing boundary type, only needed in grgen
+                P,ITB(2,NXA*NZA),JTB(2,NYA*NZA),KTB(2,NXA*NZA),&
                 ! block dependent regular indices
                 IST,IBL(NBLOCKS),NIBL(NBLOCKS),&
                 JST,JBL(NBLOCKS),NJBL(NBLOCKS),&
@@ -68,7 +72,7 @@ end subroutine setBlockInd2Int
 subroutine setBlockInd1Int(B)
 !########################################################
 
-    use geo, only : DX,DY,DZ,VOL,DXBL,DYBL,DZBL,VOLBL
+    use geoModule, only : DX,DY,DZ,VOL,DXBL,DYBL,DZBL,VOLBL
     implicit none
     integer, intent(in) :: B
     
@@ -107,4 +111,4 @@ subroutine setBlockInd1Int(B)
 
 end subroutine setBlockInd1Int
 
-end module indMod
+end module indexModule

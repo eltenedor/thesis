@@ -2,7 +2,7 @@
 program grgen
 !########################################################
 
-    use ind
+    use indexModule
     implicit none
 
     print *, ' TOTAL NUMBER OF BLOCKS: '
@@ -24,10 +24,10 @@ end program grgen
 subroutine readData
 !########################################################
 
-    use bc
-    use ch
-    use geo
-    use ind
+    use boundaryModule
+    use charModule
+    use geoModule
+    use indexModule
     implicit none
 
     integer :: ITYP
@@ -102,8 +102,8 @@ end subroutine readData
 subroutine cartesian
 !########################################################
 
-    use geo
-    use ind
+    use geoModule
+    use indexModule
     implicit none
     
     ! Initialize all values with zero
@@ -163,13 +163,11 @@ end subroutine cartesian
 subroutine gridExport
 !########################################################
 
-    use bc
-    use ch
-    use geo
-    use ind
+    use boundaryModule
+    use charModule
+    use geoModule
+    use indexModule
     implicit none
-
-    character(10) :: OUT_CH
 
     DX=(XXE-XXS)/dble(NICV)
     DY=(YYE-YYS)/dble(NJCV)
@@ -213,8 +211,8 @@ subroutine gridExport
     !    write(3,*) XC(I), YC(I), ZC(I)
     !end do
 
-    write(OUT_CH,'(I1)') B
-    VTKFILE='grid_'//trim(OUT_CH)//'.vtk'
+    write(BLOCK_CH,'(I1)') B
+    VTKFILE='grid_'//trim(BLOCK_CH)//'.vtk'
 
 !...Create .vtk file
     print *, ' *** GENERATING .VTK *** '
@@ -240,8 +238,8 @@ end subroutine gridExport
 subroutine setBc
 !########################################################
 
-    use bc
-    use ind
+    use boundaryModule
+    use indexModule
     implicit none
 
     do P=1,6
@@ -283,8 +281,8 @@ end subroutine setBc
 subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
 !########################################################
 
-    use bc
-    use ind
+    use boundaryModule
+    use indexModule
     implicit none
     integer, intent(in) :: LT
     integer, dimension(N), intent(inout) :: IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4
@@ -416,9 +414,9 @@ end subroutine defBc
 subroutine calcG
 !########################################################
 
-    use bc
-    use geo
-    use ind
+    use boundaryModule
+    use geoModule
+    use indexModule
     implicit none
     real*8 ::   DLPE,DLEE,DLPN,DLNN,DLPT,DLTT,&
                 XE,YE,ZE,XN,YN,ZN,XT,YT,ZT, &
@@ -650,17 +648,17 @@ subroutine calcG
 !
 !....Normal distance from cell face center to cell center
 !
-    do IDI=1,NDIR
-        IJKB=IJKBDI(IDI)
-        IJKP=IJKPDI(IDI)
-        !IJK1=IJKDI1(IDI)
-        IJK2=IJKDI2(IDI)
-        IJK3=IJKDI3(IDI)
-        IJK4=IJKDI4(IDI)
+    do IJKDIR=1,NDIR
+        IJKB=IJKBDI(IJKDIR)
+        IJKP=IJKPDI(IJKDIR)
+        !IJK1=IJKDI1(IJKDIR)
+        IJK2=IJKDI2(IJKDIR)
+        IJK3=IJKDI3(IJKDIR)
+        IJK4=IJKDI4(IJKDIR)
         !
         call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
-        SRDDI(IDI)=AR/(DN+SMALL)
+        SRDDI(IJKDIR)=AR/(DN+SMALL)
     end do
 
 end subroutine calcG
@@ -669,18 +667,18 @@ end subroutine calcG
 subroutine writeParamMod
 !########################################################
 
-    use bc
-    use geo
-    use ind
+    use boundaryModule
+    use geoModule
+    use indexModule
     implicit none
 
 !...Create solver file
     !OPEN(UNIT=9,FILE='../../../pet_src/paramMod.F90')
-    OPEN(UNIT=9,FILE='paramMod.F90')
+    OPEN(UNIT=9,FILE='parameterModule.F90')
     REWIND 9
     
-    write(9,'(A16)') 'module param'
-    write(9,'(A18)') '  implicit none'
+    write(9,'(A22)') 'module parameterModule'
+    write(9,'(A13)') 'implicit none'
     write(9,'(A22 A4 I6 A1)') 'integer, parameter :: ', 'NXA=', NIA,'&' 
     write(9,'(A5 I6 A1)') ',NYA=', NJA, '&'
     write(9,'(A5 I6 A1)') ',NZA=', NKA, '&'
@@ -690,6 +688,6 @@ subroutine writeParamMod
     write(9,'(A9 I6 A1)')   ',NBLOCKS=',NB,'&'
     write(9,'(A6 I1 A1)') ',PREC=',PREC,'&'
     write(9,'(A9 I5 A1)') ',NFACEAL=',10000
-    write(9,'(A)') 'end module param'
+    write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParamMod

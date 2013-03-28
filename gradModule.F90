@@ -1,8 +1,8 @@
-module grad
+module gradModule
 
-    use param
+    use parameterModule
     implicit none
 
     real(KIND=PREC) ::  FIE,DFXE,DFYE,DFZE,FIN,DFXN,DFYN,DFZN
 
-end module grad
+end module gradModule

@@ -24,7 +24,7 @@ program main
     call findNeighbours
     call cpu_time(T2)
     print *, 'T2-T1 = ', T2-T1
-    call writeParam
+    call writeParameterModule
 
 end program main
 
@@ -32,20 +32,18 @@ end program main
 subroutine readData
 !#########################################################
 
-    use bc
-    use geo
-    use param
-    use indMod
+    use boundaryModule
+    use charModule
+    use geoModule
+    use parameterModule
+    use indexModule
     implicit none
-
-    integer :: BLOCKUNIT,OFFSET
-    character(len=20) :: UNIT_CH,BLOCKFILE
     
     NB=NBLOCKS
     OFFSET=20
     BLOCKUNIT=OFFSET+1
-    write(UNIT_CH,'(I1)') (BLOCKUNIT-OFFSET)
-    BLOCKFILE='grid_'//trim(UNIT_CH)//'.pre'
+    write(BLOCK_CH,'(I1)') (BLOCKUNIT-OFFSET)
+    BLOCKFILE='grid_'//trim(BLOCK_CH)//'.pre'
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
@@ -66,8 +64,8 @@ subroutine readData
     
     do B=2,NB
         BLOCKUNIT=OFFSET+B
-        write(UNIT_CH,'(I1)') (BLOCKUNIT-OFFSET)
-        BLOCKFILE='grid_'//trim(UNIT_CH)//'.pre'
+        write(BLOCK_CH,'(I1)') (BLOCKUNIT-OFFSET)
+        BLOCKFILE='grid_'//trim(BLOCK_CH)//'.pre'
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         rewind BLOCKUNIT
         read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NBLOCK,NDIR
@@ -166,10 +164,10 @@ subroutine findNeighbours
 !#########################################################
 
     use iso_c_binding
-    use bc
-    use geo
-    use logic
-    use indMod
+    use boundaryModule
+    use geoModule
+    use controlModule
+    use indexModule
     implicit none
     integer :: iterationsCounter
 
@@ -530,9 +528,9 @@ end subroutine findNeighbours
 subroutine writeBlockData(IB)
 !#####################################################
 
-    use bc
-    use geo
-    use indMod
+    use boundaryModule
+    use geoModule
+    use indexModule
     implicit none
     integer,intent(in) :: IB
     integer :: BLOCKUNIT,OFFSET
@@ -615,7 +613,7 @@ end subroutine writeBlockData
 subroutine createMapping
 !#####################################################
     
-    use indMod
+    use indexModule
     implicit none
 
     IJK_GLO=-1
@@ -637,13 +635,13 @@ subroutine createMapping
 end subroutine createMapping
 
 !#####################################################
-subroutine writeParam
+subroutine writeParameterModule
 !#####################################################
 
-    use indMod
+    use indexModule
     implicit none
 
-    OPEN(UNIT=9,FILE='paramMod.F90')
+    OPEN(UNIT=9,FILE='parameterModule.F90')
     REWIND 9
     read(9,*) !'module param'
     read(9,*) !'  implicit none'
@@ -656,6 +654,6 @@ subroutine writeParam
     read(9,*) !  ',NBLOCKS=',NB,'&'
     read(9,*) !',PREC=',PREC,'&'
     write(9,'(A9 I5 A1)') ',NFACEAL=',NF
-    write(9,'(A)') 'end module param'
+    write(9,'(A)') 'end module parameterModule'
 
-end subroutine writeParam
+end subroutine writeParameterModule

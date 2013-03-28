@@ -1,6 +1,6 @@
-module bc
+module boundaryModule
 
-    use param
+    use parameterModule
     implicit none
     integer ::  IJKBDI(NDIRAL), IJKPDI(NDIRAL), IJKDI1(NDIRAL), IJKDI2(NDIRAL), IJKDI3(NDIRAL), IJKDI4(NDIRAL), &
     
@@ -23,4 +23,4 @@ module bc
                         XPNF(NFACEAL),YPNF(NFACEAL),ZPNF(NFACEAL),&
                         NXF(NFACEAL),NYF(NFACEAL),NZF(NFACEAL)
 
-end module bc
+end module boundaryModule

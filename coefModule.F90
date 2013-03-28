@@ -1,6 +1,6 @@
-module coef
+module coefModule
 
-    use param
+    use parameterModule
     implicit none
 #include <finclude/petscvecdef.h>
 #include <finclude/petscmatdef.h>
@@ -16,4 +16,4 @@ module coef
     PetscInt :: row, col(7),col1
     PetscScalar :: val(7),val1,valq,valt,tol,minres
 
-end module coef
+end module coefModule
