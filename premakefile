@@ -28,22 +28,16 @@ preprocessing: $(OBJS)
 	@echo
 	@echo 'Invoking Fortran Linker'
 	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
-	@rm -rf *.o *.mod
+	@rm -rf *.o *.mod $(DPATH)*.o $(DPATH)*.mod
 	@echo
 	@echo 'DONE'
 	
-preprocessing.o: preprocessing.F90
-	@echo
-	@echo 'Invoking Fortran Compiler'
-	$(CFORT) $(CFORTFLAGS) $< -o $@
-
-occtFunc.o: occtFunc.cpp
+%.o: %.cpp
 	@echo
 	@echo 'Invoking C++ Compiler'
 	$(CCPP) $(CCPPFLAGS) $(INCLUDES) $< -o $@
 	
-# Compile Modules
-%.o: %.F90
+%.o: %.f90
 	@echo
 	@echo 'Invoking Fortran Compiler'
 	$(CFORT) $(CFORTFLAGS) $< -o $@

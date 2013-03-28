@@ -641,7 +641,7 @@ subroutine writeParameterModule
     use indexModule
     implicit none
 
-    OPEN(UNIT=9,FILE='parameterModule.F90')
+    OPEN(UNIT=9,FILE='parameterModule.f90')
     REWIND 9
     read(9,*) !'module param'
     read(9,*) !'  implicit none'

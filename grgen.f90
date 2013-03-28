@@ -674,7 +674,7 @@ subroutine writeParamMod
 
 !...Create solver file
     !OPEN(UNIT=9,FILE='../../../pet_src/paramMod.F90')
-    OPEN(UNIT=9,FILE='parameterModule.F90')
+    OPEN(UNIT=9,FILE='parameterModule.f90')
     REWIND 9
     
     write(9,'(A22)') 'module parameterModule'

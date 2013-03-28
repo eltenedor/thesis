@@ -27,8 +27,7 @@ grgen: $(OBJS)
 	@echo
 	@echo 'DONE'
 
-#normal rule (Modules)
-%.o: %.F90
+%.o: %.f90
 	@echo
 	@echo 'Invoking Fortran Compiler'
 	$(CFORT) $(CFORTFLAGS) $< -o $@

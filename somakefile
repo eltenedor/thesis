@@ -40,26 +40,15 @@ solver: $(OBJS)
 	@echo 'DONE'
 	
 #default for modules (no-petsc modules!)
-%.o: %.F90
+%.o: %.f90
 	@echo
 	@echo 'Invoking Fortran Compiler'
 	$(CFORT) $(CFORTFLAGS) $< -o $@
 	
 #petsc modules
-petsc_ksp_module.o: petsc_ksp_module.F90
+%.o: %.F90
 	@echo
 	@echo 'Invoking MPIF90 Compiler'
-	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
-
-coefModule.o: coefModule.F90
-	@echo
-	@echo 'Invoking MPIF90 Compiler'
-	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@	
-	
-#compile solver.F90
-solver.o: solver.F90
-	@echo
-	@echo 'Invoking MPF90 Compiler'
 	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
 
 clean:
