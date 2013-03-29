@@ -12,7 +12,7 @@ module coefModule
                        
     Mat :: Amat
     Vec :: solvec,bvec
-    PetscInt, Parameter :: i1=1,i2=2,i5=5,i7=7
+    PetscInt, Parameter :: i1=1,i2=2,i3=3,i5=5,i7=7
     PetscInt :: row, col(7),col1
     PetscScalar :: val(7),val1,valq,valt,tol,minres
 

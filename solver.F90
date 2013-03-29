@@ -12,7 +12,11 @@ program main
     use varModule
     implicit none
 #include <finclude/petscsys.h>
-
+!
+!==========================================================
+!....INPUT DATA AND INITIALIZATION
+!==========================================================
+!
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
 
     open(unit=9,FILE='ERR.out')
@@ -22,12 +26,18 @@ program main
     call init
     print *, 'SETTING UP KSP'
     call setUpKSP
-
+!
+!==========================================================
+!....START TIME LOOP
+!==========================================================
+!
     ITIMS=1
     ITIME=1
-!....START TIME LOOP
     print *, 'STARTING TIMELOOP'
     do ITIM=ITIMS,ITIME
+!
+!.....SHIFT SOLUTIONS IN TIME (OLD = CURRENT)
+!
         if (LTIME) then
             TIME=TIME+DT
             do B=1,NB
@@ -46,8 +56,11 @@ program main
 
        print *, 'UPDATING DIRICHLET BOUNDARIES'
        call updateDir
-
+!
+!==========================================================
 !....START OUTER ITERATIONS
+!==========================================================
+!
         LSG=10000
         !LSG=2
         do LS=1,LSG
@@ -65,9 +78,11 @@ program main
         end do
         !call setField
     end do
-
-    ! Free work space
-
+!
+!==========================================================
+!....FREE WORK SPACE AND FINALIZE PROGRAM
+!==========================================================
+!
     call cleanUp(Amat,bvec,solvec)
     call PetscFinalize(ierr)
 
@@ -82,9 +97,9 @@ subroutine init
     use charModule
     use geoModule
     use indexModule
-    !use preProcInd
     use controlModule
     use parameterModule
+    use scalarModule
     use varModule
     implicit none
 #include <finclude/petscsys.h>
@@ -92,8 +107,22 @@ subroutine init
 #include <finclude/petscpc.h>
 
     PetscErrorCode :: ierr
+    PetscMPIInt :: rank
 
-    PROC=0
+    print *, 'ENTER DT (0 - stationary)'
+    read *, DT
+    if (DT.gt.0.0d0) then
+        LTIME=.true.
+        print *, 'ENTER T_0'
+        read *, T_0
+    else
+        LTIME=.false.
+    end if
+
+    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
+    print *, rank
+
+    PROC=rank
     write(PROC_CH,'(I1)') PROC
     PROCUNIT=PROC+PROCOFFSET
     PROCFILE='proc_'//trim(PROC_CH)//'.inp'
@@ -102,10 +131,6 @@ subroutine init
     rewind PROCUNIT 
 
     read(PROCUNIT,*) NB
-    !print *, NB
-    !
-    !allocate(B_GLO(NB))
-    !
     read(PROCUNIT,*) (B_GLO(B),B=1,NB)
     !print *, (B_GLO(B),B=1,NB)
 
@@ -229,18 +254,18 @@ subroutine init
     call MatCreate(PETSC_COMM_WORLD,Amat,ierr)
     call MatSetType(Amat,MATSEQAIJ,ierr)
     !call MatSetType(Amat,MATMPIAIJ,ierr)
-    call MatSetSizes(Amat,PETSC_DECIDE,PETSC_DECIDE,N,N,ierr)
-    !call MatSetSizes(Amat,N,N,PETSC_DECIDE,PETSC_DECIDE,ierr)
+    !call MatSetSizes(Amat,PETSC_DECIDE,PETSC_DECIDE,N,N,ierr)
+    call MatSetSizes(Amat,N,N,PETSC_DECIDE,PETSC_DECIDE,ierr)
     call MatSetFromOptions(Amat,ierr) 
     
     ! Increase performance during matrix assembly due to preallocation
     call MatSeqAIJSetPreallocation(Amat,i7,PETSC_NULL_INTEGER,ierr)
-    !call MatMPIAIJSetPreallocation(Amat,i7,PETSC_NULL_INTEGER,ierr)
+    !call MatMPIAIJSetPreallocation(Amat,i7,PETSC_NULL_INTEGER,i3,PETSC_NULL_INTEGER,ierr)
 
     ! Create Vector
     call VecCreate(PETSC_COMM_WORLD,solvec,ierr)
-    call VecSetSizes(solvec,PETSC_DECIDE,N,ierr)
-    !call VecSetSizes(solvec,N,PETSC_DECIDE,ierr)
+    !call VecSetSizes(solvec,PETSC_DECIDE,N,ierr)
+    call VecSetSizes(solvec,N,PETSC_DECIDE,ierr)
     call VecSetFromOptions(solvec,ierr)
     call VecDuplicate(solvec,bvec,ierr)
 
@@ -352,9 +377,13 @@ subroutine updateDir
 
 end subroutine updateDir
 
-!########################################################
+!#########################################################
 subroutine updateGhost
 !#########################################################
+!   This routine gathers all necessary neighbour values
+!   needed for the correct calculation of diffusive and 
+!   convective fluxes through block boundary faces
+!=========================================================
 
     use boundaryModule
     use geoModule
@@ -407,16 +436,18 @@ subroutine updateGhost
     
 end subroutine updateGhost
 
-!#########################################################
+!#############################################################
 subroutine calcSc
-!#########################################################
+!#############################################################
+!     This routine discretizes (FVM) and solves the scalar transport
+!     equation.
+!=============================================================
 
     use boundaryModule
     use coefModule
     use geoModule
     use gradModule
     use indexModule
-    !use preProcInd
     use mmsModule
     use petsc_ksp_module
     use scalarModule
@@ -435,12 +466,14 @@ subroutine calcSc
     !print *, '  CALCULATE CV-CENTER GRADIENTS'
     call gradfi(T,TR,DTX,DTY,DTZ)
     call updateGrad
-
-    ! START BLOCK LOOP
+!
+!.....START BLOCK LOOP
+!
     do B=1,NB
         call setBlockInd(B)
-
-        ! initialize Q and AP
+!
+!.....INITIALIZE Q AND AP
+!
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
@@ -450,12 +483,9 @@ subroutine calcSc
         end do
         end do
         end do
-
-        !do F=FACEST+1,FACEST+NFACE
-        !    AF(F)=0.0d0
-        !end do
-
-        ! FLUXES THROUGH EAST FACE
+!
+!.....FLUXES THROUGH EAST FACE
+!
         do K=2,NKM
         do I=2,NIM-1
         do J=2,NJM
@@ -464,9 +494,9 @@ subroutine calcSc
         end do
         end do
         end do
-
-
-        ! FLUXES THROUGH NORTH FACE
+!
+!.....FLUXES THROUGH NORTH FACE
+!
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM-1
@@ -475,8 +505,9 @@ subroutine calcSc
         end do
         end do
         end do
-
-        ! FLUXES THROUGH TOP FACE
+!
+!.....FLUXES THROUGH TOP FACE
+!
         do K=2,NKM-1
         do I=2,NIM
         do J=2,NJM
@@ -486,9 +517,9 @@ subroutine calcSc
         end do
         end do
 
-    !
-    !.....UNSTEADY TERM CONTRIBUTION
-    !
+!
+!.....UNSTEADY TERM CONTRIBUTION
+!
         if(LTIME) then
             do K=2,NKM
             do I=2,NIM
@@ -501,20 +532,17 @@ subroutine calcSc
             end do
             end do
         end if
-
-    !
-    !.....DIRICHLET BOUNDARY CONTRIBUTION
-    !
+!
+!.....DIRICHLET BOUNDARY CONTRIBUTION
+!
         call dirBdFlux
-
-    !
-    !.....BLOCK BOUNDARY CONTRIBUTION
-    !
+!
+!.....BLOCK BOUNDARY CONTRIBUTION
+!
         call blockBdFlux
-
-    !
-    !.....FINAL COEFFICIENT AND SOURCE MATRIX FOR FI-EQUATION
-    !
+!
+!.....FINAL COEFFICIENT AND SOURCE MATRIX FOR FI-EQUATION
+!
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
@@ -524,9 +552,9 @@ subroutine calcSc
         end do
         end do
         end do
-        
-        ! Assemble matrix and Vector
-
+!        
+!.....ASSEMBLE MATRIX AND RHS-VECTOR
+!
         ! Assemble inner CV matrix coefficients
         print *, 'Assemble inner CV matrix coefficients'
         do K=3,NKM-1
@@ -552,7 +580,6 @@ subroutine calcSc
             val(6)=AE(IJK)
             val(7)=AT(IJK)
             valq=Q(IJK)
-            !print *, 'TEST'
             !print *, row, col
             !
             call MatSetValues(Amat,i1,row,i7,col,val,INSERT_VALUES,ierr)
@@ -644,7 +671,7 @@ subroutine calcSc
             !
         end do
 
-        ! assembly matrix coefficients of block boundaries
+        ! Assembly off diagonal matrix coefficients of block boundaries
         do F=FACEST+1,FACEST+NFACE
             row=MIJK(L(F))
             col1=MIJK(R(F))
@@ -656,19 +683,23 @@ subroutine calcSc
 
     end do
 
-    ! assembly matrix and right hand vector
-
+    ! Assembly matrix and right hand vector
     print *, '  STARTING MATRIX ASSEMBLY'
     call MatAssemblyBegin(Amat,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyBegin(bvec,ierr)
     call MatAssemblyEnd(Amat,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyEnd(bvec,ierr)
 
+    ! muss noch implementiert werden
+    !call MatGetInfo(Amat,MAT_LOCAL,ierr)
+    !stop
     !call MatView(Amat,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !print *, ''
     !call VecView(bvec,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !stop
-
+!
+!.....SOLVE LINEAR SYSTEM
+!
     print *, '  SOLVING LINEAR SYSTEM'
     call PetscGetCPUTime(time1,ierr)
     call solveSys(Amat,bvec,solvec,N,LS,tol)
@@ -701,6 +732,13 @@ end subroutine calcSc
 !################################################################
 subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
 !################################################################
+!   This routine calculates the components of the gradient
+!   vector of a scalar FI at the CV center, using conservative
+!   scheme based on the Gauss theorem; FIE are values at east 
+!   side, FIN at north side, FIT at top side
+!   Contributions from boundary faces are calculated in 
+!   separate loops.
+!===============================================================
 
     use boundaryModule
     use geoModule
@@ -715,19 +753,18 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
 
     do B=1,NB
         call setBlockInd(B)
-    !
-    !...INITIALIZE FIELDS
-    !
+!
+!.....INITIALIZE FIELDS
+!
         !print *, '      INITIALIZING FIELDS'
         do IJK=IJKST+1,IJKST+NIJK
             DFX(IJK)=0.0d0
             DFY(IJK)=0.0d0
             DFZ(IJK)=0.0d0
         end do
-
-    !
-    !..CONTRRIBUTION FROM INNER EAST SIDES
-    !
+!
+!.....CONTRRIBUTION FROM INNER EAST SIDES
+!
         !print *, '      CALC CONTRIBUTION FROM INNER EAST SIDES'
         do K=2,NKM
         do I=2,NIM-1
@@ -739,17 +776,17 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             IJK3=IJK4-1
             IJK2=IJK3-NIJ
             IJK1=IJK4-NIJ
-            !
+            
             call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
-            !
+            
             SX=AR*NX
             SY=AR*NY
             SZ=AR*NZ
-
+            
             DFXE=FIE*SX
             DFYE=FIE*SY
             DFZE=FIE*SZ
-
+            
             DFX(IJK)=DFX(IJK)+DFXE
             DFY(IJK)=DFY(IJK)+DFYE
             DFZ(IJK)=DFZ(IJK)+DFZE
@@ -759,10 +796,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
         end do
         end do
         end do
-
-    !
-    !.....CONTRRIBUTION FROM INNER NORTH SIDES
-    !
+!
+!.....CONTRRIBUTION FROM INNER NORTH SIDES
+!
         !print *, '      CALC CONTRIBUTION FROM INNER NORTH SIDES'
         do K=2,NKM
         do I=2,NIM
@@ -774,9 +810,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             IJK4=IJK3-NJ
             IJK2=IJK3-NIJ
             IJK1=IJK4-NIJ
-            !
+            
             call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
-            !
+            
             SX=AR*NX
             SY=AR*NY
             SZ=AR*NZ
@@ -794,9 +830,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
         end do
         end do
         end do
-    !
-    !.....CONTRRIBUTION FROM INNER TOP SIDES
-    !
+!
+!.....CONTRRIBUTION FROM INNER TOP SIDES
+!
         !print *, '      CALC CONTRIBUTION FROM INNER TOP SIDES'
         do K=2,NKM-1
         do I=2,NIM
@@ -808,9 +844,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             IJK3=IJK4-NJ
             IJK1=IJK4-1
             IJK2=IJK3-1
-            !
+            
             call normalArea(IJK,IJK,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
-            !
+            
             SX=AR*NX
             SY=AR*NY
             SZ=AR*NZ
@@ -828,9 +864,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
         end do
         end do
         end do
-    !
-    !.....CONTRIBUTION FROM WALL BOUNDARIES
-    !
+!
+!.....CONTRIBUTION FROM WALL BOUNDARIES
+!
         !print *, '      CALC CONTRIBUTION FROM WALL BOUNDARIES'
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJKB=IJKBDI(IJKDIR)
@@ -839,9 +875,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             IJK2=IJKDI2(IJKDIR)
             IJK3=IJKDI3(IJKDIR)
             IJK4=IJKDI4(IJKDIR)
-            !
+            
             call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
-            !
+            
             SX=AR*NX
             SY=AR*NY
             SZ=AR*NZ
@@ -850,9 +886,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             DFY(IJKPDI(IJKDIR))=DFY(IJKPDI(IJKDIR))+FI(IJKBDI(IJKDIR))*SY
             DFZ(IJKPDI(IJKDIR))=DFZ(IJKPDI(IJKDIR))+FI(IJKBDI(IJKDIR))*SZ
         end do
-    !
-    !.....CONTRIBUTION FROM BLOCK BOUNDARIES
-    !
+!
+!.....CONTRIBUTION FROM BLOCK BOUNDARIES
+!
         !print *, '      CALC CONTRIBUTION FROM BLOCK BOUNDARIES'
         do F=FACEST+1,FACEST+NFACE
             FIF=FIR(F)*FF(F)+FI(L(F))*(1.0d0-FF(F))
@@ -869,9 +905,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             DFY(L(F))=DFY(L(F))+DFYF
             DFZ(L(F))=DFZ(L(F))+DFZF
         end do
-    !
-    !.....CALCULATE GRADIENT COMPONENTS AT CV-CENTERS
-    !
+!
+!.....CALCULATE GRADIENT COMPONENTS AT CV-CENTERS
+!
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
@@ -889,12 +925,12 @@ end subroutine gradfi
 !################################################################
 subroutine updateGrad
 !################################################################
+!   this routine updates the components of the gradient vector
+!   of the scalar FI at the CV center.
+!===============================================================
 
     use boundaryModule
-    !use geoModule
     use indexModule
-    !use mmsModule
-    !use scalarModule
     use parameterModule
     use varModule
     implicit none
@@ -913,6 +949,20 @@ end subroutine updateGrad
 !################################################################
 subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
 !################################################################
+!   This routine calculates fluxes (convective and
+!   diffusive) through the cell face between nodes IJP and IJN. 
+!   IJK1...4 are the indices of CV corners defining the cell 
+!   face. FM is the mass flux through the face, and FAC is the 
+!   interpolation factor (distance from node IJP to cell face 
+!   center over the sum of this distance and the distance from 
+!   cell face center to node IJN). CAP and CAN are the 
+!   contributions to matrix coefficients in the transport
+!   equations at nodes IJP and IJN. Diffusive fluxes are
+!   discretized using central differences; for convective
+!   fluxes, linear interpolation can be blended (G) with upwind
+!   approximation. Note: cell face surface vector is directed 
+!   from P to N.
+!==============================================================
         
     use boundaryModule
     use coefModule
@@ -926,10 +976,6 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
     real(KIND=PREC), intent(in) :: FM,FAC
     integer, intent(in) :: IJKP,IJKN,IJK2,IJK3,IJK4
     real(KIND=PREC), intent(out) :: CAN, CAP
-    real(KIND=PREC) :: ZERO,SMALL
-
-    ZERO=0.0d0
-    SMALL=1.0E-20
 
     G=1.0d0
 
@@ -937,29 +983,27 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
     FII=T(IJKN)*FAC+T(IJKP)*FACP
     DFXI=DTX(IJKN)*FAC+DTX(IJKP)*FACP
     DFYI=DTY(IJKN)*FAC+DTY(IJKP)*FACP
-    DFZI=DTZ(IJKN)*FAC+DTZ(IJKP)*FACP
-    
-    !
-    !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
-    !
-    !
+    DFZI=DTZ(IJKN)*FAC+DTZ(IJKP)*FACP    
+!
+!.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
+!
     call normalArea(IJKP,IJKN,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
-    !
+
     VSOL=ALPHA*AR/(DN+SMALL)
-    !
-    !.....EXPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
-    !
+!
+!.....EXPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
+!
     FCFIE=FM*FII
     FDFIE=ALPHA*(DFXI*AR*NX+DFYI*AR*NY+DFZI*AR*NZ)
-    !
-    !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
-    !
+!
+!.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
+!
     FCFII=MIN(FM,ZERO)*T(IJKN)+MAX(FM,ZERO)*T(IJKP)
     FDFII=VSOL*(DFXI*XPN+DFYI*YPN+DFZI*ZPN)
     !print *, MIJK(IJKP),T(IJKN),T(IJKP),FII,FCFIE
-    !
-    !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
-    !
+!
+!.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
+!
     CAN=-VSOL+MIN(FM,ZERO)
     CAP=-VSOL-MAX(FM,ZERO)
     FFIC=G*(FCFIE-FCFII)
@@ -971,6 +1015,10 @@ end subroutine fluxsc
 !################################################################
 subroutine dirBdFlux
 !################################################################
+!   This routine assembles the source terms (volume integrals)
+!   and applies dirichlet boundary conditions for the scalar
+!   transport equation.
+!===============================================================
 
     use boundaryModule
     use coefModule
@@ -981,9 +1029,8 @@ subroutine dirBdFlux
     use varModule
     implicit none
 
-    real(KIND=PREC) :: COEFC,COEFD,ZERO
+    real(KIND=PREC) :: COEFC,COEFD
     integer :: IJK1, IJK2, IJK3, IJK4
-    ZERO=0.0d0
 
 !
 !.....DIRICHLET BOUNDARY CONDITION (NO WALL!)
@@ -1014,6 +1061,9 @@ end subroutine dirBdFlux
 !################################################################
 subroutine blockBdFlux
 !################################################################
+!   This routine assembles the source terms (volume integrals)
+!   and realizes the proximity relationship of the current block
+!===============================================================
 
     use boundaryModule
     use coefModule
@@ -1024,11 +1074,7 @@ subroutine blockBdFlux
     use parameterModule
     use varModule
     implicit none
-    real(KIND=PREC) :: ZERO,SMALL
     real(KIND=PREC) :: FAC,FM
-
-    ZERO=0.0d0
-    SMALL=1.0E-20
 
     do F=FACEST+1,FACEST+NFACE
         FAC=FF(F)
@@ -1041,20 +1087,20 @@ subroutine blockBdFlux
         FM=F1(L(F))*NXF(F)+F2(L(F))*NYF(F)+F3(L(F))*NZF(F)
 
         VSOL=ALPHA*ARF(F)/(DNF(F)+SMALL)
-        !
-        !.....EXPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
-        !
+!
+!.....EXPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
+!
         FCFIE=FM*FII
         FDFIE=ALPHA*(DFXI*ARF(F)*NXF(F)+DFYI*ARF(F)*NYF(F)+DFZI*ARF(F)*NZF(F))
-        !
-        !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
-        !
+!
+!.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
+!
         FCFII=MIN(FM,ZERO)*TR(F)+MAX(FM,ZERO)*T(L(F))
         FDFII=VSOL*(DFXI*XPNF(F)*NXF(F)+DFYI*YPNF(F)*NYF(F)+DFZI*ZPNF(F)*NZF(F))
         !print *, MIJK(L(F)),FDFII,FDFIE
-        !
-        !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
-        !
+!
+!.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
+!
         !CAN=-VSOL+MIN(FM,ZERO)
         !CAP=-VSOL-MAX(FM,ZERO)
         !AF(F)=-VSOL-MAX(FM,ZERO)

@@ -106,6 +106,8 @@ end subroutine readData
 !########################################################
 subroutine cartesian
 !########################################################
+! this subroutine creates an cartesian orthogonal 3d grid
+!========================================================
 
     use geoModule
     use indexModule
@@ -212,14 +214,11 @@ subroutine gridExport
     write(3,*)  DX,DY,DZ,VOL
     write(3,*)  (SRDDI(I),I=1,NDIR)
 
-    !do I=1,NIJK
-    !    write(3,*) XC(I), YC(I), ZC(I)
-    !end do
-
     write(BLOCK_CH,'(I1)') B
     VTKFILE='grid_'//trim(BLOCK_CH)//'.vtk'
-
-!...Create .vtk file
+!
+!.....Create .vtk file
+!
     print *, ' *** GENERATING .VTK *** '
     open (unit=4,FILE=VTKFILE)
     write(4,'(A)') '# vtk DataFile Version 3.0'
@@ -242,6 +241,9 @@ end subroutine gridExport
 !########################################################
 subroutine setBc
 !########################################################
+! this routine writes the boundary type of each boundary 
+! cell into an array
+!=======================================================
 
     use boundaryModule
     use indexModule
@@ -285,6 +287,15 @@ end subroutine setBc
 !########################################################
 subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
 !########################################################
+! this subroutine collects the following information about
+! the boundary cells of the specified boundary type: 
+!   - IJKBB: index of boundary cell face center (neighbour)
+!   - IJKBP: index of boundary cell center
+!   - IJK1...4: index of boundary the edges of the respective
+!   boundary cell face. They have to be ordered in a 
+!   clockwise manner if the cell face is viewed from 
+!   outside the CV.
+!=========================================================
 
     use boundaryModule
     use indexModule
@@ -334,7 +345,6 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
         ENDIF
     end do
     end do
-
 !
 !.....WEST SIDE
 !
@@ -418,6 +428,9 @@ end subroutine defBc
 !########################################################
 subroutine calcG
 !########################################################
+! this subroutine calculates all missing corner, edge and
+! face coordinates and the interpolation factors FX,FY,FZ
+!========================================================
 
     use boundaryModule
     use geoModule
@@ -428,7 +441,7 @@ subroutine calcG
                 X1,X2,X4,Y1,Y2,Y4,Z1,Z2,Z4
     real*8,parameter :: SMALL=1.0E-20
     integer :: IJK1, IJK2, IJK3, IJK4
-
+!
 !.....CALCULATION OF NODE COORDINATES: CORNER (DUMMY) NODES
 !
     !IJK=LK(1)+LI(1)+1
@@ -436,49 +449,49 @@ subroutine calcG
     XC(IJK)=X(IJK)
     YC(IJK)=Y(IJK)
     ZC(IJK)=Z(IJK)
-!
+ 
     !IJK=LK(1)+LI(NIM)+1
     IJK=(NIM-1)*NJ+1
     XC(IJK+NJ)=X(IJK)
     YC(IJK+NJ)=Y(IJK)
     ZC(IJK+NJ)=Z(IJK)
-!
+ 
     !IJK=LK(1)+LI(1)+NJM
     IJK=NJM
     XC(IJK+1)=X(IJK)
     YC(IJK+1)=Y(IJK)
     ZC(IJK+1)=Z(IJK)
-!
+ 
     !IJK=LK(1)+LI(NIM)+NJM
     IJK=(NIM-1)*NJ+NJM
     XC(IJK+NJ+1)=X(IJK)
     YC(IJK+NJ+1)=Y(IJK)
     ZC(IJK+NJ+1)=Z(IJK)
-!
+ 
     !IJK=LK(NKM)+LI(1)+1
     IJK=(NKM-1)*NI*NJ+1
     XC(IJK+NIJ)=X(IJK)
     YC(IJK+NIJ)=Y(IJK)
     ZC(IJK+NIJ)=Z(IJK)
-!
+ 
     !IJK=LK(NKM)+LI(NIM)+1
     IJK=(NKM-1)*NI*NJ+(NIM-1)*NJ+1
     XC(IJK+NIJ+NJ)=X(IJK)
     YC(IJK+NIJ+NJ)=Y(IJK)
     ZC(IJK+NIJ+NJ)=Z(IJK)
-!
+ 
     !IJK=LK(NKM)+LI(1)+NJM
     IJK=(NKM-1)*NI*NJ+NJM
     XC(IJK+NIJ+1)=X(IJK)
     YC(IJK+NIJ+1)=Y(IJK)
     ZC(IJK+NIJ+1)=Z(IJK)
-!
+ 
     !IJK=LK(NKM)+LI(NIM)+NJM
     IJK=(NKM-1)*NI*NJ+(NIM-1)*NJ+NJM
     XC(IJK+NIJ+NJ+1)=X(IJK)
     YC(IJK+NIJ+NJ+1)=Y(IJK)
     ZC(IJK+NIJ+NJ+1)=Z(IJK)
-
+ 
 !
 !.....CALCULATION OF NODE COORDINATES: BOUNDARY EDGE NODES
 !               

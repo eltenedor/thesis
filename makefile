@@ -4,10 +4,10 @@ include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
 
 # default values, will be overwritten by bash
-expath = ../order_verification/blockStructured/test
+expath = ../order_verification/blockStructured/test/
 
 solver_src = \
-	${expath}/parameterModule.F90 \
+	${expath}parameterModule.F90 \
 	controlModule.F90 \
 	boundaryModule.F90 \
 	characterModule.F90 \
@@ -33,6 +33,6 @@ solver: ${solver_obj} chkopts
 	${RM} -f ${solver_obj} ${solver_mod}
 	
 cln:
-	${RM} -f *.o *.mod
+	${RM} -f *.o *.mod $(expath)*.o $(expath).mod
 	
 	

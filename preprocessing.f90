@@ -653,7 +653,7 @@ subroutine writeParameterModule
     read(9,*) ! ',NBLOCKAL=', NBLOCKA, '&'
     read(9,*) !  ',NBLOCKS=',NB,'&'
     read(9,*) !',PREC=',PREC,'&'
-    write(9,'(A9 I5 A1)') ',NFACEAL=',NF
+    write(9,'(A9 I7 A1)') ',NFACEAL=',NF
     write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParameterModule

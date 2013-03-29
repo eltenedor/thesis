@@ -1,7 +1,7 @@
 module controlModule
 
     implicit none
-    logical, parameter :: LTIME=.false.
+    logical :: LTIME=.false.
     logical :: CONVERGED=.false.
     logical :: STARTED,FOUND
     integer :: pcInd, kspInd
