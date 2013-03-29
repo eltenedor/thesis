@@ -88,6 +88,9 @@ program main
 
 end program main
 
+!==========================================================
+!>  This subroutine reads in grid geometry and boundary
+!>  conditions and initializes matrices and vectors
 !#########################################################
 subroutine init
 !#########################################################
@@ -273,6 +276,9 @@ subroutine init
 
 end subroutine init
 
+!========================================================
+!>  This subroutine sets the initial field values if a
+!>  instationary problem is solved
 !#########################################################
 subroutine setField
 !#########################################################
@@ -297,6 +303,9 @@ subroutine setField
 
 end subroutine setField
 
+!========================================================
+!>  This subroutine creates a .vtk containing grid geometry
+!>  and scalar field values of the current block
 !#########################################################
 subroutine writeVtk
 !#########################################################
@@ -353,6 +362,9 @@ subroutine writeVtk
 
 end subroutine writeVtk
 
+!=======================================================
+!>  This subroutine updates the dirichlet boundary field
+!>  values if a instationary problem is being solved
 !########################################################
 subroutine updateDir
 !#########################################################
@@ -377,13 +389,13 @@ subroutine updateDir
 
 end subroutine updateDir
 
+!=========================================================
+!>   This routine gathers all necessary neighbour values
+!>   needed for the correct calculation of diffusive and 
+!>   convective fluxes through block boundary faces
 !#########################################################
 subroutine updateGhost
 !#########################################################
-!   This routine gathers all necessary neighbour values
-!   needed for the correct calculation of diffusive and 
-!   convective fluxes through block boundary faces
-!=========================================================
 
     use boundaryModule
     use geoModule
@@ -436,12 +448,12 @@ subroutine updateGhost
     
 end subroutine updateGhost
 
+!=============================================================
+!>     This routine discretizes (FVM) and solves the scalar transport
+!>     equation.
 !#############################################################
 subroutine calcSc
 !#############################################################
-!     This routine discretizes (FVM) and solves the scalar transport
-!     equation.
-!=============================================================
 
     use boundaryModule
     use coefModule
@@ -556,7 +568,7 @@ subroutine calcSc
 !.....ASSEMBLE MATRIX AND RHS-VECTOR
 !
         ! Assemble inner CV matrix coefficients
-        print *, 'Assemble inner CV matrix coefficients'
+        !print *, 'Assemble inner CV matrix coefficients'
         do K=3,NKM-1
         do I=3,NIM-1
         do J=3,NJM-1
@@ -729,16 +741,16 @@ subroutine calcSc
 
 end subroutine calcSc
 
+!===============================================================
+!>   This routine calculates the components of the gradient
+!>   vector of a scalar FI at the CV center, using conservative
+!>   scheme based on the Gauss theorem; FIE are values at east 
+!>   side, FIN at north side, FIT at top side
+!>   Contributions from boundary faces are calculated in 
+!>   separate loops.
 !################################################################
 subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
 !################################################################
-!   This routine calculates the components of the gradient
-!   vector of a scalar FI at the CV center, using conservative
-!   scheme based on the Gauss theorem; FIE are values at east 
-!   side, FIN at north side, FIT at top side
-!   Contributions from boundary faces are calculated in 
-!   separate loops.
-!===============================================================
 
     use boundaryModule
     use geoModule
@@ -922,12 +934,12 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
 
 end subroutine gradfi
 
+!===============================================================
+!>   this routine updates the components of the gradient vector
+!>   of the scalar FI at the CV center.
 !################################################################
 subroutine updateGrad
 !################################################################
-!   this routine updates the components of the gradient vector
-!   of the scalar FI at the CV center.
-!===============================================================
 
     use boundaryModule
     use indexModule
@@ -946,23 +958,23 @@ subroutine updateGrad
 
 end subroutine updateGrad
 
+!==============================================================
+!>   This routine calculates fluxes (convective and
+!>   diffusive) through the cell face between nodes IJP and IJN. 
+!>   IJK1...4 are the indices of CV corners defining the cell 
+!>   face. FM is the mass flux through the face, and FAC is the 
+!>   interpolation factor (distance from node IJP to cell face 
+!>   center over the sum of this distance and the distance from 
+!>   cell face center to node IJN). CAP and CAN are the 
+!>   contributions to matrix coefficients in the transport
+!>   equations at nodes IJP and IJN. Diffusive fluxes are
+!>   discretized using central differences; for convective
+!>   fluxes, linear interpolation can be blended (G) with upwind
+!>   approximation. Note: cell face surface vector is directed 
+!>   from P to N.
 !################################################################
 subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
 !################################################################
-!   This routine calculates fluxes (convective and
-!   diffusive) through the cell face between nodes IJP and IJN. 
-!   IJK1...4 are the indices of CV corners defining the cell 
-!   face. FM is the mass flux through the face, and FAC is the 
-!   interpolation factor (distance from node IJP to cell face 
-!   center over the sum of this distance and the distance from 
-!   cell face center to node IJN). CAP and CAN are the 
-!   contributions to matrix coefficients in the transport
-!   equations at nodes IJP and IJN. Diffusive fluxes are
-!   discretized using central differences; for convective
-!   fluxes, linear interpolation can be blended (G) with upwind
-!   approximation. Note: cell face surface vector is directed 
-!   from P to N.
-!==============================================================
         
     use boundaryModule
     use coefModule
@@ -1012,13 +1024,13 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
 
 end subroutine fluxsc
 
+!===============================================================
+!>   This routine assembles the source terms (volume integrals)
+!>   and applies dirichlet boundary conditions for the scalar
+!>   transport equation.
 !################################################################
 subroutine dirBdFlux
 !################################################################
-!   This routine assembles the source terms (volume integrals)
-!   and applies dirichlet boundary conditions for the scalar
-!   transport equation.
-!===============================================================
 
     use boundaryModule
     use coefModule
@@ -1058,12 +1070,12 @@ subroutine dirBdFlux
 
 end subroutine dirBdFlux
 
+!===============================================================
+!>   This routine assembles the source terms (volume integrals)
+!>   and realizes the proximity relationship of the current block
 !################################################################
 subroutine blockBdFlux
 !################################################################
-!   This routine assembles the source terms (volume integrals)
-!   and realizes the proximity relationship of the current block
-!===============================================================
 
     use boundaryModule
     use coefModule
@@ -1115,6 +1127,8 @@ subroutine blockBdFlux
 
 end subroutine blockBdFlux
 
+!================================================================
+!> This subroutine calculates the mean error of the current block
 !################################################################
 subroutine calcErr
 !################################################################

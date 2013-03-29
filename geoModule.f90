@@ -14,7 +14,7 @@ module geoModule
                         XPN,YPN,ZPN,SX,SY,SZ,&
                         FX(NXYZA),FY(NXYZA),FZ(NXYZA)
                         
-    public :: normalArea,calcGrad
+    public :: normalArea,calcGrad,reverseOrder
     private :: normalAreaIndex, normalAreaFace
     
     interface normalArea
