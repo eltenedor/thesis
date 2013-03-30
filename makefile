@@ -33,6 +33,6 @@ solver: ${solver_obj} chkopts
 	${RM} -f ${solver_obj} ${solver_mod}
 	
 cln:
-	${RM} -f *.o *.mod $(expath)*.o $(expath).mod
+	${RM} -f *.o *.mod $(expath)*.o $(expath)*.mod
 	
 	
