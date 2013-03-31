@@ -265,7 +265,6 @@ subroutine init
     
     ! Increase performance during matrix assembly due to preallocation
     !call MatSeqAIJSetPreallocation(Amat,10,PETSC_NULL_INTEGER,ierr)
-    !call MatSeqAIJSetPreallocation(Amat,PETSC_DEFAULT_INTEGER,PETSC_NULL_INTEGER,ierr)
     call MatMPIAIJSetPreallocation(Amat,10,PETSC_NULL_INTEGER,0,PETSC_NULL_INTEGER,ierr)
     !call MatSetUp(Amat,ierr)
 
@@ -686,6 +685,7 @@ subroutine calcSc
         end do
 
         ! Assembly off diagonal matrix coefficients of block boundaries
+        print *, 'BLOCK: ', B
         do F=FACEST+1,FACEST+NFACE
             row=MIJK(L(F))
             col1=MIJK(R(F))
@@ -710,6 +710,7 @@ subroutine calcSc
     !call MatView(Amat,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !print *, ''
     !call VecView(bvec,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !call VecView(solvec,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !stop
 !
 !.....SOLVE LINEAR SYSTEM
@@ -744,12 +745,11 @@ subroutine calcSc
 end subroutine calcSc
 
 !===============================================================
-!>   This routine calculates the components of the gradient
-!>   vector of a scalar FI at the CV center, using conservative
-!>   scheme based on the Gauss theorem; FIE are values at east 
-!>   side, FIN at north side, FIT at top side
-!>   Contributions from boundary faces are calculated in 
-!>   separate loops.
+!>  calculates the components of the gradient vector of a
+!>  scalar FI at the CV center, using conservative scheme based
+!>  on the Gauss theorem; FIE are values at east side, FIN at
+!>  north side, FIT at top side Contributions from boundary
+!>  faces are calculated in  separate loops.
 !################################################################
 subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
 !################################################################
@@ -1111,7 +1111,7 @@ subroutine blockBdFlux
 !
         FCFII=MIN(FM,ZERO)*TR(F)+MAX(FM,ZERO)*T(L(F))
         FDFII=VSOL*(DFXI*XPNF(F)*NXF(F)+DFYI*YPNF(F)*NYF(F)+DFZI*ZPNF(F)*NZF(F))
-        !print *, MIJK(L(F)),FDFII,FDFIE
+        !print *, MIJK(L(F)),VSOL,FM
 !
 !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
 !
@@ -1120,7 +1120,7 @@ subroutine blockBdFlux
         !AF(F)=-VSOL-MAX(FM,ZERO)
         ! Boundary must be treated inoutflow like
         !print *, MIJK(L(F)),MIJK(R(F)),NXF(F),NYF(F),NZF(F)
-        AF(F)=-VSOL+FM
+        AF(F)=-VSOL+MIN(FM,ZERO)
         AP(L(F))=AP(L(F))-AF(F)
         FFIC=G*(FCFIE-FCFII)
         Q(L(F))=Q(L(F))-FFIC+FDFIE-FDFII
@@ -1156,7 +1156,8 @@ subroutine calcErr
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             !ER=T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME)
             !E=abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
-            E=E+abs(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))
+            E=E+dabs(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))
+            ER=ER+(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))**2
             !ER=max(E,ER)
         end do
         end do
@@ -1164,7 +1165,8 @@ subroutine calcErr
     end do
     
     rewind 9
-    write(9, *), E/dble(N), tges, reasonInt, itsInt, LS
-    print *, 'ERROR ', E/dble(N), tges, reasonInt, itsInt, LS
+    !write(9, *), E/dble(N), tges, reasonInt, itsInt, LS
+    !print *, 'ERROR ', E/dble(N), tges, reasonInt, itsInt, LS
+    print *, 'ERROR ', E/dble(N), dsqrt(ER/dble(N)), tges, itsInt
 
 end subroutine calcErr

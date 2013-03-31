@@ -233,7 +233,7 @@ subroutine findNeighbours
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
-                                call reverseOrder(XYZCommon)
+                                !call reverseOrder(XYZCommon)
                                 if (AR.gt.0.0d0) then
                                     STARTED=.true.
                                     FOUND=.true.
@@ -287,7 +287,7 @@ subroutine findNeighbours
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
-                                !call reverseOrder(XYZCommon)
+                                call reverseOrder(XYZCommon)
                                 if (AR.gt.0.0d0) then
                                     STARTED=.true.
                                     FOUND=.true.

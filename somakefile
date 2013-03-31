@@ -1,16 +1,19 @@
-INCLUDES := -I/home/fabian/util/petsc/petsc-3.3-p6/include -I/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/include
+#INCLUDES := -I/home/fabian/util/petsc/petsc-3.3-p6/include -I/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/include
+INCLUDES := -I/home/fabian/util/petsc/petsc-3.3-p6/include -I/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/include -I/usr/include/mpich2
 
-LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -Wl,-rpath,/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib -lflapack -lfblas -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpichf90 -lgfortran -lm -lm -ldl -lmpich -lopa -lmpl -lrt -lpthread -lgcc_s -ldl
+#LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -Wl,-rpath,/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib -lflapack -lfblas -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpichf90 -lgfortran -lm -lm -ldl -lmpich -lopa -lmpl -lrt -lpthread -lgcc_s -ldl
+LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -llapack -lblas -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -lmpichf90 -lgfortran -lm -lgfortran -lm -lquadmath -lm -ldl -lmpich -lopa -lmpl -lrt -lcr -lpthread -lgcc_s -ldl
 
 CFORT := gfortran
-#CFORTFLAGS := -c -Wall -Wno-unused-variable
-# CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
-CFORTFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable
+CFORTFLAGS := -c -Wall -Wno-unused-variable
+#CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
+#CFORTFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable
 
 CCPP := g++
 CCPPFLAGS := -c -Wall -Wno-unused-variable
 
-CMPIF := /home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/bin/mpif90
+#CMPIF := /home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/bin/mpif90
+CMPIF := mpif90
 CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
 #CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
 
@@ -53,7 +56,14 @@ solver: $(OBJS)
 	@echo 'Invoking MPIF90 Compiler'
 	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
 
-clean:
+clean:M
 	@rm -rf *.o *.mod $(DPATH)*.mod $(DPATH)*.o
 
+################################# ADDITIONAL COMMENTS ##################################
+	# different flags result from:
 # http://amiatypist.blogspot.de/2010/05/relocation-truncated-to-fit-rx866432s.html
+# two versions of INCLUDES and LIBS,
+# 	first version used (run (as su) from $PETSC_DIR):
+# ./configure --with-cc=gcc --with-fc=gfortran --download-f-blas-lapack --download-mpich
+#	second version used (mpich2, lapack and blas installed in std. paths):
+#./configure

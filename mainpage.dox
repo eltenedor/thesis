@@ -1,0 +1,18 @@
+/**
+\mainpage The mainpage documentation
+\section sec1 Installation
+    \subsection sec1_1 Basic Requirements
+    This program has been tested with 
+    \subsection sec1_2 Configuring PETSc
+    Get the latest tarball on http://www.mcs.anl.gov/petsc/download/index.html and follow the instructions on http://www.mcs.anl.gov/petsc/documentation/installation.html.\n
+    Depending on your setup you can either setup PETSc quickly with.
+    \subsection sec1_3 Configuring Opencascade
+    Use your os's repository: e.g. \b apt-cache \b search \b opencascade
+\section sec2 Program Usage
+    \subsection sec2_1 Makefiles
+    \subsection sec2_2 Grid Generation
+    \subsection sec2_3 Preprocessing
+    \subsection sec2_4 Solver
+    \subsection sec2_5 Postprocessing with Paraview
+
+*/

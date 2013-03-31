@@ -2,8 +2,8 @@ INCLUDES :=
 LIBS :=
 
 CFORT := gfortran
-#CFORTFLAGS := -c -Wall -Wno-unused-variable
-CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
+CFORTFLAGS := -c -Wall -Wno-unused-variable
+#CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
 
 CCPP := g++
 CCPPFLAGS := -c -Wall -Wno-unused-variable
@@ -24,6 +24,7 @@ grgen: $(OBJS)
 	@echo
 	@echo 'Invoking Fortran Linker'
 	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
+	@rm -rf *.o *.mod $(DPATH)*.o $(DPATH)*.mod
 	@echo
 	@echo 'DONE'
 
