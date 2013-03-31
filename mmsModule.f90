@@ -46,49 +46,4 @@ function src(x,y,z,t) result(src_res)
 
 end function src
 
-!####################################################
-function vel(x,y,z,t) result(vel_res)
-!####################################################
-
-    use scalarModule
-    implicit none
-    
-    real*8, intent(in) :: x,y,z,t
-    real*8 :: vel_res
-
-    
-    VEL_RES = sin(X*pi)*sin(Y*pi)
-    !vel_res = 0.0d0
-    
-    
-end function vel
-
-!####################################################
-function velx(x,y) result(velx_res)
-!####################################################
-
-    use scalarModule
-    implicit none
-    
-    real*8, intent(in) :: x,y
-    real*8 :: velx_res
-    
-    VELX_RES = -y/(x**2+y**2)
-    
-end function velx
-
-!####################################################
-function vely(x,y) result(vely_res)
-!####################################################
-
-    use scalarModule
-    implicit none
-    
-    real*8, intent(in) :: x,y
-    real*8 :: vely_res
-    
-    VELY_RES = x/(x**2+y**2)
-    
-end function vely
-
 end module mmsModule

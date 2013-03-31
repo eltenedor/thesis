@@ -159,6 +159,7 @@ subroutine init
     NFACEBL(1)=NFACE
     IJKPROC=IJKST
     NBL(1)=N
+    print *, 1,N
 
     do B=2,NB
         !read(PROCUNIT,*) B_GLO(B)
@@ -183,15 +184,16 @@ subroutine init
         NIJKBL(B)=NIJK
         NBLOCKBL(B)=NBLOCK
         NDIRBL(B)=NDIR
-        NFACEBL(B)=NFACEBL(BB)
+        NFACEBL(B)=NFACE
         !IJKBL_GLO(B)=IJKST
         NBL(B)=N
+        print *, B,N
     end do
     
     ! calculate processor load
     N=sum(NBL)
 
-    print *, N
+    print *, 'LOCAL LOAD: ', N
 
     do B=1,NB
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
@@ -255,15 +257,17 @@ subroutine init
 
     ! Create Matrix
     call MatCreate(PETSC_COMM_WORLD,Amat,ierr)
-    call MatSetType(Amat,MATSEQAIJ,ierr)
-    !call MatSetType(Amat,MATMPIAIJ,ierr)
+    !call MatSetType(Amat,MATSEQAIJ,ierr)
+    call MatSetType(Amat,MATMPIAIJ,ierr)
     !call MatSetSizes(Amat,PETSC_DECIDE,PETSC_DECIDE,N,N,ierr)
     call MatSetSizes(Amat,N,N,PETSC_DECIDE,PETSC_DECIDE,ierr)
     call MatSetFromOptions(Amat,ierr) 
     
     ! Increase performance during matrix assembly due to preallocation
-    call MatSeqAIJSetPreallocation(Amat,i7,PETSC_NULL_INTEGER,ierr)
-    !call MatMPIAIJSetPreallocation(Amat,i7,PETSC_NULL_INTEGER,i3,PETSC_NULL_INTEGER,ierr)
+    !call MatSeqAIJSetPreallocation(Amat,10,PETSC_NULL_INTEGER,ierr)
+    !call MatSeqAIJSetPreallocation(Amat,PETSC_DEFAULT_INTEGER,PETSC_NULL_INTEGER,ierr)
+    call MatMPIAIJSetPreallocation(Amat,10,PETSC_NULL_INTEGER,0,PETSC_NULL_INTEGER,ierr)
+    !call MatSetUp(Amat,ierr)
 
     ! Create Vector
     call VecCreate(PETSC_COMM_WORLD,solvec,ierr)
@@ -271,8 +275,6 @@ subroutine init
     call VecSetSizes(solvec,N,PETSC_DECIDE,ierr)
     call VecSetFromOptions(solvec,ierr)
     call VecDuplicate(solvec,bvec,ierr)
-
-    !stop
 
 end subroutine init
 
@@ -1117,6 +1119,7 @@ subroutine blockBdFlux
         !CAP=-VSOL-MAX(FM,ZERO)
         !AF(F)=-VSOL-MAX(FM,ZERO)
         ! Boundary must be treated inoutflow like
+        !print *, MIJK(L(F)),MIJK(R(F)),NXF(F),NYF(F),NZF(F)
         AF(F)=-VSOL+FM
         AP(L(F))=AP(L(F))-AF(F)
         FFIC=G*(FCFIE-FCFII)

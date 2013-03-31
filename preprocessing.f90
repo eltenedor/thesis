@@ -170,6 +170,7 @@ subroutine findNeighbours
     use indexModule
     implicit none
     integer :: iterationsCounter
+    logical :: equalSize
 
     interface cpp_interface
 
@@ -187,6 +188,7 @@ subroutine findNeighbours
 
     NF=0
     iterationsCounter=0
+
     ! use other block loop: B=1,NB
     do B=1,NB
         FACEBL(B)=NF
@@ -197,6 +199,11 @@ subroutine findNeighbours
         neighbour: do INEIGH=1,6
             if (NEIGH(B,INEIGH).gt.0) then
                 call setBlockInd(B,NEIGH(B,INEIGH))
+                if (NBLOCKL.eq.NBLOCKR) then
+                    equalSize=.true.
+                else
+                    equalSize=.false.
+                end if
                 IJKSTR=IJKBLOCKSTR+1
                 IJKER=IJKBLOCKSTR+NBLOCKR
                 STARTED=.false.
@@ -241,6 +248,8 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (.not.equalSize) then
+                                    cycle SouthInner
                                 else if (AR.le.0.0d0.and.STARTED) then
                                     IJKSTR=IJKR
                                     STARTED=.false.
@@ -278,6 +287,7 @@ subroutine findNeighbours
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
+                                !call reverseOrder(XYZCommon)
                                 if (AR.gt.0.0d0) then
                                     STARTED=.true.
                                     FOUND=.true.
@@ -292,6 +302,8 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (.not.equalSize) then
+                                    cycle NorthInner
                                 else if (AR.le.0.0d0.and.STARTED) then
                                     IJKSTR=IJKR
                                     STARTED=.false.
@@ -337,15 +349,17 @@ subroutine findNeighbours
                                     NF=NF+1
                                     L(NF)=IJKPBL(IJKL)
                                     R(NF)=IJKPBL(IJKR)
+                                    !print *, L(NF),R(NF)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
-
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (.not.equalSize) then
+                                    cycle WestInner
                                 else if (AR.le.0.0d0.and.STARTED) then
                                     IJKSTR=IJKR
                                     STARTED=.false.
@@ -389,6 +403,7 @@ subroutine findNeighbours
                                     NF=NF+1
                                     L(NF)=IJKPBL(IJKL)
                                     R(NF)=IJKPBL(IJKR)
+                                    !print *, L(NF),R(NF)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
@@ -397,6 +412,8 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (.not.equalSize) then
+                                    cycle EastInner
                                 else if (AR.le.0.0d0.and.STARTED) then
                                     IJKSTR=IJKR
                                     STARTED=.false.
@@ -449,6 +466,8 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (.not.equalSize) then
+                                    cycle BottomInner
                                 else if (AR.le.0.0d0.and.STARTED) then
                                     IJKSTR=IJKR
                                     STARTED=.false.
@@ -500,6 +519,8 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                else if (.not.equalSize) then
+                                    cycle TopInner
                                 else if (AR.le.0.0d0.and.STARTED) then
                                     IJKSTR=IJKR
                                     STARTED=.false.
@@ -602,6 +623,7 @@ subroutine writeBlockData(IB)
     !
     ! Map
     !
+    print *, NXYZA
     write(BLOCKUNIT,*) (MIJK(IJK),IJK=1,NXYZA)
 
     rewind BLOCKUNIT

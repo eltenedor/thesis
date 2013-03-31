@@ -4,14 +4,15 @@ LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc 
 
 CFORT := gfortran
 #CFORTFLAGS := -c -Wall -Wno-unused-variable
-CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
+# CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
+CFORTFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable
 
 CCPP := g++
 CCPPFLAGS := -c -Wall -Wno-unused-variable
 
 CMPIF := /home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/bin/mpif90
-#CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
-CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
+CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
+#CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
 
 DPATH := ../order_verification/blockStructured/test/
 
@@ -53,6 +54,6 @@ solver: $(OBJS)
 	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
 
 clean:
-	@rm -rf *.o *.mod
+	@rm -rf *.o *.mod $(DPATH)*.mod $(DPATH)*.o
 
 # http://amiatypist.blogspot.de/2010/05/relocation-truncated-to-fit-rx866432s.html

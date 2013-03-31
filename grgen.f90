@@ -8,7 +8,7 @@ program grgen
 
     print *, ' TOTAL NUMBER OF BLOCKS: '
     read(*,*) NB
-    print *, ' NAME OF INPUT FILE (NAME.inp, * - KEYBOARD)'
+    print *, ' "NAME" OF INPUT FILE (NAME_BLOCK.inp, * - KEYBOARD)'
     read *, FILIN
 
     ! Create one grid.out and grid.vtk for each block
@@ -103,11 +103,11 @@ subroutine readData
        
 end subroutine readData
 
+!========================================================
+!>   cartesian orthogonal 3d grid
 !########################################################
 subroutine cartesian
 !########################################################
-! this subroutine creates an cartesian orthogonal 3d grid
-!========================================================
 
     use geoModule
     use indexModule
@@ -238,12 +238,12 @@ subroutine gridExport
 
 end subroutine gridExport
 
+!=======================================================
+!>  writes the boundary type of each boundary cell into
+!>  an array
 !########################################################
 subroutine setBc
 !########################################################
-! this routine writes the boundary type of each boundary 
-! cell into an array
-!=======================================================
 
     use boundaryModule
     use indexModule
@@ -284,18 +284,18 @@ subroutine setBc
 
 end subroutine setBc
 
+!=========================================================
+!>  collects the following information about the boundary
+!>    cells of the specified boundary type: 
+!>    - IJKBB: index of boundary cell face center (neighbour)
+!>    - IJKBP: index of boundary cell center
+!>    - IJK1...4: index of boundary the edges of the respective
+!>    boundary cell face. They have to be ordered in a 
+!>    clockwise manner if the cell face is viewed from 
+!>    outside the CV.
 !########################################################
 subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
 !########################################################
-! this subroutine collects the following information about
-! the boundary cells of the specified boundary type: 
-!   - IJKBB: index of boundary cell face center (neighbour)
-!   - IJKBP: index of boundary cell center
-!   - IJK1...4: index of boundary the edges of the respective
-!   boundary cell face. They have to be ordered in a 
-!   clockwise manner if the cell face is viewed from 
-!   outside the CV.
-!=========================================================
 
     use boundaryModule
     use indexModule
@@ -425,12 +425,12 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
 !
 end subroutine defBc
 
+!========================================================
+!>  calculates all missing corner, edge and face
+!>  coordinates and the interpolation factors FX,FY,FZ
 !########################################################
 subroutine calcG
 !########################################################
-! this subroutine calculates all missing corner, edge and
-! face coordinates and the interpolation factors FX,FY,FZ
-!========================================================
 
     use boundaryModule
     use geoModule
