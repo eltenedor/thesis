@@ -8,7 +8,8 @@ CFORTFLAGS := -c -Wall -Wno-unused-variable
 CCPP := g++
 CCPPFLAGS := -c -Wall -Wno-unused-variable
 
-DPATH := ../order_verification/blockStructured/test/
+#DPATH := ../order_verification/
+DPATH := ../multiblock/
 
 OBJS := \
 	parameterModule.o \

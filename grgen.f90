@@ -90,7 +90,7 @@ subroutine readData
     END IF
 
     PRINT *, ' ENTER> BOUNDARY TYPE S N W E B T:'
-    print *, '(1 - INLET (DIRICHLET), 2 - OUTLET (NEUMANN ZERO GRADIENT), 3 WALL (DIRICHLET), 4 BLOCK)'
+    print *, '(1 - DIRICHLET, 2 - NEUMANN ZERO GRADIENT, 3 WALL (DIRICHLET), 4 BLOCK)'
     IF(ITYP.EQ.1) THEN
         READ(*,*) BTYP(1:6)
         WRITE(BLOCKUNIT,*) BTYP(1:6),  '   SBTYP, NBTYP, WBTYP, EBTYP,  BBTYP ,TBTYP '
@@ -197,7 +197,7 @@ subroutine gridExport
     DZ=(ZZE-ZZS)/dble(NKCV)
 
     
-    write(BLOCKUNIT,*)  NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO
+    write(BLOCKUNIT,*)  NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO
     write(BLOCKUNIT,*)  (NEIGH(B,I),I=1,6)
     !print *, (NEIGH(B,I),I=1,6)
     !write(3,*)  (LK(K),K=1,NK)
@@ -210,19 +210,19 @@ subroutine gridExport
     write(BLOCKUNIT,*)  (YC(I),I=1,NIJK)
     write(BLOCKUNIT,*)  (ZC(I),I=1,NIJK)
 
-    write(BLOCKUNIT,*)  (IJKBINL(I),I=1,NINL)
-    write(BLOCKUNIT,*)  (IJKPINL(I),I=1,NINL)
-    write(BLOCKUNIT,*)  (IJKINL1(I),I=1,NINL)
-    write(BLOCKUNIT,*)  (IJKINL2(I),I=1,NINL)
-    write(BLOCKUNIT,*)  (IJKINL3(I),I=1,NINL)
-    write(BLOCKUNIT,*)  (IJKINL4(I),I=1,NINL)
+    write(BLOCKUNIT,*)  (IJKBDIR(I),I=1,NDIR)
+    write(BLOCKUNIT,*)  (IJKPDIR(I),I=1,NDIR)
+    write(BLOCKUNIT,*)  (IJKDIR1(I),I=1,NDIR)
+    write(BLOCKUNIT,*)  (IJKDIR2(I),I=1,NDIR)
+    write(BLOCKUNIT,*)  (IJKDIR3(I),I=1,NDIR)
+    write(BLOCKUNIT,*)  (IJKDIR4(I),I=1,NDIR)
     
-    write(BLOCKUNIT,*)  (IJKBOUT(I),I=1,NOUT)
-    write(BLOCKUNIT,*)  (IJKPOUT(I),I=1,NOUT)
-    write(BLOCKUNIT,*)  (IJKOUT1(I),I=1,NOUT)
-    write(BLOCKUNIT,*)  (IJKOUT2(I),I=1,NOUT)
-    write(BLOCKUNIT,*)  (IJKOUT3(I),I=1,NOUT)
-    write(BLOCKUNIT,*)  (IJKOUT4(I),I=1,NOUT)
+    write(BLOCKUNIT,*)  (IJKBNEU(I),I=1,NNEU)
+    write(BLOCKUNIT,*)  (IJKPNEU(I),I=1,NNEU)
+    write(BLOCKUNIT,*)  (IJKNEU1(I),I=1,NNEU)
+    write(BLOCKUNIT,*)  (IJKNEU2(I),I=1,NNEU)
+    write(BLOCKUNIT,*)  (IJKNEU3(I),I=1,NNEU)
+    write(BLOCKUNIT,*)  (IJKNEU4(I),I=1,NNEU)
     
     write(BLOCKUNIT,*)  (IJKBWAL(I),I=1,NWAL)
     write(BLOCKUNIT,*)  (IJKPWAL(I),I=1,NWAL)
@@ -243,8 +243,8 @@ subroutine gridExport
     write(BLOCKUNIT,*)  (FZ(I), I=1,NIJK)
 
     write(BLOCKUNIT,*)  DX,DY,DZ,VOL
-    write(BLOCKUNIT,*)  (SRDINL(I),I=1,NINL)
-    write(BLOCKUNIT,*)  (SRDOUT(I),I=1,NOUT)
+    !write(BLOCKUNIT,*)  (SRDDIR(I),I=1,NDIR)
+    !write(BLOCKUNIT,*)  (SRDNEU(I),I=1,NNEU)
     write(BLOCKUNIT,*)  (SRDWAL(I),I=1,NWAL)
 
     close(unit=BLOCKUNIT)
@@ -316,10 +316,10 @@ subroutine setBc
         end if
     end do
 
-    call defbc(1,NINL,IJKBINL,IJKPINL,IJKINL1,IJKINL2,IJKINL3,IJKINL4)
-    NINLA=NINLA+NINL
-    call defbc(2,NOUT,IJKBOUT,IJKPOUT,IJKOUT1,IJKOUT2,IJKOUT3,IJKOUT4)
-    NOUTA=NOUTA+NOUT
+    call defbc(1,NDIR,IJKBDIR,IJKPDIR,IJKDIR1,IJKDIR2,IJKDIR3,IJKDIR4)
+    NDIRA=NDIRA+NDIR
+    call defbc(2,NNEU,IJKBNEU,IJKPNEU,IJKNEU1,IJKNEU2,IJKNEU3,IJKNEU4)
+    NNEUA=NNEUA+NNEU
     call defbc(3,NWAL,IJKBWAL,IJKPWAL,IJKWAL1,IJKWAL2,IJKWAL3,IJKWAL4)
     NWALA=NWALA+NWAL
     call defbc(4,NBLO,IJKBBLO,IJKPBLO,IJKBLO1,IJKBLO2,IJKBLO3,IJKBLO4)
@@ -351,7 +351,7 @@ subroutine defBc(LT,NBCF,IJKBB,IJKBP,IJK1,IJK2,IJK3,IJK4)
 !
       NBCF=0
 !
-!.....SOUTH SIDE
+!.....SNEUH SIDE
 !
     IK=0
     do K=2,NKM
@@ -709,31 +709,31 @@ subroutine calcG
 !
 !....Normal distance from cell face center to cell center
 !
-    do IJKINL=1,NINL
-        IJKB=IJKBINL(IJKINL)
-        IJKP=IJKPINL(IJKINL)
-        !IJK1=IJKINL1(IJKINL)
-        IJK2=IJKINL2(IJKINL)
-        IJK3=IJKINL3(IJKINL)
-        IJK4=IJKINL4(IJKINL)
-        !
-        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
-        !
-        SRDINL(IJKINL)=AR/(DN+SMALL)
-    end do
+    !do IJKDIR=1,NDIR
+    !    IJKB=IJKBDIR(IJKDIR)
+    !    IJKP=IJKPDIR(IJKDIR)
+    !    !IJK1=IJKDIR1(IJKDIR)
+    !    IJK2=IJKDIR2(IJKDIR)
+    !    IJK3=IJKDIR3(IJKDIR)
+    !    IJK4=IJKDIR4(IJKDIR)
+    !    !
+    !    call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
+    !    !
+    !    SRDDIR(IJKDIR)=AR/(DN+SMALL)
+    !end do
 
-    do IJKOUT=1,NOUT
-        IJKB=IJKBOUT(IJKOUT)
-        IJKP=IJKPOUT(IJKOUT)
-        !IJK1=IJKOUT1(IJKOUT)
-        IJK2=IJKOUT2(IJKOUT)
-        IJK3=IJKOUT3(IJKOUT)
-        IJK4=IJKOUT4(IJKOUT)
-        !
-        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
-        !
-        SRDOUT(IJKOUT)=AR/(DN+SMALL)
-    end do
+    !do IJKNEU=1,NNEU
+    !    IJKB=IJKBNEU(IJKNEU)
+    !    IJKP=IJKPNEU(IJKNEU)
+    !    !IJK1=IJKNEU1(IJKNEU)
+    !    IJK2=IJKNEU2(IJKNEU)
+    !    IJK3=IJKNEU3(IJKNEU)
+    !    IJK4=IJKNEU4(IJKNEU)
+    !    !
+    !    call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
+    !    !
+    !    SRDNEU(IJKNEU)=AR/(DN+SMALL)
+    !end do
 
     do IJKWAL=1,NWAL
         IJKB=IJKBWAL(IJKWAL)
@@ -769,8 +769,8 @@ subroutine writeParamMod
     write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NYA=', NJA
     write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NZA=', NKA
     write(9,'(4X, A22, A6, I9)') 'integer, parameter :: ', 'NXYZA=', NIJKA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NINLAL=', NINLA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NOUTAL=', NOUTA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NDIRAL=', NDIRA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NNEUAL=', NNEUA
     write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NWALAL=', NWALA
     write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOA
     write(9,'(4X, A22, A8, I6)')   'integer, parameter :: ', 'NBLOCKS=',NB

@@ -46,22 +46,24 @@ subroutine readData
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
-    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO
+    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO
     
     IBL(1)=0
     JBL(1)=0
     KBL(1)=0
     IJKBL(1)=0
-    IJKINLBL(1)=0
-    IJKOUTBL(1)=0
+    IJKDIRBL(1)=0
+    IJKNEUBL(1)=0
     IJKWALBL(1)=0
     IJKBLOBL(1)=0
     NIBL(1)=NI
     NJBL(1)=NJ
     NKBL(1)=NK
     NIJKBL(1)=NIJK
-    NBLOBL(1)=NBLO
+    NDIRBL(1)=NDIR
+    NNEUBL(1)=NNEU
     NWALBL(1)=NWAL
+    NBLOBL(1)=NBLO
     
     do B=2,NB
         BLOCKUNIT=OFFSET+B
@@ -69,23 +71,23 @@ subroutine readData
         BLOCKFILE='grid_'//trim(BLOCK_CH)//'.pre'
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         rewind BLOCKUNIT
-        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO
+        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO
 
         BB=B-1
         IBL(B)=IBL(BB)+NIBL(BB)
         JBL(B)=JBL(BB)+NJBL(BB)
         KBL(B)=KBL(BB)+NKBL(BB)
         IJKBL(B)=IJKBL(BB)+NIJKBL(BB)
-        IJKINLBL(B)=IJKINLBL(BB)+NINLBL(BB)
-        IJKOUTBL(B)=IJKOUTBL(BB)+NOUTBL(BB)
+        IJKDIRBL(B)=IJKDIRBL(BB)+NDIRBL(BB)
+        IJKNEUBL(B)=IJKNEUBL(BB)+NNEUBL(BB)
         IJKWALBL(B)=IJKWALBL(BB)+NWALBL(BB)
         IJKBLOBL(B)=IJKBLOBL(BB)+NBLOBL(BB)
         NIBL(B)=NI
         NJBL(B)=NJ
         NKBL(B)=NK
         NIJKBL(B)=NIJK
-        NINLBL(B)=NINL
-        NOUTBL(B)=NOUT
+        NDIRBL(B)=NDIR
+        NNEUBL(B)=NNEU
         NWALBL(B)=NWAL
         NBLOBL(B)=NBLO
     end do
@@ -107,19 +109,19 @@ subroutine readData
         read(BLOCKUNIT,*)   (YC(IJKST+IJK),IJK=1,NIJK)
         read(BLOCKUNIT,*)   (ZC(IJKST+IJK),IJK=1,NIJK)
         
-        read(BLOCKUNIT,*)   (IJKBINL(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*)   (IJKPINL(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*)   (IJKINL1(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*)   (IJKINL2(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*)   (IJKINL3(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*)   (IJKINL4(IJKINLST+IJK),IJK=1,NINL)
+        read(BLOCKUNIT,*)   (IJKBDIR(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*)   (IJKPDIR(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*)   (IJKDIR1(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*)   (IJKDIR2(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*)   (IJKDIR3(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*)   (IJKDIR4(IJKDIRST+IJK),IJK=1,NDIR)
         
-        read(BLOCKUNIT,*)   (IJKBOUT(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*)   (IJKPOUT(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*)   (IJKOUT1(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*)   (IJKOUT2(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*)   (IJKOUT3(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*)   (IJKOUT4(IJKOUTST+IJK),IJK=1,NOUT)
+        read(BLOCKUNIT,*)   (IJKBNEU(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*)   (IJKPNEU(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*)   (IJKNEU1(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*)   (IJKNEU2(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*)   (IJKNEU3(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*)   (IJKNEU4(IJKNEUST+IJK),IJK=1,NNEU)
         
         read(BLOCKUNIT,*)   (IJKBWAL(IJKWALST+IJK),IJK=1,NWAL)
         read(BLOCKUNIT,*)   (IJKPWAL(IJKWALST+IJK),IJK=1,NWAL)
@@ -149,22 +151,22 @@ subroutine readData
             IJKBLO4(IJKBLO)=IJKBLO4(IJKBLO)+IJKST
         end do
         !
-        do IJKINL=IJKINLST+1,IJKINLST+NINL
-            IJKBINL(IJKINL)=IJKBINL(IJKINL)+IJKST
-            IJKPINL(IJKINL)=IJKPINL(IJKINL)+IJKST
-            IJKINL1(IJKINL)=IJKINL1(IJKINL)+IJKST
-            IJKINL2(IJKINL)=IJKINL2(IJKINL)+IJKST
-            IJKINL3(IJKINL)=IJKINL3(IJKINL)+IJKST
-            IJKINL4(IJKINL)=IJKINL4(IJKINL)+IJKST
+        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+            IJKBDIR(IJKDIR)=IJKBDIR(IJKDIR)+IJKST
+            IJKPDIR(IJKDIR)=IJKPDIR(IJKDIR)+IJKST
+            IJKDIR1(IJKDIR)=IJKDIR1(IJKDIR)+IJKST
+            IJKDIR2(IJKDIR)=IJKDIR2(IJKDIR)+IJKST
+            IJKDIR3(IJKDIR)=IJKDIR3(IJKDIR)+IJKST
+            IJKDIR4(IJKDIR)=IJKDIR4(IJKDIR)+IJKST
         end do
         !
-        do IJKOUT=IJKOUTST+1,IJKOUTST+NOUT
-            IJKBOUT(IJKOUT)=IJKBOUT(IJKOUT)+IJKST
-            IJKPOUT(IJKOUT)=IJKPOUT(IJKOUT)+IJKST
-            IJKOUT1(IJKOUT)=IJKOUT1(IJKOUT)+IJKST
-            IJKOUT2(IJKOUT)=IJKOUT2(IJKOUT)+IJKST
-            IJKOUT3(IJKOUT)=IJKOUT3(IJKOUT)+IJKST
-            IJKOUT4(IJKOUT)=IJKOUT4(IJKOUT)+IJKST
+        do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
+            IJKBNEU(IJKNEU)=IJKBNEU(IJKNEU)+IJKST
+            IJKPNEU(IJKNEU)=IJKPNEU(IJKNEU)+IJKST
+            IJKNEU1(IJKNEU)=IJKNEU1(IJKNEU)+IJKST
+            IJKNEU2(IJKNEU)=IJKNEU2(IJKNEU)+IJKST
+            IJKNEU3(IJKNEU)=IJKNEU3(IJKNEU)+IJKST
+            IJKNEU4(IJKNEU)=IJKNEU4(IJKNEU)+IJKST
         end do
         !
         do IJKWAL=IJKWALST+1,IJKWALST+NWAL
@@ -245,9 +247,9 @@ subroutine findNeighbours
                 select case (INEIGH)
                     case (1)
                         !
-                        !..........SOUTH..........
+                        !..........SNEUH..........
                         !
-                        print *, 'SOUTH'
+                        print *, 'SNEUH'
                         SouthOuter: do IJKL=IJKSTL,IJKENL
                             !
                             XYZL(1:3)=[X(IJKBLO2(IJKL)),Y(IJKBLO2(IJKL)),Z(IJKBLO2(IJKL))]
@@ -600,8 +602,8 @@ subroutine writeBlockData(IB)
     read(BLOCKUNIT,*)  (FY(I), I=1,NIJK)
     read(BLOCKUNIT,*)  (FZ(I), I=1,NIJK)
     read(BLOCKUNIT,*)  DX,DY,DZ,VOL
-    read(BLOCKUNIT,*)  (SRDINL(I),I=1,NINL)
-    read(BLOCKUNIT,*)  (SRDOUT(I),I=1,NOUT)
+    !read(BLOCKUNIT,*)  (SRDDIR(I),I=1,NDIR)
+    !read(BLOCKUNIT,*)  (SRDNEU(I),I=1,NNEU)
     read(BLOCKUNIT,*)  (SRDWAL(I),I=1,NWAL)
     !
     ! overwrite data back to input file
@@ -613,7 +615,7 @@ subroutine writeBlockData(IB)
     print *, 'WRITING TO FILE: ', BLOCKFILE
     rewind BLOCKUNIT
     N=(NK-2)*(NI-2)*(NJ-2)
-    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO,NFACE,N,IJKST
+    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N,IJKST
     !write(BLOCKUNIT,*) (NEIGH(B,I),I=1,6)
     !write(BLOCKUNIT,*) (LK(KST+K),K=1,NK)
     !write(BLOCKUNIT,*) (LI(IST+I),I=1,NI)
@@ -631,19 +633,19 @@ subroutine writeBlockData(IB)
     write(BLOCKUNIT,*) (IJKBLO3(IJKBLOST+IJK),IJK=1,NBLO)
     write(BLOCKUNIT,*) (IJKBLO4(IJKBLOST+IJK),IJK=1,NBLO)
 
-    write(BLOCKUNIT,*) (IJKBINL(IJKINLST+IJK),IJK=1,NINL)
-    write(BLOCKUNIT,*) (IJKPINL(IJKINLST+IJK),IJK=1,NINL)
-    write(BLOCKUNIT,*) (IJKINL1(IJKINLST+IJK),IJK=1,NINL)
-    write(BLOCKUNIT,*) (IJKINL2(IJKINLST+IJK),IJK=1,NINL)
-    write(BLOCKUNIT,*) (IJKINL3(IJKINLST+IJK),IJK=1,NINL)
-    write(BLOCKUNIT,*) (IJKINL4(IJKINLST+IJK),IJK=1,NINL)
+    write(BLOCKUNIT,*) (IJKBDIR(IJKDIRST+IJK),IJK=1,NDIR)
+    write(BLOCKUNIT,*) (IJKPDIR(IJKDIRST+IJK),IJK=1,NDIR)
+    write(BLOCKUNIT,*) (IJKDIR1(IJKDIRST+IJK),IJK=1,NDIR)
+    write(BLOCKUNIT,*) (IJKDIR2(IJKDIRST+IJK),IJK=1,NDIR)
+    write(BLOCKUNIT,*) (IJKDIR3(IJKDIRST+IJK),IJK=1,NDIR)
+    write(BLOCKUNIT,*) (IJKDIR4(IJKDIRST+IJK),IJK=1,NDIR)
 
-    write(BLOCKUNIT,*) (IJKBOUT(IJKOUTST+IJK),IJK=1,NOUT)
-    write(BLOCKUNIT,*) (IJKPOUT(IJKOUTST+IJK),IJK=1,NOUT)
-    write(BLOCKUNIT,*) (IJKOUT1(IJKOUTST+IJK),IJK=1,NOUT)
-    write(BLOCKUNIT,*) (IJKOUT2(IJKOUTST+IJK),IJK=1,NOUT)
-    write(BLOCKUNIT,*) (IJKOUT3(IJKOUTST+IJK),IJK=1,NOUT)
-    write(BLOCKUNIT,*) (IJKOUT4(IJKOUTST+IJK),IJK=1,NOUT)
+    write(BLOCKUNIT,*) (IJKBNEU(IJKNEUST+IJK),IJK=1,NNEU)
+    write(BLOCKUNIT,*) (IJKPNEU(IJKNEUST+IJK),IJK=1,NNEU)
+    write(BLOCKUNIT,*) (IJKNEU1(IJKNEUST+IJK),IJK=1,NNEU)
+    write(BLOCKUNIT,*) (IJKNEU2(IJKNEUST+IJK),IJK=1,NNEU)
+    write(BLOCKUNIT,*) (IJKNEU3(IJKNEUST+IJK),IJK=1,NNEU)
+    write(BLOCKUNIT,*) (IJKNEU4(IJKNEUST+IJK),IJK=1,NNEU)
 
     write(BLOCKUNIT,*) (IJKBWAL(IJKWALST+IJK),IJK=1,NWAL)
     write(BLOCKUNIT,*) (IJKPWAL(IJKWALST+IJK),IJK=1,NWAL)
@@ -657,8 +659,8 @@ subroutine writeBlockData(IB)
     write(BLOCKUNIT,*) (FY(I), I=1,NIJK)
     write(BLOCKUNIT,*) (FZ(I), I=1,NIJK)
     write(BLOCKUNIT,*) DX,DY,DZ,VOL
-    write(BLOCKUNIT,*)  (SRDINL(I),I=1,NINL)
-    write(BLOCKUNIT,*)  (SRDOUT(I),I=1,NOUT)
+    !write(BLOCKUNIT,*)  (SRDDIR(I),I=1,NDIR)
+    !write(BLOCKUNIT,*)  (SRDNEU(I),I=1,NNEU)
     write(BLOCKUNIT,*)  (SRDWAL(I),I=1,NWAL)
     !
     write(BLOCKUNIT,*) (L(FACEST+I),I=1,NFACE)
@@ -724,8 +726,8 @@ subroutine writeParameterModule
     read(9,*) ! 'integer, parameter :: ', 'NYA=', NJA
     read(9,*) ! 'integer, parameter :: ', 'NZA=', NKA
     read(9,*) ! 'integer, parameter :: ', 'NXYZA=', NIJKA
-    read(9,*) ! 'integer, parameter :: ', 'NINLAL=', NINLA
-    read(9,*) ! 'integer, parameter :: ', 'NOUTAL=', NOUTA
+    read(9,*) ! 'integer, parameter :: ', 'NDIRAL=', NDIRA
+    read(9,*) ! 'integer, parameter :: ', 'NNEUAL=', NNEUA
     read(9,*) ! 'integer, parameter :: ', 'NWALAL=', NWALA
     read(9,*) ! 'integer, parameter :: ', 'NBLOAL=', NBLOA
     read(9,*) !   'integer, parameter :: ', 'NBLOCKS=',NB

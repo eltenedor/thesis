@@ -58,13 +58,13 @@ program main
        call updateBd
 !
 !==========================================================
-!....START OUTER ITERATIONS
+!....START NEUER ITERATIONS
 !==========================================================
 !
-        LSG=10000
+        LSG=100
         !LSG=2
         do LS=1,LSG
-            print *, 'OUTER ITERATION: ', LS
+            print *, 'NEUER ITERATION: ', LS
             print *, '  UPDATING GHOST VALUES'
             call updateGhost
             !print *, '  CALCULATING VELOCITY FIELD'
@@ -142,22 +142,23 @@ subroutine init
     BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
-    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO,NFACE,N,IJKST
+    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N,IJKST
+    print *, NDIR,NNEU
     
     IBL(1)=0
     JBL(1)=0
     KBL(1)=0
     IJKBL(1)=0
-    IJKINLBL(1)=0
-    IJKOUTBL(1)=0
+    IJKDIRBL(1)=0
+    IJKNEUBL(1)=0
     IJKWALBL(1)=0
     IJKBLOBL(1)=0
     NIBL(1)=NI
     NJBL(1)=NJ
     NKBL(1)=NK
     NIJKBL(1)=NIJK
-    NINLBL(1)=NINL
-    NOUTBL(1)=NOUT
+    NDIRBL(1)=NDIR
+    NNEUBL(1)=NNEU
     NWALBL(1)=NWAL
     NBLOBL(1)=NBLO
     NFACEBL(1)=NFACE
@@ -173,15 +174,15 @@ subroutine init
         !print *, BLOCKFILE
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         rewind BLOCKUNIT
-        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO,NFACE,N,IJKST
+        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N,IJKST
 
         BB=B-1
         IBL(B)=IBL(BB)+NIBL(BB)
         JBL(B)=JBL(BB)+NJBL(BB)
         KBL(B)=KBL(BB)+NKBL(BB)
         IJKBL(B)=IJKBL(BB)+NIJKBL(BB)
-        IJKINLBL(B)=IJKINLBL(BB)+NINLBL(BB)
-        IJKOUTBL(B)=IJKOUTBL(BB)+NOUTBL(BB)
+        IJKDIRBL(B)=IJKDIRBL(BB)+NDIRBL(BB)
+        IJKNEUBL(B)=IJKNEUBL(BB)+NNEUBL(BB)
         IJKWALBL(B)=IJKWALBL(BB)+NWALBL(BB)
         IJKBLOBL(B)=IJKBLOBL(BB)+NBLOBL(BB)
         FACEBL(B)=FACEBL(BB)+NFACEBL(BB)
@@ -189,8 +190,8 @@ subroutine init
         NJBL(B)=NJ
         NKBL(B)=NK
         NIJKBL(B)=NIJK
-        NINLBL(B)=NINL
-        NOUTBL(B)=NOUT
+        NDIRBL(B)=NDIR
+        NNEUBL(B)=NNEU
         NWALBL(B)=NWAL
         NBLOBL(B)=NBLO
         NFACEBL(B)=NFACE
@@ -223,19 +224,19 @@ subroutine init
         read(BLOCKUNIT,*) (IJKBLO3(IJKBLOST+IJK),IJK=1,NBLO)
         read(BLOCKUNIT,*) (IJKBLO4(IJKBLOST+IJK),IJK=1,NBLO)
 
-        read(BLOCKUNIT,*) (IJKBINL(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*) (IJKPINL(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*) (IJKINL1(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*) (IJKINL2(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*) (IJKINL3(IJKINLST+IJK),IJK=1,NINL)
-        read(BLOCKUNIT,*) (IJKINL4(IJKINLST+IJK),IJK=1,NINL)
+        read(BLOCKUNIT,*) (IJKBDIR(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKPDIR(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKDIR1(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKDIR2(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKDIR3(IJKDIRST+IJK),IJK=1,NDIR)
+        read(BLOCKUNIT,*) (IJKDIR4(IJKDIRST+IJK),IJK=1,NDIR)
 
-        read(BLOCKUNIT,*) (IJKBOUT(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*) (IJKPOUT(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*) (IJKOUT1(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*) (IJKOUT2(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*) (IJKOUT3(IJKOUTST+IJK),IJK=1,NOUT)
-        read(BLOCKUNIT,*) (IJKOUT4(IJKOUTST+IJK),IJK=1,NOUT)
+        read(BLOCKUNIT,*) (IJKBNEU(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*) (IJKPNEU(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*) (IJKNEU1(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*) (IJKNEU2(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*) (IJKNEU3(IJKNEUST+IJK),IJK=1,NNEU)
+        read(BLOCKUNIT,*) (IJKNEU4(IJKNEUST+IJK),IJK=1,NNEU)
 
         read(BLOCKUNIT,*) (IJKBWAL(IJKWALST+IJK),IJK=1,NWAL)
         read(BLOCKUNIT,*) (IJKPWAL(IJKWALST+IJK),IJK=1,NWAL)
@@ -248,8 +249,8 @@ subroutine init
         read(BLOCKUNIT,*) (FY(IJKST+IJK), IJK=1,NIJK)
         read(BLOCKUNIT,*) (FZ(IJKST+IJK), IJK=1,NIJK)
         read(BLOCKUNIT,*) DXBL(B),DYBL(B),DZBL(B),VOLBL(B)
-        read(BLOCKUNIT,*) (SRDINL(IJKINLST+I),I=1,NINL)
-        read(BLOCKUNIT,*) (SRDOUT(IJKOUTST+I),I=1,NOUT)
+        !read(BLOCKUNIT,*) (SRDDIR(IJKDIRST+I),I=1,NDIR)
+        !read(BLOCKUNIT,*) (SRDNEU(IJKNEUST+I),I=1,NNEU)
         read(BLOCKUNIT,*) (SRDWAL(IJKWALST+I),I=1,NWAL)
         !
         read(BLOCKUNIT,*) (L(FACEST+I),I=1,NFACE)
@@ -409,12 +410,12 @@ subroutine updateBd
 
     do B=1,NB
         call setBlockInd(B)
-        do IJKINL=IJKINLST+1,IJKINLST+NINL
-            IJKB=IJKBINL(IJKINL)
+        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+            IJKB=IJKBDIR(IJKDIR)
             T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
         end do
-        do IJKOUT=IJKOUTST+1,IJKOUTST+NOUT
-            IJKB=IJKBOUT(IJKOUT)
+        do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
+            IJKB=IJKBNEU(IJKNEU)
             T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
         end do
         do IJKWAL=IJKWALST+1,IJKWALST+NWAL
@@ -441,6 +442,7 @@ subroutine updateGhost
     use parameterModule
     use varModule
     implicit none
+    integer :: IJK1,IJK2,IJK3,IJK4
 
     do B=1,NB
         call setBlockInd(B)
@@ -480,6 +482,30 @@ subroutine updateGhost
         end do
         end do
         end do
+
+        !print *, 'mass fluxes'
+        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+            IJKB=IJKBDIR(IJKDIR)
+            IJKP=IJKPDIR(IJKDIR)
+            !IJK1=IJKDIR1(IJKDIR)
+            IJK2=IJKDIR2(IJKDIR)
+            IJK3=IJKDIR3(IJKDIR)
+            IJK4=IJKDIR4(IJKDIR)
+            call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
+            FDIR(IJKDIR)=RHO*AR*(VX*NX+VY*NY+VZ*NZ)
+        end do
+
+        do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
+            IJKB=IJKBNEU(IJKNEU)
+            IJKP=IJKPNEU(IJKNEU)
+            !IJK1=IJKNEU1(IJKNEU)
+            IJK2=IJKNEU2(IJKNEU)
+            IJK3=IJKNEU3(IJKNEU)
+            IJK4=IJKNEU4(IJKNEU)
+            call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
+            !print *,MIJK(IJKP),AR,NX,NY,NZ
+            FNEU(IJKNEU)=RHO*AR*(VX*NX+VY*NY+VZ*NZ)
+        end do
     end do
     
 end subroutine updateGhost
@@ -506,7 +532,8 @@ subroutine calcSc
 #include <finclude/petscvec.h>
 #include <finclude/petscmat.h>
 
-    real*8 :: APT, URF
+    real*8 :: APT,URF,CB,CP
+    integer :: IJK1,IJK2,IJK3,IJK4
     PetscLogDouble :: time1, time2
 
     URF=1.0d0
@@ -538,7 +565,7 @@ subroutine calcSc
         do I=2,NIM-1
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            call fluxsc(IJK,IJK+NJ,IJK-NIJ-1,IJK-1,IJK,F1(IJK),FX(IJK),AW(IJK+NJ),AE(IJK))
+            call fluxsc(IJK,IJK+NJ,IJK-NIJ-1,IJK-1,IJK,F1(IJK),AW(IJK+NJ),AE(IJK),FX(IJK),1.0d0)
         end do
         end do
         end do
@@ -549,7 +576,7 @@ subroutine calcSc
         do I=2,NIM
         do J=2,NJM-1
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            call fluxsc(IJK,IJK+1,IJK-NIJ,IJK,IJK-NJ,F2(IJK),FY(IJK),AS(IJK+1),AN(IJK))
+            call fluxsc(IJK,IJK+1,IJK-NIJ,IJK,IJK-NJ,F2(IJK),AS(IJK+1),AN(IJK),FY(IJK),1.0d0)
         end do
         end do
         end do
@@ -560,7 +587,7 @@ subroutine calcSc
         do I=2,NIM
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            call fluxsc(IJK,IJK+NIJ,IJK-NJ-1,IJK-NJ,IJK,F3(IJK),FZ(IJK),AB(IJK+NIJ),AT(IJK))
+            call fluxsc(IJK,IJK+NIJ,IJK-NJ-1,IJK-NJ,IJK,F3(IJK),AB(IJK+NIJ),AT(IJK),FZ(IJK),1.0d0)
         end do
         end do
         end do
@@ -581,39 +608,47 @@ subroutine calcSc
             end do
         end if
 !
-!.....INLET BOUNARIES
+!.....DIRICHLET BOUNARIES
 !
-        !do IJKINL=IJKINLST+1,IJKINLST+NWAL
-        !    IJKP=IJKPINL(IJKINL)
-        !    IJKB=IJKBINL(IJKINL)
-        !    !IJK1=IJKINL1(IJKINL)
-        !    IJK2=IJKINL2(IJKINL)
-        !    IJK3=IJKINL3(IJKINL)
-        !    IJK4=IJKINL4(IJKINL)
-        !    DTX(IJKB)=DTX(IJKP)
-        !    DTY(IJKB)=DTY(IJKP)
-        !    DTZ(IJKB)=DTZ(IJKP)
-        !    FM=
-        !    call fluxsc(IJKP,IJKB,IJK2,IJK3,IJK4,CP,CB,ONE,ZERO)
-        !    AP(IJKP)=AP(IJKP)-CB
-        !    Q(IJKP)=Q(IJKP)-CB*T(IJB)
-        !end do
+        !print *, 'DIRET BOUNDARIES'
+        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+            IJKP=IJKPDIR(IJKDIR)
+            IJKB=IJKBDIR(IJKDIR)
+            !IJK1=IJKDIR1(IJKDIR)
+            IJK2=IJKDIR2(IJKDIR)
+            IJK3=IJKDIR3(IJKDIR)
+            IJK4=IJKDIR4(IJKDIR)
+            DTX(IJKB)=DTX(IJKP)
+            DTY(IJKB)=DTY(IJKP)
+            DTZ(IJKB)=DTZ(IJKP)
+
+            call fluxsc(IJKP,IJKB,IJK2,IJK3,IJK4,FDIR(IJKDIR),CP,CB,ONE,ZERO)
+
+            AP(IJKP)=AP(IJKP)-CB
+            !print *, Q(IJKP)
+            Q(IJKP)=Q(IJKP)-CB*T(IJKB)
+            !print *,MIJK(IJKP),AP(IJKP),Q(IJKP),CB
+        end do
 !
-!.....OUTET BOUNARIES
+!.....NEUMANN ZERO GRADIENT BOUNARIES
 !
-        !do IJKOUT=IJKOUTST+1,IJKOUTST+NOUT
-        !    IJKP=IJKPOUT(IJKOUT)
-        !    IJKB=IJKBOUT(IJKOUT)
-        !    !IJK1=IJKOUT1(IJKOUT)
-        !    IJK2=IJKOUT2(IJKOUT)
-        !    IJK3=IJKOUT3(IJKOUT)
-        !    IJK4=IJKOUT4(IJKOUT)
-        !    DTX(IJKB)=DTX(IJKP)
-        !    DTY(IJKB)=DTY(IJKP)
-        !    DTZ(IJKB)=DTZ(IJKP)
-        !    FM=
-        !    call fluxsc(IJKP,IJKB,IJK2,IJK3,IJK4,CP,CB,ONE,ZERO)
-        !end do
+        !print *, 'NEULET BOUNDARIES'
+        do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
+            IJKP=IJKPNEU(IJKNEU)
+            IJKB=IJKBNEU(IJKNEU)
+            T(IJKB)=T(IJKP)
+            !IJK1=IJKNEU1(IJKNEU)
+            IJK2=IJKNEU2(IJKNEU)
+            IJK3=IJKNEU3(IJKNEU)
+            IJK4=IJKNEU4(IJKNEU)
+            DTX(IJKB)=DTX(IJKP)
+            DTY(IJKB)=DTY(IJKP)
+            DTZ(IJKB)=DTZ(IJKP)
+
+            !print *,Q(IJKP)
+            call fluxsc(IJKP,IJKB,IJK2,IJK3,IJK4,FNEU(IJKNEU),CP,CB,ONE,ZERO)
+
+        end do
 !
 !.....WALL BOUNDARY CONTRIBUTION
 !
@@ -671,12 +706,11 @@ subroutine calcSc
         end do
 
         ! Assembly matrix coefficients of inlet boundaries
-        do IJKINL=IJKINLST+1,IJKINLST+NINL
-            IJK=IJKPINL(IJKINL)
+        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+            IJK=IJKPDIR(IJKDIR)
             IJKP=MIJK(IJK)
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
-            !print *, IJKINL,IJKPDI(IJKINL),row
             !
             val(4)=AP(IJK)
             valq=Q(IJK)
@@ -712,12 +746,11 @@ subroutine calcSc
         end do
 
         ! Assembly matrix coefficients of wall boundaries
-        do IJKOUT=IJKOUTST+1,IJKOUTST+NWAL
-            IJK=IJKPOUT(IJKOUT)
+        do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
+            IJK=IJKPNEU(IJKNEU)
             IJKP=MIJK(IJK)
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
-            !print *, IJKWAL,IJKPDI(IJKWAL),row
             !
             val(4)=AP(IJK)
             valq=Q(IJK)
@@ -1025,15 +1058,15 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
         end do
         end do
 !
-!.....CONTRIBUTION FROM INLET BOUNDARIES
+!.....CONTRIBUTION FROM DIRICHLET BOUNDARIES
 !
-        do IJKINL=IJKINLST+1,IJKINLST+NINL
-            IJKB=IJKBINL(IJKINL)
-            IJKP=IJKPINL(IJKINL)
-            !IJK1=IJKINL1(IJKINL)
-            IJK2=IJKINL2(IJKINL)
-            IJK3=IJKINL3(IJKINL)
-            IJK4=IJKINL4(IJKINL)
+        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+            IJKB=IJKBDIR(IJKDIR)
+            IJKP=IJKPDIR(IJKDIR)
+            !IJK1=IJKDIR1(IJKDIR)
+            IJK2=IJKDIR2(IJKDIR)
+            IJK3=IJKDIR3(IJKDIR)
+            IJK4=IJKDIR4(IJKDIR)
             
             call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
             
@@ -1041,20 +1074,20 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             SY=AR*NY
             SZ=AR*NZ
 
-            DFX(IJKPINL(IJKINL))=DFX(IJKPINL(IJKINL))+FI(IJKBINL(IJKINL))*SX
-            DFY(IJKPINL(IJKINL))=DFY(IJKPINL(IJKINL))+FI(IJKBINL(IJKINL))*SY
-            DFZ(IJKPINL(IJKINL))=DFZ(IJKPINL(IJKINL))+FI(IJKBINL(IJKINL))*SZ
+            DFX(IJKPDIR(IJKDIR))=DFX(IJKPDIR(IJKDIR))+FI(IJKBDIR(IJKDIR))*SX
+            DFY(IJKPDIR(IJKDIR))=DFY(IJKPDIR(IJKDIR))+FI(IJKBDIR(IJKDIR))*SY
+            DFZ(IJKPDIR(IJKDIR))=DFZ(IJKPDIR(IJKDIR))+FI(IJKBDIR(IJKDIR))*SZ
         end do
 !
-!.....CONTRIBUTION FROM OUTLET BOUNDARIES
+!.....CONTRIBUTION FROM NEUMANN BOUNDARIES
 !
-        do IJKOUT=IJKOUTST+1,IJKOUTST+NOUT
-            IJKB=IJKBOUT(IJKOUT)
-            IJKP=IJKPOUT(IJKOUT)
-            !IJK1=IJKOUT1(IJKOUT)
-            IJK2=IJKOUT2(IJKOUT)
-            IJK3=IJKOUT3(IJKOUT)
-            IJK4=IJKOUT4(IJKOUT)
+        do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
+            IJKB=IJKBNEU(IJKNEU)
+            IJKP=IJKPNEU(IJKNEU)
+            !IJK1=IJKNEU1(IJKNEU)
+            IJK2=IJKNEU2(IJKNEU)
+            IJK3=IJKNEU3(IJKNEU)
+            IJK4=IJKNEU4(IJKNEU)
             
             call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
             
@@ -1062,9 +1095,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
             SY=AR*NY
             SZ=AR*NZ
 
-            DFX(IJKPOUT(IJKOUT))=DFX(IJKPOUT(IJKOUT))+FI(IJKBOUT(IJKOUT))*SX
-            DFY(IJKPOUT(IJKOUT))=DFY(IJKPOUT(IJKOUT))+FI(IJKBOUT(IJKOUT))*SY
-            DFZ(IJKPOUT(IJKOUT))=DFZ(IJKPOUT(IJKOUT))+FI(IJKBOUT(IJKOUT))*SZ
+            DFX(IJKPNEU(IJKNEU))=DFX(IJKPNEU(IJKNEU))+FI(IJKBNEU(IJKNEU))*SX
+            DFY(IJKPNEU(IJKNEU))=DFY(IJKPNEU(IJKNEU))+FI(IJKBNEU(IJKNEU))*SY
+            DFZ(IJKPNEU(IJKNEU))=DFZ(IJKPNEU(IJKNEU))+FI(IJKBNEU(IJKNEU))*SZ
         end do
 !
 !.....CONTRIBUTION FROM WALL BOUNDARIES
@@ -1161,7 +1194,7 @@ end subroutine updateGrad
 !>   approximation. Note: cell face surface vector is directed 
 !>   from P to N.
 !################################################################
-subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
+subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
 !################################################################
         
     use boundaryModule
@@ -1173,11 +1206,9 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,FAC,CAP,CAN)
     use parameterModule
     use varModule
     implicit none
-    real(KIND=PREC), intent(in) :: FM,FAC
+    real(KIND=PREC), intent(in) :: FM,FAC,G
     integer, intent(in) :: IJKP,IJKN,IJK2,IJK3,IJK4
     real(KIND=PREC), intent(out) :: CAN, CAP
-
-    G=1.0d0
 
     FACP=1.0d0-FAC
     FII=T(IJKN)*FAC+T(IJKP)*FACP
@@ -1250,11 +1281,11 @@ subroutine walBdFlux
         SY=AR*NY
         SZ=AR*NZ
         !
-        COEFC=RHO*(SX*VX+SY*VY+SZ*VZ)
+        !COEFC=RHO*(SX*VX+SY*VY+SZ*VZ)
         COEFD=ALPHA*SRDWAL(IJKWAL)
-        AP(IJKP)=AP(IJKP)+COEFD-COEFC
-        Q(IJKP)=Q(IJKP)+(COEFD-COEFC)*T(IJKB)
-        !print *, MIJK(IJKP),COEFD,SRDWAL(IJKWAL),COEFC,AP(IJKP)
+        AP(IJKP)=AP(IJKP)+COEFD
+        Q(IJKP)=Q(IJKP)+COEFD*T(IJKB)
+        !print *, MIJK(IJKP),AP(IJKP),Q(IJKP),COEFD,COEFC
     end do
 
 end subroutine walBdFlux
@@ -1275,7 +1306,9 @@ subroutine blockBdFlux
     use parameterModule
     use varModule
     implicit none
-    real(KIND=PREC) :: FAC,FM
+    real(KIND=PREC) :: FAC,FM,G
+
+    G=1.0d0
 
     do F=FACEST+1,FACEST+NFACE
         FAC=FF(F)

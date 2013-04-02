@@ -17,7 +17,8 @@ CMPIF := mpif90
 CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
 #CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
 
-DPATH := ../order_verification/blockStructured/test/
+#DPATH := ../order_verification/
+DPATH := ../multiblock/
 
 OBJS := \
 	$(DPATH)parameterModule.o \

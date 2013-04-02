@@ -6,8 +6,8 @@ module parameterModule
     integer, parameter :: NYA=130
     integer, parameter :: NZA=130
     integer, parameter :: NXYZA=2197000
-    integer, parameter :: NINLAL=786432
-    integer, parameter :: NOUTAL=786432
+    integer, parameter :: NDIRAL=786432
+    integer, parameter :: NNEUAL=786432
     integer, parameter :: NWALAL=786432
     integer, parameter :: NBLOAL=786432
     integer, parameter :: PREC=8

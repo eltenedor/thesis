@@ -8,9 +8,9 @@ module indexModule
                 ! Time stepping indices
                 ITIM,ITIMS,ITIME,&
                 ! Global Size Variables
-                NIA,NJA,NKA,NIJA,NIJKA,NINLA,NOUTA,NWALA,NBLOA,&
+                NIA,NJA,NKA,NIJA,NIJKA,NDIRA,NNEUA,NWALA,NBLOA,&
                 ! Regular Indices block independent (IJKB needed?)
-                I,J,K,IJ,IK,JK,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKINL,IJKOUT,IJKWAL,IJKB,IJKBLO,IJKP,&
+                I,J,K,IJ,IK,JK,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKNEU,IJKWAL,IJKB,IJKBLO,IJKP,&
                 IJKSTL,IJKENL,IJKSTR,IJKENR,&
                 ! Indices for complete Blocks
                 B,BB,NB,&
@@ -27,10 +27,10 @@ module indexModule
                 IJKST,IJKBL(NBLOCKS),NIJKBL(NBLOCKS),NBL(NBLOCKS),&
                 !NICVBL(NBLOCKS),NJCVBL(NBLOCKS),NKCVBL(NBLOCKS),&
                 !LI(1000),LK(1000),&
-                ! block dependent indices (inlet boundary - INL)
-                IJKINLST,IJKINLBL(NBLOCKS),NINLBL(NBLOCKS),NINL,&
-                ! block dependent indices (outlet boundary - OUT)
-                IJKOUTST,IJKOUTBL(NBLOCKS),NOUTBL(NBLOCKS),NOUT,&
+                ! block dependent indices (inlet boundary - DIR)
+                IJKDIRST,IJKDIRBL(NBLOCKS),NDIRBL(NBLOCKS),NDIR,&
+                ! block dependent indices (outlet boundary - NEU)
+                IJKNEUST,IJKNEUBL(NBLOCKS),NNEUBL(NBLOCKS),NNEU,&
                 ! block dependent indices (wall boundary - WAL)
                 IJKWALST,IJKWALBL(NBLOCKS),NWALBL(NBLOCKS),NWAL,&
                 ! block dependent indices (block boundary - BLO, left - L, right - R)
@@ -98,11 +98,11 @@ subroutine setBlockInd1Int(B)
     IJKST=IJKBL(B)
     NIJK=NIJKBL(B)
     
-    IJKINLST=IJKINLBL(B)
-    NINL=NINLBL(B)
+    IJKDIRST=IJKDIRBL(B)
+    NDIR=NDIRBL(B)
     
-    IJKOUTST=IJKOUTBL(B)
-    NOUT=NOUTBL(B)
+    IJKNEUST=IJKNEUBL(B)
+    NNEU=NNEUBL(B)
 
     IJKWALST=IJKWALBL(B)
     NWAL=NWALBL(B)
