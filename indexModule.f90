@@ -8,10 +8,10 @@ module indexModule
                 ! Time stepping indices
                 ITIM,ITIMS,ITIME,&
                 ! Global Size Variables
-                NIA,NJA,NKA,NIJA,NIJKA,NDIRA,NBLOCKA,&
+                NIA,NJA,NKA,NIJA,NIJKA,NINLA,NOUTA,NWALA,NBLOA,&
                 ! Regular Indices block independent (IJKB needed?)
-                I,J,K,IJ,IK,JK,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKB,IJKBLOCK,IJKP,&
-                IJKSTL,IJKEL,IJKSTR,IJKER,&
+                I,J,K,IJ,IK,JK,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKINL,IJKOUT,IJKWAL,IJKB,IJKBLO,IJKP,&
+                IJKSTL,IJKENL,IJKSTR,IJKENR,&
                 ! Indices for complete Blocks
                 B,BB,NB,&
                 ! Indices inside Blocks
@@ -27,11 +27,15 @@ module indexModule
                 IJKST,IJKBL(NBLOCKS),NIJKBL(NBLOCKS),NBL(NBLOCKS),&
                 !NICVBL(NBLOCKS),NJCVBL(NBLOCKS),NKCVBL(NBLOCKS),&
                 !LI(1000),LK(1000),&
-                ! block dependent indices (dirichlet boundary)
-                IJKDIRST,IJKDIRBL(NBLOCKS),NDIRBL(NBLOCKS),NDIR,&
-                ! block dependent indices (block boundary)
-                IJKBLOCKBL(NBLOCKS),NBLOCKBL(NBLOCKS),&
-                IJKBLOCKST,NBLOCK,IJKBLOCKSTL,NBLOCKL,IJKBLOCKSTR,NBLOCKR,&
+                ! block dependent indices (inlet boundary - INL)
+                IJKINLST,IJKINLBL(NBLOCKS),NINLBL(NBLOCKS),NINL,&
+                ! block dependent indices (outlet boundary - OUT)
+                IJKOUTST,IJKOUTBL(NBLOCKS),NOUTBL(NBLOCKS),NOUT,&
+                ! block dependent indices (wall boundary - WAL)
+                IJKWALST,IJKWALBL(NBLOCKS),NWALBL(NBLOCKS),NWAL,&
+                ! block dependent indices (block boundary - BLO, left - L, right - R)
+                IJKBLOBL(NBLOCKS),NBLOBL(NBLOCKS),&
+                IJKBLOST,NBLO,IJKBLOSTL,NBLOL,IJKBLOSTR,NBLOR,&
                 IJKMARKL,IJKMARKR,&
                 ! block dependent indices (boundary faces)
                 F,NF,&
@@ -60,11 +64,11 @@ subroutine setBlockInd2Int(BL,BR)
     implicit none
     integer, intent(in) :: BL,BR
 
-    IJKBLOCKSTL=IJKBLOCKBL(BL)
-    NBLOCKL=NBLOCKBL(BL)
+    IJKBLOSTL=IJKBLOBL(BL)
+    NBLOL=NBLOBL(BL)
     
-    IJKBLOCKSTR=IJKBLOCKBL(BR)
-    NBLOCKR=NBLOCKBL(BR)
+    IJKBLOSTR=IJKBLOBL(BR)
+    NBLOR=NBLOBL(BR)
 
 end subroutine setBlockInd2Int
 
@@ -93,12 +97,18 @@ subroutine setBlockInd1Int(B)
 
     IJKST=IJKBL(B)
     NIJK=NIJKBL(B)
-
-    IJKBLOCKST=IJKBLOCKBL(B)
-    NBLOCK=NBLOCKBL(B)
     
-    IJKDIRST=IJKDIRBL(B)
-    NDIR=NDIRBL(B)
+    IJKINLST=IJKINLBL(B)
+    NINL=NINLBL(B)
+    
+    IJKOUTST=IJKOUTBL(B)
+    NOUT=NOUTBL(B)
+
+    IJKWALST=IJKWALBL(B)
+    NWAL=NWALBL(B)
+    
+    IJKBLOST=IJKBLOBL(B)
+    NBLO=NBLOBL(B)
     
     FACEST=FACEBL(B)
     NFACE=NFACEBL(B)

@@ -56,7 +56,7 @@ solver: $(OBJS)
 	@echo 'Invoking MPIF90 Compiler'
 	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
 
-clean:M
+clean:
 	@rm -rf *.o *.mod $(DPATH)*.mod $(DPATH)*.o
 
 ################################# ADDITIONAL COMMENTS ##################################
@@ -66,4 +66,4 @@ clean:M
 # 	first version used (run (as su) from $PETSC_DIR):
 # ./configure --with-cc=gcc --with-fc=gfortran --download-f-blas-lapack --download-mpich
 #	second version used (mpich2, lapack and blas installed in std. paths):
-#./configure
+#./configure --with-mpi-dir=/usr/lib/mpich2

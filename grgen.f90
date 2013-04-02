@@ -35,71 +35,87 @@ subroutine readData
 
     integer :: ITYP
     
+    BLOCKUNIT=OFFSET+B
+
     write(BLOCK_CH,'(I1)') B
-    BLOCKFILE=trim(FILIN)//'_'//trim(BLOCK_CH)//'.inp'
     !PRINT *, ' INPUT FILE NAME (* - KEYBOARD):  '
     !READ(*,1) FILIN
     IF(FILIN.NE.'*') THEN
-        OPEN (UNIT=2,FILE=BLOCKFILE)
-        REWIND 2
+        BLOCKFILE=trim(FILIN)//'_'//trim(BLOCK_CH)//'.inp'
+        OPEN (UNIT=BLOCKUNIT,FILE=BLOCKFILE)
+        REWIND BLOCKUNIT
         ITYP=0
     ELSE
-        OPEN (UNIT=1,FILE='grid.inp')
-        REWIND 1
+        BLOCKFILE='grid_'//trim(BLOCK_CH)//'.inp'
+        OPEN (UNIT=BLOCKUNIT,FILE=BLOCKFILE)
+        REWIND BLOCKUNIT
         ITYP=1
     ENDIF
 
     PRINT *, ' OUTPUT FILE NAME:  '
     IF(ITYP.EQ.1) THEN
         READ(*,1) FILOUT
-        WRITE(1,1) FILOUT
+        WRITE(BLOCKUNIT,1) FILOUT
     ELSE
-        READ(2,1) FILOUT
+        READ(BLOCKUNIT,1) FILOUT
+        print *, FILOUT
     ENDIF
     1 FORMAT(A12)
-
-    OPEN (UNIT=3,FILE=FILOUT)
-    REWIND 3
 
     PRINT *, ' ENTER> XSTART, XEND, NUMBER OF CVS:  '
     IF(ITYP.EQ.1) THEN
         READ(*,*) XXS,XXE,NICV
-        WRITE(1,*) XXS,XXE,NICV,'   XS,XE,NICV '
+        WRITE(BLOCKUNIT,*) XXS,XXE,NICV,'   XS,XE,NICV '
     ELSE
-        READ(2,*) XXS,XXE,NICV
+        READ(BLOCKUNIT,*) XXS,XXE,NICV
+        print *, XXS,XXE,NICV
     END IF
 
     PRINT *, ' ENTER> YSTART, YEND, NUMBER OF CVS:  '
     IF(ITYP.EQ.1) THEN
         READ(*,*) YYS,YYE,NJCV
-        WRITE(1,*) YYS,YYE,NJCV,'   YS,YE,NJCV '
+        WRITE(BLOCKUNIT,*) YYS,YYE,NJCV,'   YS,YE,NJCV '
     ELSE
-        READ(2,*) YYS,YYE,NJCV
+        READ(BLOCKUNIT,*) YYS,YYE,NJCV
+        print *, YYS,YYE,NJCV
     END IF
 
     PRINT *, ' ENTER> ZSTART, ZEND, NUMBER OF CVS:  '
     IF(ITYP.EQ.1) THEN
         READ(*,*) ZZS,ZZE,NKCV
-        WRITE(1,*) ZZS,ZZE,NKCV,'   ZS,ZE,NKCV '
+        WRITE(BLOCKUNIT,*) ZZS,ZZE,NKCV,'   ZS,ZE,NKCV '
     ELSE
-        READ(2,*) ZZS,ZZE,NKCV
+        READ(BLOCKUNIT,*) ZZS,ZZE,NKCV
+        print *, ZZS,ZZE,NKCV
     END IF
 
-    PRINT *, ' ENTER> BOUNDARY TYPE S N W E B T:  (1 - DIRICHLET, 2 - BLOCK)'
+    PRINT *, ' ENTER> BOUNDARY TYPE S N W E B T:'
+    print *, '(1 - INLET (DIRICHLET), 2 - OUTLET (NEUMANN ZERO GRADIENT), 3 WALL (DIRICHLET), 4 BLOCK)'
     IF(ITYP.EQ.1) THEN
         READ(*,*) BTYP(1:6)
-        WRITE(1,*) BTYP(1:6),  '   SBTYP, NBTYP, WBTYP, EBTYP,  BBTYP ,TBTYP '
+        WRITE(BLOCKUNIT,*) BTYP(1:6),  '   SBTYP, NBTYP, WBTYP, EBTYP,  BBTYP ,TBTYP '
     ELSE
-        READ(2,*) BTYP(1:6)
+        READ(BLOCKUNIT,*) BTYP(1:6)
+        print *, BTYP(1:6)
     END IF
     
-    PRINT *, ' ENTER> NEIGHBOUR INDEX S N W E T B:  (-1 - NO NEIGHBOUR)'
-    IF(ITYP.EQ.1) THEN
-        READ(*,*) NEIGH(B,1:6)
-        WRITE(1,*) NEIGH(B,1:6),  '   SNEIGH, NNEIGH, WNEIGH, ENEIGH, BNEIGH, TNEIGH '
-    ELSE
-        READ(2,*) NEIGH(B,1:6)
-    END IF
+    !if(NB.gt.1) then
+        PRINT *, ' ENTER> NEIGHBOUR INDEX S N W E T B:  (-1 - NO NEIGHBOUR)'
+        IF(ITYP.EQ.1) THEN
+            READ(*,*) NEIGH(B,1:6)
+            WRITE(BLOCKUNIT,*) NEIGH(B,1:6),  '   SNEIGH, NNEIGH, WNEIGH, ENEIGH, BNEIGH, TNEIGH '
+        ELSE
+            READ(BLOCKUNIT,*) NEIGH(B,1:6)
+            print *, NEIGH(B,1:6)
+        END IF
+    !else
+    !    NEIGH(1,:)=-1
+    !end if
+
+    close(unit=BLOCKUNIT)
+    OPEN (UNIT=BLOCKUNIT,FILE=FILOUT)
+    REWIND BLOCKUNIT
+
        
 end subroutine readData
 
@@ -179,62 +195,85 @@ subroutine gridExport
     DX=(XXE-XXS)/dble(NICV)
     DY=(YYE-YYS)/dble(NJCV)
     DZ=(ZZE-ZZS)/dble(NKCV)
+
     
-    write(3,*)  NI,NJ,NK,NIJK,NBLOCK,NDIR
-    write(3,*)  (NEIGH(B,I),I=1,6)
+    write(BLOCKUNIT,*)  NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO
+    write(BLOCKUNIT,*)  (NEIGH(B,I),I=1,6)
     !print *, (NEIGH(B,I),I=1,6)
     !write(3,*)  (LK(K),K=1,NK)
     !write(3,*)  (LI(I),I=1,NI)
 
-    write(3,*)  (X(I),I=1,NIJK)
-    write(3,*)  (Y(I),I=1,NIJK)
-    write(3,*)  (Z(I),I=1,NIJK)
-    write(3,*)  (XC(I),I=1,NIJK)
-    write(3,*)  (YC(I),I=1,NIJK)
-    write(3,*)  (ZC(I),I=1,NIJK)
+    write(BLOCKUNIT,*)  (X(I),I=1,NIJK)
+    write(BLOCKUNIT,*)  (Y(I),I=1,NIJK)
+    write(BLOCKUNIT,*)  (Z(I),I=1,NIJK)
+    write(BLOCKUNIT,*)  (XC(I),I=1,NIJK)
+    write(BLOCKUNIT,*)  (YC(I),I=1,NIJK)
+    write(BLOCKUNIT,*)  (ZC(I),I=1,NIJK)
 
-    write(3,*)  (IJKBBL(I),I=1,NBLOCK)
-    write(3,*)  (IJKPBL(I),I=1,NBLOCK)
-    write(3,*)  (IJKBL1(I),I=1,NBLOCK)
-    write(3,*)  (IJKBL2(I),I=1,NBLOCK)
-    write(3,*)  (IJKBL3(I),I=1,NBLOCK)
-    write(3,*)  (IJKBL4(I),I=1,NBLOCK)
+    write(BLOCKUNIT,*)  (IJKBINL(I),I=1,NINL)
+    write(BLOCKUNIT,*)  (IJKPINL(I),I=1,NINL)
+    write(BLOCKUNIT,*)  (IJKINL1(I),I=1,NINL)
+    write(BLOCKUNIT,*)  (IJKINL2(I),I=1,NINL)
+    write(BLOCKUNIT,*)  (IJKINL3(I),I=1,NINL)
+    write(BLOCKUNIT,*)  (IJKINL4(I),I=1,NINL)
     
-    write(3,*)  (IJKBDI(I),I=1,NDIR)
-    write(3,*)  (IJKPDI(I),I=1,NDIR)
-    write(3,*)  (IJKDI1(I),I=1,NDIR)
-    write(3,*)  (IJKDI2(I),I=1,NDIR)
-    write(3,*)  (IJKDI3(I),I=1,NDIR)
-    write(3,*)  (IJKDI4(I),I=1,NDIR)
+    write(BLOCKUNIT,*)  (IJKBOUT(I),I=1,NOUT)
+    write(BLOCKUNIT,*)  (IJKPOUT(I),I=1,NOUT)
+    write(BLOCKUNIT,*)  (IJKOUT1(I),I=1,NOUT)
+    write(BLOCKUNIT,*)  (IJKOUT2(I),I=1,NOUT)
+    write(BLOCKUNIT,*)  (IJKOUT3(I),I=1,NOUT)
+    write(BLOCKUNIT,*)  (IJKOUT4(I),I=1,NOUT)
+    
+    write(BLOCKUNIT,*)  (IJKBWAL(I),I=1,NWAL)
+    write(BLOCKUNIT,*)  (IJKPWAL(I),I=1,NWAL)
+    write(BLOCKUNIT,*)  (IJKWAL1(I),I=1,NWAL)
+    write(BLOCKUNIT,*)  (IJKWAL2(I),I=1,NWAL)
+    write(BLOCKUNIT,*)  (IJKWAL3(I),I=1,NWAL)
+    write(BLOCKUNIT,*)  (IJKWAL4(I),I=1,NWAL)
 
-    write(3,*)  (FX(I), I=1,NIJK)
-    write(3,*)  (FY(I), I=1,NIJK)
-    write(3,*)  (FZ(I), I=1,NIJK)
+    write(BLOCKUNIT,*)  (IJKBBLO(I),I=1,NBLO)
+    write(BLOCKUNIT,*)  (IJKPBLO(I),I=1,NBLO)
+    write(BLOCKUNIT,*)  (IJKBLO1(I),I=1,NBLO)
+    write(BLOCKUNIT,*)  (IJKBLO2(I),I=1,NBLO)
+    write(BLOCKUNIT,*)  (IJKBLO3(I),I=1,NBLO)
+    write(BLOCKUNIT,*)  (IJKBLO4(I),I=1,NBLO)
+    
+    write(BLOCKUNIT,*)  (FX(I), I=1,NIJK)
+    write(BLOCKUNIT,*)  (FY(I), I=1,NIJK)
+    write(BLOCKUNIT,*)  (FZ(I), I=1,NIJK)
 
-    write(3,*)  DX,DY,DZ,VOL
-    write(3,*)  (SRDDI(I),I=1,NDIR)
+    write(BLOCKUNIT,*)  DX,DY,DZ,VOL
+    write(BLOCKUNIT,*)  (SRDINL(I),I=1,NINL)
+    write(BLOCKUNIT,*)  (SRDOUT(I),I=1,NOUT)
+    write(BLOCKUNIT,*)  (SRDWAL(I),I=1,NWAL)
 
-    write(BLOCK_CH,'(I1)') B
-    VTKFILE='grid_'//trim(BLOCK_CH)//'.vtk'
+    close(unit=BLOCKUNIT)
+
 !
 !.....Create .vtk file
 !
+    write(BLOCK_CH,'(I1)') B
+    VTKFILE='grid_'//trim(BLOCK_CH)//'.vtk'
+    open (unit=BLOCKUNIT,FILE=VTKFILE)
+    rewind BLOCKUNIT
+
     print *, ' *** GENERATING .VTK *** '
-    open (unit=4,FILE=VTKFILE)
-    write(4,'(A)') '# vtk DataFile Version 3.0'
-    write(4,'(A)') 'grid'
-    write(4,'(A)') 'ASCII'
-    write(4,'(A)') 'DATASET STRUCTURED_GRID'
-    write(4,'(A I6 I6 I6)') 'DIMENSIONS', NIM,NJM,NKM
-    write(4,'(A I10 A)') 'Points ', NIM*NJM*NKM, ' float'
+    write(BLOCKUNIT,'(A)') '# vtk DataFile Version 3.0'
+    write(BLOCKUNIT,'(A)') 'grid'
+    write(BLOCKUNIT,'(A)') 'ASCII'
+    write(BLOCKUNIT,'(A)') 'DATASET STRUCTURED_GRID'
+    write(BLOCKUNIT,'(A I6 I6 I6)') 'DIMENSIONS', NIM,NJM,NKM
+    write(BLOCKUNIT,'(A I10 A)') 'Points ', NIM*NJM*NKM, ' float'
     do K=1,NKM
     do J=1,NJM
     do I=1,NIM
         IJK=(K-1)*NI*NJ+(I-1)*NJ+J
-        write(4,'(E20.10,1X,E20.10,1X,E20.10)'), X(IJK), Y(IJK),Z(IJK)
+        write(BLOCKUNIT,'(E20.10,1X,E20.10,1X,E20.10)'), X(IJK), Y(IJK),Z(IJK)
     end do
     end do
     end do
+
+    close(unit=BLOCKUNIT)
 
 end subroutine gridExport
 
@@ -277,10 +316,14 @@ subroutine setBc
         end if
     end do
 
-    call defbc(1,NDIR,IJKBDI,IJKPDI,IJKDI1,IJKDI2,IJKDI3,IJKDI4)
-    NDIRA=NDIRA+NDIR
-    call defbc(2,NBLOCK,IJKBBL,IJKPBL,IJKBL1,IJKBL2,IJKBL3,IJKBL4)
-    NBLOCKA=NBLOCKA+NBLOCK
+    call defbc(1,NINL,IJKBINL,IJKPINL,IJKINL1,IJKINL2,IJKINL3,IJKINL4)
+    NINLA=NINLA+NINL
+    call defbc(2,NOUT,IJKBOUT,IJKPOUT,IJKOUT1,IJKOUT2,IJKOUT3,IJKOUT4)
+    NOUTA=NOUTA+NOUT
+    call defbc(3,NWAL,IJKBWAL,IJKPWAL,IJKWAL1,IJKWAL2,IJKWAL3,IJKWAL4)
+    NWALA=NWALA+NWAL
+    call defbc(4,NBLO,IJKBBLO,IJKPBLO,IJKBLO1,IJKBLO2,IJKBLO3,IJKBLO4)
+    NBLOA=NBLOA+NBLO
 
 end subroutine setBc
 
@@ -666,17 +709,43 @@ subroutine calcG
 !
 !....Normal distance from cell face center to cell center
 !
-    do IJKDIR=1,NDIR
-        IJKB=IJKBDI(IJKDIR)
-        IJKP=IJKPDI(IJKDIR)
-        !IJK1=IJKDI1(IJKDIR)
-        IJK2=IJKDI2(IJKDIR)
-        IJK3=IJKDI3(IJKDIR)
-        IJK4=IJKDI4(IJKDIR)
+    do IJKINL=1,NINL
+        IJKB=IJKBINL(IJKINL)
+        IJKP=IJKPINL(IJKINL)
+        !IJK1=IJKINL1(IJKINL)
+        IJK2=IJKINL2(IJKINL)
+        IJK3=IJKINL3(IJKINL)
+        IJK4=IJKINL4(IJKINL)
         !
         call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
         !
-        SRDDI(IJKDIR)=AR/(DN+SMALL)
+        SRDINL(IJKINL)=AR/(DN+SMALL)
+    end do
+
+    do IJKOUT=1,NOUT
+        IJKB=IJKBOUT(IJKOUT)
+        IJKP=IJKPOUT(IJKOUT)
+        !IJK1=IJKOUT1(IJKOUT)
+        IJK2=IJKOUT2(IJKOUT)
+        IJK3=IJKOUT3(IJKOUT)
+        IJK4=IJKOUT4(IJKOUT)
+        !
+        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
+        !
+        SRDOUT(IJKOUT)=AR/(DN+SMALL)
+    end do
+
+    do IJKWAL=1,NWAL
+        IJKB=IJKBWAL(IJKWAL)
+        IJKP=IJKPWAL(IJKWAL)
+        !IJK1=IJKWAL1(IJKWAL)
+        IJK2=IJKWAL2(IJKWAL)
+        IJK3=IJKWAL3(IJKWAL)
+        IJK4=IJKWAL4(IJKWAL)
+        !
+        call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
+        !
+        SRDWAL(IJKWAL)=AR/(DN+SMALL)
     end do
 
 end subroutine calcG
@@ -691,21 +760,22 @@ subroutine writeParamMod
     implicit none
 
 !...Create solver file
-    !OPEN(UNIT=9,FILE='../../../pet_src/paramMod.F90')
     OPEN(UNIT=9,FILE='parameterModule.f90')
     REWIND 9
     
     write(9,'(A22)') 'module parameterModule'
-    write(9,'(A13)') 'implicit none'
-    write(9,'(A22 A4 I6 A1)') 'integer, parameter :: ', 'NXA=', NIA,'&' 
-    write(9,'(A5 I6 A1)') ',NYA=', NJA, '&'
-    write(9,'(A5 I6 A1)') ',NZA=', NKA, '&'
-    write(9,'(A7 I9 A1)') ',NXYZA=', NIJKA, '&'
-    write(9,'(A8 I6 A1)') ',NDIRAL=', NDIRA,'&'
-    write(9,'(A10 I6 A1)') ',NBLOCKAL=', NBLOCKA, '&'
-    write(9,'(A9 I6 A1)')   ',NBLOCKS=',NB,'&'
-    write(9,'(A6 I1 A1)') ',PREC=',PREC,'&'
-    write(9,'(A9 I6 A1)') ',NFACEAL=',100000
+    write(9,'(4X, A13)') 'implicit none'
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NXA=', NIA
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NYA=', NJA
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NZA=', NKA
+    write(9,'(4X, A22, A6, I9)') 'integer, parameter :: ', 'NXYZA=', NIJKA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NINLAL=', NINLA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NOUTAL=', NOUTA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NWALAL=', NWALA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOA
+    write(9,'(4X, A22, A8, I6)')   'integer, parameter :: ', 'NBLOCKS=',NB
+    write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
+    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NFACEAL=',100000
     write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParamMod

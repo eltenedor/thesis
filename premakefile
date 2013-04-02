@@ -1,7 +1,8 @@
 INCLUDES := -I/usr/include/opencascade
 
 #LIBS := -lTKBinXCAF -lTKIGES -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTL -lTKVRML -lTKXCAF -lTKXCAFSchema -lTKXDEIGES -lTKXDESTEP -lTKXSBase -lTKXmlXCAF
-LIBS := -lTKAdvTools -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBool -lTKBO -lTKBRep -lTKCAF -lTKCDF -lTKernel -lTKFeat -lTKFillet -lTKG2d -lTKG3d -lTKGeomAlgo -lTKGeomBase -lTKHLR -lTKIGES -lTKLCAF -lTKMath -lTKMesh -lTKMeshVS -lTKNIS -lTKOffset -lTKOpenGl -lTKPCAF -lTKPLCAF -lTKPrim -lTKPShape -lTKService -lTKShapeSchema -lTKShHealing -lTKStdLSchema -lTKStdSchema -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTEP -lTKSTL -lTKTObj -lTKTopAlgo -lTKV2d -lTKV3d -lTKVRML -lTKXCAFSchema -lTKXCAF -lTKXDEIGES -lTKXDESTEP -lTKXMesh -lTKXmlL -lTKXml -lTKXmlTObj -lTKXmlXCAF -lTKXSBase
+LIBS := -lTKAdvTools -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBool -lTKBO -lTKBRep -lTKCAF -lTKCDF -lTKernel -lTKFeat -lTKFillet -lTKG2d -lTKG3d -lTKGeomAlgo -lTKGeomBase -lTKHLR -lTKIGES -lTKLCAF -lTKMath -lTKMesh -lTKMeshVS -lTKNIS -lTKOffset -lTKOpenGl -lTKPCAF -lTKPLCAF -lTKPrim -lTKPShape -lTKService -lTKShapeSchema -lTKShHealing -lTKStdLSchema -lTKStdSchema -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTEP -lTKSTL -lTKTObj -lTKTopAlgo -lTKV2d -lTKV3d -lTKVRML -lTKXCAFSchema -lTKXCAF -lTKXDEIGES -lTKXDESTEP -lTKXMesh -lTKXmlL -lTKXml -lTKXmlTObj -lTKXmlXCAF
+# -lTKXSBase
 
 CFORT := gfortran
 CFORTFLAGS := -c -Wall -Wno-unused-variable
@@ -25,11 +26,11 @@ OBJS := \
 
 all: preprocessing
 
+#@rm -rf *.o *.mod $(DPATH)*.o $(DPATH)*.mod
 preprocessing: $(OBJS)
 	@echo
 	@echo 'Invoking Fortran Linker'
 	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
-	@rm -rf *.o *.mod $(DPATH)*.o $(DPATH)*.mod
 	@echo
 	@echo 'DONE'
 	
@@ -44,5 +45,5 @@ preprocessing: $(OBJS)
 	$(CFORT) $(CFORTFLAGS) $< -o $@
 
 clean:
-	@rm -rf *.o *.mod $(DPATH)*.o $(DPATH)*.mod
+	@rm -rf *.o *.mod $(DPATH)*.mod $(DPATH)*.o
 

@@ -2,19 +2,24 @@ module boundaryModule
 
     use parameterModule
     implicit none
-    integer ::  IJKBDI(NDIRAL), IJKPDI(NDIRAL), IJKDI1(NDIRAL), IJKDI2(NDIRAL), IJKDI3(NDIRAL), IJKDI4(NDIRAL), &
+    integer ::  IJKBINL(NINLAL), IJKPINL(NINLAL), IJKINL1(NINLAL), IJKINL2(NINLAL), IJKINL3(NINLAL), IJKINL4(NINLAL)
+    integer ::  IJKBOUT(NOUTAL), IJKPOUT(NOUTAL), IJKOUT1(NOUTAL), IJKOUT2(NOUTAL), IJKOUT3(NOUTAL), IJKOUT4(NOUTAL)
+    integer ::  IJKBWAL(NWALAL), IJKPWAL(NWALAL), IJKWAL1(NWALAL), IJKWAL2(NWALAL), IJKWAL3(NWALAL), IJKWAL4(NWALAL)
     
     !
     ! block boundary related data (only needed for grid generation and preprocessing)
     !
-                IJKBBL(NBLOCKAL), IJKPBL(NBLOCKAL), IJKBL1(NBLOCKAL), IJKBL2(NBLOCKAL), IJKBL3(NBLOCKAL), IJKBL4(NBLOCKAL), &
-                BTYP(6),&
+    integer ::  IJKBBLO(NBLOAL), IJKPBLO(NBLOAL), IJKBLO1(NBLOAL), IJKBLO2(NBLOAL), IJKBLO3(NBLOAL), IJKBLO4(NBLOAL)
+
+    integer ::  BTYP(6),&
     !
     ! face index related data
     !
                 L(NFACEAL),R(NFACEAL)
                 
-    real(KIND=PREC) :: SRDDI(NDIRAL)
+    real(KIND=PREC) :: SRDINL(NINLAL)
+    real(KIND=PREC) :: SRDOUT(NOUTAL)
+    real(KIND=PREC) :: SRDWAL(NWALAL)
     !
     ! face geometry related data
     !

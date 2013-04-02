@@ -40,27 +40,28 @@ subroutine readData
     implicit none
     
     NB=NBLOCKS
-    OFFSET=20
     BLOCKUNIT=OFFSET+1
     write(BLOCK_CH,'(I1)') (BLOCKUNIT-OFFSET)
     BLOCKFILE='grid_'//trim(BLOCK_CH)//'.pre'
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
-    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NBLOCK,NDIR
+    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO
     
     IBL(1)=0
     JBL(1)=0
     KBL(1)=0
     IJKBL(1)=0
-    IJKBLOCKBL(1)=0
-    IJKDIRBL(1)=0
+    IJKINLBL(1)=0
+    IJKOUTBL(1)=0
+    IJKWALBL(1)=0
+    IJKBLOBL(1)=0
     NIBL(1)=NI
     NJBL(1)=NJ
     NKBL(1)=NK
     NIJKBL(1)=NIJK
-    NBLOCKBL(1)=NBLOCK
-    NDIRBL(1)=NDIR
+    NBLOBL(1)=NBLO
+    NWALBL(1)=NWAL
     
     do B=2,NB
         BLOCKUNIT=OFFSET+B
@@ -68,21 +69,25 @@ subroutine readData
         BLOCKFILE='grid_'//trim(BLOCK_CH)//'.pre'
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         rewind BLOCKUNIT
-        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NBLOCK,NDIR
+        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO
 
         BB=B-1
         IBL(B)=IBL(BB)+NIBL(BB)
         JBL(B)=JBL(BB)+NJBL(BB)
         KBL(B)=KBL(BB)+NKBL(BB)
         IJKBL(B)=IJKBL(BB)+NIJKBL(BB)
-        IJKBLOCKBL(B)=IJKBLOCKBL(BB)+NBLOCKBL(BB)
-        IJKDIRBL(B)=IJKDIRBL(BB)+NDIRBL(BB)
+        IJKINLBL(B)=IJKINLBL(BB)+NINLBL(BB)
+        IJKOUTBL(B)=IJKOUTBL(BB)+NOUTBL(BB)
+        IJKWALBL(B)=IJKWALBL(BB)+NWALBL(BB)
+        IJKBLOBL(B)=IJKBLOBL(BB)+NBLOBL(BB)
         NIBL(B)=NI
         NJBL(B)=NJ
         NKBL(B)=NK
         NIJKBL(B)=NIJK
-        NBLOCKBL(B)=NBLOCK
-        NDIRBL(B)=NDIR
+        NINLBL(B)=NINL
+        NOUTBL(B)=NOUT
+        NWALBL(B)=NWAL
+        NBLOBL(B)=NBLO
     end do
 
     call createMapping
@@ -94,66 +99,96 @@ subroutine readData
         !print *, (NEIGH(B,I),I=1,6)
         !read(BLOCKUNIT,*)   (LK(KST+K),K=1,NK)
         !read(BLOCKUNIT,*)   (LI(IST+I),I=1,NI)
+        
         read(BLOCKUNIT,*)   (X(IJKST+IJK),IJK=1,NIJK)
         read(BLOCKUNIT,*)   (Y(IJKST+IJK),IJK=1,NIJK)
         read(BLOCKUNIT,*)   (Z(IJKST+IJK),IJK=1,NIJK)
         read(BLOCKUNIT,*)   (XC(IJKST+IJK),IJK=1,NIJK)
         read(BLOCKUNIT,*)   (YC(IJKST+IJK),IJK=1,NIJK)
         read(BLOCKUNIT,*)   (ZC(IJKST+IJK),IJK=1,NIJK)
-        read(BLOCKUNIT,*)   (IJKBBL(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-        read(BLOCKUNIT,*)   (IJKPBL(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-        read(BLOCKUNIT,*)   (IJKBL1(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-        read(BLOCKUNIT,*)   (IJKBL2(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-        read(BLOCKUNIT,*)   (IJKBL3(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-        read(BLOCKUNIT,*)   (IJKBL4(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-        read(BLOCKUNIT,*)   (IJKBDI(IJKDIRST+IJK),IJK=1,NDIR)
-        read(BLOCKUNIT,*)   (IJKPDI(IJKDIRST+IJK),IJK=1,NDIR)
-        read(BLOCKUNIT,*)   (IJKDI1(IJKDIRST+IJK),IJK=1,NDIR)
-        read(BLOCKUNIT,*)   (IJKDI2(IJKDIRST+IJK),IJK=1,NDIR)
-        read(BLOCKUNIT,*)   (IJKDI3(IJKDIRST+IJK),IJK=1,NDIR)
-        read(BLOCKUNIT,*)   (IJKDI4(IJKDIRST+IJK),IJK=1,NDIR)
+        
+        read(BLOCKUNIT,*)   (IJKBINL(IJKINLST+IJK),IJK=1,NINL)
+        read(BLOCKUNIT,*)   (IJKPINL(IJKINLST+IJK),IJK=1,NINL)
+        read(BLOCKUNIT,*)   (IJKINL1(IJKINLST+IJK),IJK=1,NINL)
+        read(BLOCKUNIT,*)   (IJKINL2(IJKINLST+IJK),IJK=1,NINL)
+        read(BLOCKUNIT,*)   (IJKINL3(IJKINLST+IJK),IJK=1,NINL)
+        read(BLOCKUNIT,*)   (IJKINL4(IJKINLST+IJK),IJK=1,NINL)
+        
+        read(BLOCKUNIT,*)   (IJKBOUT(IJKOUTST+IJK),IJK=1,NOUT)
+        read(BLOCKUNIT,*)   (IJKPOUT(IJKOUTST+IJK),IJK=1,NOUT)
+        read(BLOCKUNIT,*)   (IJKOUT1(IJKOUTST+IJK),IJK=1,NOUT)
+        read(BLOCKUNIT,*)   (IJKOUT2(IJKOUTST+IJK),IJK=1,NOUT)
+        read(BLOCKUNIT,*)   (IJKOUT3(IJKOUTST+IJK),IJK=1,NOUT)
+        read(BLOCKUNIT,*)   (IJKOUT4(IJKOUTST+IJK),IJK=1,NOUT)
+        
+        read(BLOCKUNIT,*)   (IJKBWAL(IJKWALST+IJK),IJK=1,NWAL)
+        read(BLOCKUNIT,*)   (IJKPWAL(IJKWALST+IJK),IJK=1,NWAL)
+        read(BLOCKUNIT,*)   (IJKWAL1(IJKWALST+IJK),IJK=1,NWAL)
+        read(BLOCKUNIT,*)   (IJKWAL2(IJKWALST+IJK),IJK=1,NWAL)
+        read(BLOCKUNIT,*)   (IJKWAL3(IJKWALST+IJK),IJK=1,NWAL)
+        read(BLOCKUNIT,*)   (IJKWAL4(IJKWALST+IJK),IJK=1,NWAL)
+
+        read(BLOCKUNIT,*)   (IJKBBLO(IJKBLOST+IJK),IJK=1,NBLO)
+        read(BLOCKUNIT,*)   (IJKPBLO(IJKBLOST+IJK),IJK=1,NBLO)
+        read(BLOCKUNIT,*)   (IJKBLO1(IJKBLOST+IJK),IJK=1,NBLO)
+        read(BLOCKUNIT,*)   (IJKBLO2(IJKBLOST+IJK),IJK=1,NBLO)
+        read(BLOCKUNIT,*)   (IJKBLO3(IJKBLOST+IJK),IJK=1,NBLO)
+        read(BLOCKUNIT,*)   (IJKBLO4(IJKBLOST+IJK),IJK=1,NBLO)
+        
     end do
 
-    ! Remap values for IJKBL1-4
     print *, 'REMAPPING VALUES'
     do B=1,NB
         call setBlockInd(B)
-        do IJKBLOCK=IJKBLOCKST+1,IJKBLOCKST+NBLOCK
-            IJKBBL(IJKBLOCK)=IJKBBL(IJKBLOCK)+IJKST
-            IJKPBL(IJKBLOCK)=IJKPBL(IJKBLOCK)+IJKST
-            IJKBL1(IJKBLOCK)=IJKBL1(IJKBLOCK)+IJKST
-            IJKBL2(IJKBLOCK)=IJKBL2(IJKBLOCK)+IJKST
-            IJKBL3(IJKBLOCK)=IJKBL3(IJKBLOCK)+IJKST
-            IJKBL4(IJKBLOCK)=IJKBL4(IJKBLOCK)+IJKST
+        do IJKBLO=IJKBLOST+1,IJKBLOST+NBLO
+            IJKBBLO(IJKBLO)=IJKBBLO(IJKBLO)+IJKST
+            IJKPBLO(IJKBLO)=IJKPBLO(IJKBLO)+IJKST
+            IJKBLO1(IJKBLO)=IJKBLO1(IJKBLO)+IJKST
+            IJKBLO2(IJKBLO)=IJKBLO2(IJKBLO)+IJKST
+            IJKBLO3(IJKBLO)=IJKBLO3(IJKBLO)+IJKST
+            IJKBLO4(IJKBLO)=IJKBLO4(IJKBLO)+IJKST
         end do
         !
-        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKBDI(IJKDIR)=IJKBDI(IJKDIR)+IJKST
-            IJKPDI(IJKDIR)=IJKPDI(IJKDIR)+IJKST
-            IJKDI1(IJKDIR)=IJKDI1(IJKDIR)+IJKST
-            IJKDI2(IJKDIR)=IJKDI2(IJKDIR)+IJKST
-            IJKDI3(IJKDIR)=IJKDI3(IJKDIR)+IJKST
-            IJKDI4(IJKDIR)=IJKDI4(IJKDIR)+IJKST
+        do IJKINL=IJKINLST+1,IJKINLST+NINL
+            IJKBINL(IJKINL)=IJKBINL(IJKINL)+IJKST
+            IJKPINL(IJKINL)=IJKPINL(IJKINL)+IJKST
+            IJKINL1(IJKINL)=IJKINL1(IJKINL)+IJKST
+            IJKINL2(IJKINL)=IJKINL2(IJKINL)+IJKST
+            IJKINL3(IJKINL)=IJKINL3(IJKINL)+IJKST
+            IJKINL4(IJKINL)=IJKINL4(IJKINL)+IJKST
         end do
-        !do K=1,NK
-        !    LK(KST+K)=LK(KST+K)+IJKST
-        !end do
-        !do I=1,NI
-        !    LI(IST+I)=LI(IST+I)+IJKST
-        !end do
+        !
+        do IJKOUT=IJKOUTST+1,IJKOUTST+NOUT
+            IJKBOUT(IJKOUT)=IJKBOUT(IJKOUT)+IJKST
+            IJKPOUT(IJKOUT)=IJKPOUT(IJKOUT)+IJKST
+            IJKOUT1(IJKOUT)=IJKOUT1(IJKOUT)+IJKST
+            IJKOUT2(IJKOUT)=IJKOUT2(IJKOUT)+IJKST
+            IJKOUT3(IJKOUT)=IJKOUT3(IJKOUT)+IJKST
+            IJKOUT4(IJKOUT)=IJKOUT4(IJKOUT)+IJKST
+        end do
+        !
+        do IJKWAL=IJKWALST+1,IJKWALST+NWAL
+            IJKBWAL(IJKWAL)=IJKBWAL(IJKWAL)+IJKST
+            IJKPWAL(IJKWAL)=IJKPWAL(IJKWAL)+IJKST
+            IJKWAL1(IJKWAL)=IJKWAL1(IJKWAL)+IJKST
+            IJKWAL2(IJKWAL)=IJKWAL2(IJKWAL)+IJKST
+            IJKWAL3(IJKWAL)=IJKWAL3(IJKWAL)+IJKST
+            IJKWAL4(IJKWAL)=IJKWAL4(IJKWAL)+IJKST
+        end do
+
     end do
 
     !print *, 'REMAPPED VALUES'
     !do B=1,NB
         !call setBlockInd(B)
         !print *, 'BLOCK: ', B
-        !do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-        !    IJKBDI(IJKDIR)
-        !print *, IJKPDI(IJKDIR)
-        !    IJKDI1(IJKDIR)
-        !    IJKDI2(IJKDIR)
-        !    IJKDI3(IJKDIR)
-        !    IJKDI4(IJKDIR)
+        !do IJKWAL=IJKWALST+1,IJKWALST+NWAL
+        !    IJKBWAL(IJKWAL)
+        !print *, IJKPWAL(IJKWAL)
+        !    IJKWAL1(IJKWAL)
+        !    IJKWAL2(IJKWAL)
+        !    IJKWAL3(IJKWAL)
+        !    IJKWAL4(IJKWAL)
     !    end do
     !end do
 
@@ -185,7 +220,6 @@ subroutine findNeighbours
         end subroutine commonFace
     end interface cpp_interface
 
-
     NF=0
     iterationsCounter=0
 
@@ -193,19 +227,19 @@ subroutine findNeighbours
     do B=1,NB
         FACEBL(B)=NF
         call setBlockInd(B)
-        IJKSTL=IJKBLOCKST+1
-        IJKEL=IJKBLOCKST+NBLOCK
+        IJKSTL=IJKBLOST+1
+        IJKENL=IJKBLOST+NBLO
         print *, 'BLOCK: ',B
         neighbour: do INEIGH=1,6
             if (NEIGH(B,INEIGH).gt.0) then
                 call setBlockInd(B,NEIGH(B,INEIGH))
-                if (NBLOCKL.eq.NBLOCKR) then
+                if (NBLOL.eq.NBLOR) then
                     equalSize=.true.
                 else
                     equalSize=.false.
                 end if
-                IJKSTR=IJKBLOCKSTR+1
-                IJKER=IJKBLOCKSTR+NBLOCKR
+                IJKSTR=IJKBLOSTR+1
+                IJKENR=IJKBLOSTR+NBLOR
                 STARTED=.false.
                 FOUND=.false.
                 select case (INEIGH)
@@ -214,22 +248,22 @@ subroutine findNeighbours
                         !..........SOUTH..........
                         !
                         print *, 'SOUTH'
-                        SouthOuter: do IJKL=IJKSTL,IJKEL
+                        SouthOuter: do IJKL=IJKSTL,IJKENL
                             !
-                            XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
-                            XYZL(4:6)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
-                            XYZL(7:9)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
-                            XYZL(10:12)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
+                            XYZL(1:3)=[X(IJKBLO2(IJKL)),Y(IJKBLO2(IJKL)),Z(IJKBLO2(IJKL))]
+                            XYZL(4:6)=[X(IJKBLO1(IJKL)),Y(IJKBLO1(IJKL)),Z(IJKBLO1(IJKL))]
+                            XYZL(7:9)=[X(IJKBLO3(IJKL)),Y(IJKBLO3(IJKL)),Z(IJKBLO3(IJKL))]
+                            XYZL(10:12)=[X(IJKBLO4(IJKL)),Y(IJKBLO4(IJKL)),Z(IJKBLO4(IJKL))]
                             !
-                            SouthInner: do IJKR=IJKSTR,IJKER
+                            SouthInner: do IJKR=IJKSTR,IJKENR
                                 iterationsCounter=iterationsCounter+1
                                 !print *, iterationsCounter
-                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, IJKPBLO(IJKL),IJKPBLO(IJKR)
                                 !
-                                XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
-                                XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
-                                XYZR(7:9)=[X(IJKBL4(IJKR)),Y(IJKBL4(IJKR)),Z(IJKBL4(IJKR))]
-                                XYZR(10:12)=[X(IJKBL3(IJKR)),Y(IJKBL3(IJKR)),Z(IJKBL3(IJKR))]
+                                XYZR(1:3)=[X(IJKBLO1(IJKR)),Y(IJKBLO1(IJKR)),Z(IJKBLO1(IJKR))]
+                                XYZR(4:6)=[X(IJKBLO2(IJKR)),Y(IJKBLO2(IJKR)),Z(IJKBLO2(IJKR))]
+                                XYZR(7:9)=[X(IJKBLO4(IJKR)),Y(IJKBLO4(IJKR)),Z(IJKBLO4(IJKR))]
+                                XYZR(10:12)=[X(IJKBLO3(IJKR)),Y(IJKBLO3(IJKR)),Z(IJKBLO3(IJKR))]
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
@@ -238,8 +272,8 @@ subroutine findNeighbours
                                     STARTED=.true.
                                     FOUND=.true.
                                     NF=NF+1
-                                    L(NF)=IJKPBL(IJKL)
-                                    R(NF)=IJKPBL(IJKR)
+                                    L(NF)=IJKPBLO(IJKL)
+                                    R(NF)=IJKPBLO(IJKR)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
@@ -268,22 +302,22 @@ subroutine findNeighbours
                         !..........NORTH..........
                         !
                         print *, 'NORTH'
-                        NorthOuter: do IJKL=IJKSTL,IJKEL
+                        NorthOuter: do IJKL=IJKSTL,IJKENL
                             !
-                            XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
-                            XYZL(4:6)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
-                            XYZL(7:9)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
-                            XYZL(10:12)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
+                            XYZL(1:3)=[X(IJKBLO1(IJKL)),Y(IJKBLO1(IJKL)),Z(IJKBLO1(IJKL))]
+                            XYZL(4:6)=[X(IJKBLO2(IJKL)),Y(IJKBLO2(IJKL)),Z(IJKBLO2(IJKL))]
+                            XYZL(7:9)=[X(IJKBLO4(IJKL)),Y(IJKBLO4(IJKL)),Z(IJKBLO4(IJKL))]
+                            XYZL(10:12)=[X(IJKBLO3(IJKL)),Y(IJKBLO3(IJKL)),Z(IJKBLO3(IJKL))]
                             !
-                            NorthInner: do IJKR=IJKSTR,IJKER
+                            NorthInner: do IJKR=IJKSTR,IJKENR
                                 iterationsCounter=iterationsCounter+1
                                 !print *, iterationsCounter
-                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, IJKPBLO(IJKL),IJKPBLO(IJKR)
                                 !
-                                XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
-                                XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
-                                XYZR(7:9)=[X(IJKBL3(IJKR)),Y(IJKBL3(IJKR)),Z(IJKBL3(IJKR))]
-                                XYZR(10:12)=[X(IJKBL4(IJKR)),Y(IJKBL4(IJKR)),Z(IJKBL4(IJKR))]
+                                XYZR(1:3)=[X(IJKBLO2(IJKR)),Y(IJKBLO2(IJKR)),Z(IJKBLO2(IJKR))]
+                                XYZR(4:6)=[X(IJKBLO1(IJKR)),Y(IJKBLO1(IJKR)),Z(IJKBLO1(IJKR))]
+                                XYZR(7:9)=[X(IJKBLO3(IJKR)),Y(IJKBLO3(IJKR)),Z(IJKBLO3(IJKR))]
+                                XYZR(10:12)=[X(IJKBLO4(IJKR)),Y(IJKBLO4(IJKR)),Z(IJKBLO4(IJKR))]
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
@@ -292,8 +326,8 @@ subroutine findNeighbours
                                     STARTED=.true.
                                     FOUND=.true.
                                     NF=NF+1
-                                    L(NF)=IJKPBL(IJKL)
-                                    R(NF)=IJKPBL(IJKR)
+                                    L(NF)=IJKPBLO(IJKL)
+                                    R(NF)=IJKPBLO(IJKR)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
@@ -307,7 +341,7 @@ subroutine findNeighbours
                                 else if (AR.le.0.0d0.and.STARTED) then
                                     IJKSTR=IJKR
                                     STARTED=.false.
-                                    IJKBLOCKSTR=IJKMARKR
+                                    IJKBLOSTR=IJKMARKR
                                     cycle NorthOuter
                                 else if (FOUND) then
                                     IJKSTL=IJKL
@@ -323,22 +357,22 @@ subroutine findNeighbours
                         !..........WEST..........
                         !
                         print *, 'WEST'
-                        WestOuter: do IJKL=IJKSTL,IJKEL
+                        WestOuter: do IJKL=IJKSTL,IJKENL
                             !
-                            XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
-                            XYZL(4:6)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
-                            XYZL(7:9)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
-                            XYZL(10:12)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
+                            XYZL(1:3)=[X(IJKBLO1(IJKL)),Y(IJKBLO1(IJKL)),Z(IJKBLO1(IJKL))]
+                            XYZL(4:6)=[X(IJKBLO2(IJKL)),Y(IJKBLO2(IJKL)),Z(IJKBLO2(IJKL))]
+                            XYZL(7:9)=[X(IJKBLO4(IJKL)),Y(IJKBLO4(IJKL)),Z(IJKBLO4(IJKL))]
+                            XYZL(10:12)=[X(IJKBLO3(IJKL)),Y(IJKBLO3(IJKL)),Z(IJKBLO3(IJKL))]
                             !
-                            WestInner: do IJKR=IJKSTR,IJKER
+                            WestInner: do IJKR=IJKSTR,IJKENR
                                 iterationsCounter=iterationsCounter+1
-                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, IJKPBLO(IJKL),IJKPBLO(IJKR)
                                 !print *, iterationsCounter
                                 !
-                                XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
-                                XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
-                                XYZR(7:9)=[X(IJKBL3(IJKR)),Y(IJKBL3(IJKR)),Z(IJKBL3(IJKR))]
-                                XYZR(10:12)=[X(IJKBL4(IJKR)),Y(IJKBL4(IJKR)),Z(IJKBL4(IJKR))]
+                                XYZR(1:3)=[X(IJKBLO2(IJKR)),Y(IJKBLO2(IJKR)),Z(IJKBLO2(IJKR))]
+                                XYZR(4:6)=[X(IJKBLO1(IJKR)),Y(IJKBLO1(IJKR)),Z(IJKBLO1(IJKR))]
+                                XYZR(7:9)=[X(IJKBLO3(IJKR)),Y(IJKBLO3(IJKR)),Z(IJKBLO3(IJKR))]
+                                XYZR(10:12)=[X(IJKBLO4(IJKR)),Y(IJKBLO4(IJKR)),Z(IJKBLO4(IJKR))]
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
@@ -347,8 +381,8 @@ subroutine findNeighbours
                                     STARTED=.true.
                                     FOUND=.true.
                                     NF=NF+1
-                                    L(NF)=IJKPBL(IJKL)
-                                    R(NF)=IJKPBL(IJKR)
+                                    L(NF)=IJKPBLO(IJKL)
+                                    R(NF)=IJKPBLO(IJKR)
                                     !print *, L(NF),R(NF)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
@@ -378,22 +412,22 @@ subroutine findNeighbours
                         !..........EAST..........
                         !
                         print *, 'EAST'
-                        EastOuter: do IJKL=IJKSTL,IJKEL
+                        EastOuter: do IJKL=IJKSTL,IJKENL
                             !
-                            XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
-                            XYZL(4:6)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
-                            XYZL(7:9)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
-                            XYZL(10:12)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
+                            XYZL(1:3)=[X(IJKBLO2(IJKL)),Y(IJKBLO2(IJKL)),Z(IJKBLO2(IJKL))]
+                            XYZL(4:6)=[X(IJKBLO1(IJKL)),Y(IJKBLO1(IJKL)),Z(IJKBLO1(IJKL))]
+                            XYZL(7:9)=[X(IJKBLO3(IJKL)),Y(IJKBLO3(IJKL)),Z(IJKBLO3(IJKL))]
+                            XYZL(10:12)=[X(IJKBLO4(IJKL)),Y(IJKBLO4(IJKL)),Z(IJKBLO4(IJKL))]
                             !
-                            EastInner: do IJKR=IJKSTR,IJKER
+                            EastInner: do IJKR=IJKSTR,IJKENR
                                 iterationsCounter=iterationsCounter+1
-                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, IJKPBLO(IJKL),IJKPBLO(IJKR)
                                 !print *, iterationsCounter
                                 !
-                                XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
-                                XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
-                                XYZR(7:9)=[X(IJKBL4(IJKR)),Y(IJKBL4(IJKR)),Z(IJKBL4(IJKR))]
-                                XYZR(10:12)=[X(IJKBL3(IJKR)),Y(IJKBL3(IJKR)),Z(IJKBL3(IJKR))]
+                                XYZR(1:3)=[X(IJKBLO1(IJKR)),Y(IJKBLO1(IJKR)),Z(IJKBLO1(IJKR))]
+                                XYZR(4:6)=[X(IJKBLO2(IJKR)),Y(IJKBLO2(IJKR)),Z(IJKBLO2(IJKR))]
+                                XYZR(7:9)=[X(IJKBLO4(IJKR)),Y(IJKBLO4(IJKR)),Z(IJKBLO4(IJKR))]
+                                XYZR(10:12)=[X(IJKBLO3(IJKR)),Y(IJKBLO3(IJKR)),Z(IJKBLO3(IJKR))]
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
@@ -401,8 +435,8 @@ subroutine findNeighbours
                                     STARTED=.true.
                                     FOUND=.true.
                                     NF=NF+1
-                                    L(NF)=IJKPBL(IJKL)
-                                    R(NF)=IJKPBL(IJKR)
+                                    L(NF)=IJKPBLO(IJKL)
+                                    R(NF)=IJKPBLO(IJKR)
                                     !print *, L(NF),R(NF)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
@@ -432,22 +466,22 @@ subroutine findNeighbours
                         !..........BOTTOM..........
                         !
                         print *, 'BOTTOM'
-                        BottomOuter: do IJKL=IJKSTL,IJKEL
+                        BottomOuter: do IJKL=IJKSTL,IJKENL
                             !
-                            XYZL(1:3)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
-                            XYZL(4:6)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
-                            XYZL(7:9)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
-                            XYZL(10:12)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
+                            XYZL(1:3)=[X(IJKBLO1(IJKL)),Y(IJKBLO1(IJKL)),Z(IJKBLO1(IJKL))]
+                            XYZL(4:6)=[X(IJKBLO2(IJKL)),Y(IJKBLO2(IJKL)),Z(IJKBLO2(IJKL))]
+                            XYZL(7:9)=[X(IJKBLO4(IJKL)),Y(IJKBLO4(IJKL)),Z(IJKBLO4(IJKL))]
+                            XYZL(10:12)=[X(IJKBLO3(IJKL)),Y(IJKBLO3(IJKL)),Z(IJKBLO3(IJKL))]
                             !
-                            BottomInner: do IJKR=IJKSTR,IJKER
+                            BottomInner: do IJKR=IJKSTR,IJKENR
                                 iterationsCounter=iterationsCounter+1
-                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, IJKPBLO(IJKL),IJKPBLO(IJKR)
                                 !print *, iterationsCounter
                                 !
-                                XYZR(1:3)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
-                                XYZR(4:6)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
-                                XYZR(7:9)=[X(IJKBL3(IJKR)),Y(IJKBL3(IJKR)),Z(IJKBL3(IJKR))]
-                                XYZR(10:12)=[X(IJKBL4(IJKR)),Y(IJKBL4(IJKR)),Z(IJKBL4(IJKR))]
+                                XYZR(1:3)=[X(IJKBLO2(IJKR)),Y(IJKBLO2(IJKR)),Z(IJKBLO2(IJKR))]
+                                XYZR(4:6)=[X(IJKBLO1(IJKR)),Y(IJKBLO1(IJKR)),Z(IJKBLO1(IJKR))]
+                                XYZR(7:9)=[X(IJKBLO3(IJKR)),Y(IJKBLO3(IJKR)),Z(IJKBLO3(IJKR))]
+                                XYZR(10:12)=[X(IJKBLO4(IJKR)),Y(IJKBLO4(IJKR)),Z(IJKBLO4(IJKR))]
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
@@ -456,8 +490,8 @@ subroutine findNeighbours
                                     STARTED=.true.
                                     FOUND=.true.
                                     NF=NF+1
-                                    L(NF)=IJKPBL(IJKL)
-                                    R(NF)=IJKPBL(IJKR)
+                                    L(NF)=IJKPBLO(IJKL)
+                                    R(NF)=IJKPBLO(IJKR)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
@@ -486,22 +520,22 @@ subroutine findNeighbours
                         !..........TOP..........
                         !
                         print *, 'TOP'
-                        TopOuter: do IJKL=IJKSTL,IJKEL
+                        TopOuter: do IJKL=IJKSTL,IJKENL
                             !
-                            XYZL(1:3)=[X(IJKBL2(IJKL)),Y(IJKBL2(IJKL)),Z(IJKBL2(IJKL))]
-                            XYZL(4:6)=[X(IJKBL1(IJKL)),Y(IJKBL1(IJKL)),Z(IJKBL1(IJKL))]
-                            XYZL(7:9)=[X(IJKBL3(IJKL)),Y(IJKBL3(IJKL)),Z(IJKBL3(IJKL))]
-                            XYZL(10:12)=[X(IJKBL4(IJKL)),Y(IJKBL4(IJKL)),Z(IJKBL4(IJKL))]
+                            XYZL(1:3)=[X(IJKBLO2(IJKL)),Y(IJKBLO2(IJKL)),Z(IJKBLO2(IJKL))]
+                            XYZL(4:6)=[X(IJKBLO1(IJKL)),Y(IJKBLO1(IJKL)),Z(IJKBLO1(IJKL))]
+                            XYZL(7:9)=[X(IJKBLO3(IJKL)),Y(IJKBLO3(IJKL)),Z(IJKBLO3(IJKL))]
+                            XYZL(10:12)=[X(IJKBLO4(IJKL)),Y(IJKBLO4(IJKL)),Z(IJKBLO4(IJKL))]
                             !
-                            TopInner: do IJKR=IJKSTR,IJKER
+                            TopInner: do IJKR=IJKSTR,IJKENR
                                 iterationsCounter=iterationsCounter+1
-                                !print *, IJKPBL(IJKL),IJKPBL(IJKR)
+                                !print *, IJKPBLO(IJKL),IJKPBLO(IJKR)
                                 !print *, iterationsCounter
                                 !
-                                XYZR(1:3)=[X(IJKBL1(IJKR)),Y(IJKBL1(IJKR)),Z(IJKBL1(IJKR))]
-                                XYZR(4:6)=[X(IJKBL2(IJKR)),Y(IJKBL2(IJKR)),Z(IJKBL2(IJKR))]
-                                XYZR(7:9)=[X(IJKBL4(IJKR)),Y(IJKBL4(IJKR)),Z(IJKBL4(IJKR))]
-                                XYZR(10:12)=[X(IJKBL3(IJKR)),Y(IJKBL3(IJKR)),Z(IJKBL3(IJKR))]
+                                XYZR(1:3)=[X(IJKBLO1(IJKR)),Y(IJKBLO1(IJKR)),Z(IJKBLO1(IJKR))]
+                                XYZR(4:6)=[X(IJKBLO2(IJKR)),Y(IJKBLO2(IJKR)),Z(IJKBLO2(IJKR))]
+                                XYZR(7:9)=[X(IJKBLO4(IJKR)),Y(IJKBLO4(IJKR)),Z(IJKBLO4(IJKR))]
+                                XYZR(10:12)=[X(IJKBLO3(IJKR)),Y(IJKBLO3(IJKR)),Z(IJKBLO3(IJKR))]
                                 !
                                 AR=0.0d0
                                 call commonFace(XYZL,XYZR,XYZCommon,AR,XYZF)
@@ -509,8 +543,8 @@ subroutine findNeighbours
                                     STARTED=.true.
                                     FOUND=.true.
                                     NF=NF+1
-                                    L(NF)=IJKPBL(IJKL)
-                                    R(NF)=IJKPBL(IJKR)
+                                    L(NF)=IJKPBLO(IJKL)
+                                    R(NF)=IJKPBLO(IJKR)
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
@@ -565,8 +599,10 @@ subroutine writeBlockData(IB)
     read(BLOCKUNIT,*)  (FX(I), I=1,NIJK)
     read(BLOCKUNIT,*)  (FY(I), I=1,NIJK)
     read(BLOCKUNIT,*)  (FZ(I), I=1,NIJK)
-    read(BLOCKUNIT,*)  DX,DY,DZ, VOL
-    read(BLOCKUNIT,*)  (SRDDI(I),I=1,NDIR)
+    read(BLOCKUNIT,*)  DX,DY,DZ,VOL
+    read(BLOCKUNIT,*)  (SRDINL(I),I=1,NINL)
+    read(BLOCKUNIT,*)  (SRDOUT(I),I=1,NOUT)
+    read(BLOCKUNIT,*)  (SRDWAL(I),I=1,NWAL)
     !
     ! overwrite data back to input file
     !
@@ -574,9 +610,10 @@ subroutine writeBlockData(IB)
     BLOCKFILE='grid_'//trim(UNIT_CH)//'.out'
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
+    print *, 'WRITING TO FILE: ', BLOCKFILE
     rewind BLOCKUNIT
     N=(NK-2)*(NI-2)*(NJ-2)
-    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NBLOCK,NDIR,NFACE,N,IJKST
+    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NINL,NOUT,NWAL,NBLO,NFACE,N,IJKST
     !write(BLOCKUNIT,*) (NEIGH(B,I),I=1,6)
     !write(BLOCKUNIT,*) (LK(KST+K),K=1,NK)
     !write(BLOCKUNIT,*) (LI(IST+I),I=1,NI)
@@ -586,25 +623,43 @@ subroutine writeBlockData(IB)
     write(BLOCKUNIT,*) (XC(IJKST+IJK),IJK=1,NIJK)
     write(BLOCKUNIT,*) (YC(IJKST+IJK),IJK=1,NIJK)
     write(BLOCKUNIT,*) (ZC(IJKST+IJK),IJK=1,NIJK)
-    write(BLOCKUNIT,*) (IJKBBL(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-    write(BLOCKUNIT,*) (IJKPBL(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-    write(BLOCKUNIT,*) (IJKBL1(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-    write(BLOCKUNIT,*) (IJKBL2(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-    write(BLOCKUNIT,*) (IJKBL3(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-    write(BLOCKUNIT,*) (IJKBL4(IJKBLOCKST+IJK),IJK=1,NBLOCK)
-    write(BLOCKUNIT,*) (IJKBDI(IJKDIRST+IJK),IJK=1,NDIR)
-    write(BLOCKUNIT,*) (IJKPDI(IJKDIRST+IJK),IJK=1,NDIR)
-    write(BLOCKUNIT,*) (IJKDI1(IJKDIRST+IJK),IJK=1,NDIR)
-    write(BLOCKUNIT,*) (IJKDI2(IJKDIRST+IJK),IJK=1,NDIR)
-    write(BLOCKUNIT,*) (IJKDI3(IJKDIRST+IJK),IJK=1,NDIR)
-    write(BLOCKUNIT,*) (IJKDI4(IJKDIRST+IJK),IJK=1,NDIR)
+
+    write(BLOCKUNIT,*) (IJKBBLO(IJKBLOST+IJK),IJK=1,NBLO)
+    write(BLOCKUNIT,*) (IJKPBLO(IJKBLOST+IJK),IJK=1,NBLO)
+    write(BLOCKUNIT,*) (IJKBLO1(IJKBLOST+IJK),IJK=1,NBLO)
+    write(BLOCKUNIT,*) (IJKBLO2(IJKBLOST+IJK),IJK=1,NBLO)
+    write(BLOCKUNIT,*) (IJKBLO3(IJKBLOST+IJK),IJK=1,NBLO)
+    write(BLOCKUNIT,*) (IJKBLO4(IJKBLOST+IJK),IJK=1,NBLO)
+
+    write(BLOCKUNIT,*) (IJKBINL(IJKINLST+IJK),IJK=1,NINL)
+    write(BLOCKUNIT,*) (IJKPINL(IJKINLST+IJK),IJK=1,NINL)
+    write(BLOCKUNIT,*) (IJKINL1(IJKINLST+IJK),IJK=1,NINL)
+    write(BLOCKUNIT,*) (IJKINL2(IJKINLST+IJK),IJK=1,NINL)
+    write(BLOCKUNIT,*) (IJKINL3(IJKINLST+IJK),IJK=1,NINL)
+    write(BLOCKUNIT,*) (IJKINL4(IJKINLST+IJK),IJK=1,NINL)
+
+    write(BLOCKUNIT,*) (IJKBOUT(IJKOUTST+IJK),IJK=1,NOUT)
+    write(BLOCKUNIT,*) (IJKPOUT(IJKOUTST+IJK),IJK=1,NOUT)
+    write(BLOCKUNIT,*) (IJKOUT1(IJKOUTST+IJK),IJK=1,NOUT)
+    write(BLOCKUNIT,*) (IJKOUT2(IJKOUTST+IJK),IJK=1,NOUT)
+    write(BLOCKUNIT,*) (IJKOUT3(IJKOUTST+IJK),IJK=1,NOUT)
+    write(BLOCKUNIT,*) (IJKOUT4(IJKOUTST+IJK),IJK=1,NOUT)
+
+    write(BLOCKUNIT,*) (IJKBWAL(IJKWALST+IJK),IJK=1,NWAL)
+    write(BLOCKUNIT,*) (IJKPWAL(IJKWALST+IJK),IJK=1,NWAL)
+    write(BLOCKUNIT,*) (IJKWAL1(IJKWALST+IJK),IJK=1,NWAL)
+    write(BLOCKUNIT,*) (IJKWAL2(IJKWALST+IJK),IJK=1,NWAL)
+    write(BLOCKUNIT,*) (IJKWAL3(IJKWALST+IJK),IJK=1,NWAL)
+    write(BLOCKUNIT,*) (IJKWAL4(IJKWALST+IJK),IJK=1,NWAL)
     !
     ! untouched variables
     write(BLOCKUNIT,*) (FX(I), I=1,NIJK)
     write(BLOCKUNIT,*) (FY(I), I=1,NIJK)
     write(BLOCKUNIT,*) (FZ(I), I=1,NIJK)
     write(BLOCKUNIT,*) DX,DY,DZ,VOL
-    write(BLOCKUNIT,*) (SRDDI(I),I=1,NDIR)
+    write(BLOCKUNIT,*)  (SRDINL(I),I=1,NINL)
+    write(BLOCKUNIT,*)  (SRDOUT(I),I=1,NOUT)
+    write(BLOCKUNIT,*)  (SRDWAL(I),I=1,NWAL)
     !
     write(BLOCKUNIT,*) (L(FACEST+I),I=1,NFACE)
     write(BLOCKUNIT,*) (R(FACEST+I),I=1,NFACE)
@@ -625,9 +680,7 @@ subroutine writeBlockData(IB)
     !
     print *, NXYZA
     write(BLOCKUNIT,*) (MIJK(IJK),IJK=1,NXYZA)
-
-    rewind BLOCKUNIT
-    close (unit=BLOCKUNIT)
+    close(unit=BLOCKUNIT)
     
 end subroutine writeBlockData
 
@@ -665,17 +718,19 @@ subroutine writeParameterModule
 
     OPEN(UNIT=9,FILE='parameterModule.f90')
     REWIND 9
-    read(9,*) !'module param'
-    read(9,*) !'  implicit none'
-    read(9,*) !'integer, parameter :: ', 'NXA=', NIA,'&' 
-    read(9,*) !',NYA=', NJA, '&'
-    read(9,*) !',NZA=', NKA, '&'
-    read(9,*) !',NXYZA=', NIJKA, '&'
-    read(9,*) !',NDIRAL=', NDIRA,'&'
-    read(9,*) ! ',NBLOCKAL=', NBLOCKA, '&'
-    read(9,*) !  ',NBLOCKS=',NB,'&'
-    read(9,*) !',PREC=',PREC,'&'
-    write(9,'(A9 I7 A1)') ',NFACEAL=',NF
+    read(9,*) ! 'module parameterModule'
+    read(9,*) ! 'implicit none'
+    read(9,*) ! 'integer, parameter :: ', 'NXA=', NIA
+    read(9,*) ! 'integer, parameter :: ', 'NYA=', NJA
+    read(9,*) ! 'integer, parameter :: ', 'NZA=', NKA
+    read(9,*) ! 'integer, parameter :: ', 'NXYZA=', NIJKA
+    read(9,*) ! 'integer, parameter :: ', 'NINLAL=', NINLA
+    read(9,*) ! 'integer, parameter :: ', 'NOUTAL=', NOUTA
+    read(9,*) ! 'integer, parameter :: ', 'NWALAL=', NWALA
+    read(9,*) ! 'integer, parameter :: ', 'NBLOAL=', NBLOA
+    read(9,*) !   'integer, parameter :: ', 'NBLOCKS=',NB
+    read(9,*) ! 'integer, parameter :: ', 'PREC=',PREC
+    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NFACEAL=',NF
     write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParameterModule
