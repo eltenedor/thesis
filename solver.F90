@@ -58,13 +58,13 @@ program main
        call updateBd
 !
 !==========================================================
-!....START NEUER ITERATIONS
+!....START OUTER ITERATIONS
 !==========================================================
 !
         LSG=100
         !LSG=2
         do LS=1,LSG
-            print *, 'NEUER ITERATION: ', LS
+            print *, 'OUTER ITERATION: ', LS
             print *, '  UPDATING GHOST VALUES'
             call updateGhost
             !print *, '  CALCULATING VELOCITY FIELD'
@@ -89,8 +89,8 @@ program main
 end program main
 
 !==========================================================
-!>  This subroutine reads in grid geometry and boundary
-!>  conditions and initializes matrices and vectors
+!>  reads in grid geometry and boundary conditions and
+!>  initializes matrices and vectors
 !#########################################################
 subroutine init
 !#########################################################
@@ -203,8 +203,6 @@ subroutine init
     ! calculate processor load
     N=sum(NBL)
 
-    print *, 'LOCAL LOAD: ', N
-
     do B=1,NB
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
         call setBlockInd(B)
@@ -277,6 +275,16 @@ subroutine init
         close(UNIT=BLOCKUNIT)
     end do
 
+    !print *, 'LOCAL LOAD: ', N, 'RANGE: ',IJKPROC+N
+    ncolsmax=(maxval(NBL)**(1.0/3.0)/(minval(NBL)**(1.0/3.0)))**2*3+4
+    print *,maxval(NBL),minval(NBL),'NCOLSMAX:', ncolsmax
+
+    call distributeLoad(N)
+    !print *, size(DNNZ)
+    !do I=0,N-1
+    !    print *, I, DNNZ(I)
+    !end do
+
     TIME=0.0d0
 
     if (LTIME) then
@@ -285,17 +293,13 @@ subroutine init
     end if
 
     ! Create Matrix
+
     call MatCreate(PETSC_COMM_WORLD,Amat,ierr)
-    !call MatSetType(Amat,MATSEQAIJ,ierr)
-    call MatSetType(Amat,MATMPIAIJ,ierr)
-    !call MatSetSizes(Amat,PETSC_DECIDE,PETSC_DECIDE,N,N,ierr)
     call MatSetSizes(Amat,N,N,PETSC_DECIDE,PETSC_DECIDE,ierr)
-    call MatSetFromOptions(Amat,ierr) 
-    
-    ! Increase performance during matrix assembly due to preallocation
-    !call MatSeqAIJSetPreallocation(Amat,10,PETSC_NULL_INTEGER,ierr)
-    call MatMPIAIJSetPreallocation(Amat,16,PETSC_NULL_INTEGER,0,PETSC_NULL_INTEGER,ierr)
-    !call MatSetUp(Amat,ierr)
+    call MatSetFromOptions(Amat,ierr)
+    call MatMPIAIJSetPreallocation(Amat,PETSC_NULL_INTEGER,DNNZ,PETSC_NULL_INTEGER,ONNZ,ierr)
+    call MatSeqAIJSetPreallocation(Amat,PETSC_NULL_INTEGER,DNNZ,ierr)
+    call MatSetUp(Amat,ierr) !not necessary because already using Preallocation routine
 
     ! Create Vector
     call VecCreate(PETSC_COMM_WORLD,solvec,ierr)
@@ -511,7 +515,7 @@ subroutine updateGhost
 end subroutine updateGhost
 
 !=============================================================
-!>     This routine discretizes (FVM) and solves the scalar transport
+!>     discretizes (FVM) and solves the scalar transport
 !>     equation.
 !#############################################################
 subroutine calcSc
@@ -632,7 +636,7 @@ subroutine calcSc
 !
 !.....NEUMANN ZERO GRADIENT BOUNARIES
 !
-        !print *, 'NEULET BOUNDARIES'
+        !print *, 'NEUMANN BOUNDARIES'
         do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
             IJKP=IJKPNEU(IJKNEU)
             IJKB=IJKBNEU(IJKNEU)
@@ -1156,8 +1160,8 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
 end subroutine gradfi
 
 !===============================================================
-!>   this routine updates the components of the gradient vector
-!>   of the scalar FI at the CV center.
+!>   updates the components of the gradient vector of the scalar
+!>   FI at the CV center.
 !################################################################
 subroutine updateGrad
 !################################################################
@@ -1180,19 +1184,18 @@ subroutine updateGrad
 end subroutine updateGrad
 
 !==============================================================
-!>   This routine calculates fluxes (convective and
-!>   diffusive) through the cell face between nodes IJP and IJN. 
-!>   IJK1...4 are the indices of CV corners defining the cell 
-!>   face. FM is the mass flux through the face, and FAC is the 
-!>   interpolation factor (distance from node IJP to cell face 
-!>   center over the sum of this distance and the distance from 
-!>   cell face center to node IJN). CAP and CAN are the 
-!>   contributions to matrix coefficients in the transport
-!>   equations at nodes IJP and IJN. Diffusive fluxes are
-!>   discretized using central differences; for convective
-!>   fluxes, linear interpolation can be blended (G) with upwind
-!>   approximation. Note: cell face surface vector is directed 
-!>   from P to N.
+!>   calculates fluxes (convective and diffusive) through the
+!>   cell face between nodes IJP and IJN. IJK1...4 are the
+!>   indices of CV corners defining the cell face. FM is the
+!>   mass flux through the face, and FAC is the interpolation
+!>   factor (distance from node IJP to cell face center over
+!>   the sum of this distance and the distance from cell face
+!>   center to node IJN). CAP and CAN are the contributions to
+!>   matrix coefficients in the transport equations at nodes IJP
+!>   and IJN. Diffusive fluxes are discretized using central
+!>   differences; for convective fluxes, linear interpolation
+!>   can be blended (G) with upwind approximation. Note: cell
+!>   face surface vector is directed from P to N.
 !################################################################
 subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
 !################################################################
@@ -1347,7 +1350,7 @@ subroutine blockBdFlux
 end subroutine blockBdFlux
 
 !================================================================
-!> This subroutine calculates the mean error of the current block
+!> calculates the mean error of the current block
 !################################################################
 subroutine calcErr
 !################################################################

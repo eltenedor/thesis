@@ -247,9 +247,9 @@ subroutine findNeighbours
                 select case (INEIGH)
                     case (1)
                         !
-                        !..........SNEUH..........
+                        !..........SOUTH..........
                         !
-                        print *, 'SNEUH'
+                        print *, 'SOUTH'
                         SouthOuter: do IJKL=IJKSTL,IJKENL
                             !
                             XYZL(1:3)=[X(IJKBLO2(IJKL)),Y(IJKBLO2(IJKL)),Z(IJKBLO2(IJKL))]

@@ -27,6 +27,8 @@ subroutine setUpKSP
 #include <finclude/petscsys.h>
 #include <finclude/petscksp.h>
 
+    ! Create KSPContext
+
     call KSPCreate(PETSC_COMM_WORLD,ksp,ierr)
 
     ! Set runtime options
@@ -93,7 +95,6 @@ subroutine solveSys(A,b,x,N,LS,tol)
     call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION, &
             !& PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
             & PETSC_DEFAULT_DOUBLE_PRECISION,20000,ierr)
-
             
     ! Solve the linear system
 
@@ -107,10 +108,8 @@ subroutine solveSys(A,b,x,N,LS,tol)
     itsInt=its
 
     !print *, TOL
-
     ! View solver info
-
-    !call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
     if(N.le.32) then
         print *, 'Matrix A:'
         call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)

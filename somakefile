@@ -1,10 +1,14 @@
 #INCLUDES := -I/home/fabian/util/petsc/petsc-3.3-p6/include -I/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/include
-INCLUDES := -I/home/fabian/util/petsc/petsc-3.3-p6/include -I/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/include -I/usr/include/mpich2
+#INCLUDES := -I/home/fabian/util/petsc/petsc-3.3-p6/include -I/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/include -I/usr/include/mpich2
+INCLUDES := -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include -I$(MPI_ARCH_PATH)/include #-I/usr/lib/openmpi/include/openmpi
 
 #LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -Wl,-rpath,/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib -lflapack -lfblas -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpichf90 -lgfortran -lm -lm -ldl -lmpich -lopa -lmpl -lrt -lpthread -lgcc_s -ldl
-LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -llapack -lblas -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -lmpichf90 -lgfortran -lm -lgfortran -lm -lquadmath -lm -ldl -lmpich -lopa -lmpl -lrt -lcr -lpthread -lgcc_s -ldl
+#LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -llapack -lblas -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/x86_64-linux-gnu -L/lib/x86_64-linux-gnu -lmpichf90 -lgfortran -lm -lgfortran -lm -lquadmath -lm -ldl -lmpich -lopa -lmpl -lrt -lcr -lpthread -lgcc_s -ldl
+#LIBS := -L/home/fabian/util/petsc/petsc-3.3-p6/arch-linux2-c-debug/lib  -lpetsc -lX11 -lpthread -llapack -lblas -L/usr/lib/openmpi/lib -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
+LIBS := -L$(PETSC_DIR)/$(PETSC_ARCH)/lib  -lpetsc -lX11 -lpthread -llapack -lblas -L$(MPI_ARCH_PATH)/lib -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
 
-CFORT := gfortran
+#CFORT := gfortran
+CFORT := mpif90
 CFORTFLAGS := -c -Wall -Wno-unused-variable
 #CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
 #CFORTFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable
@@ -67,4 +71,4 @@ clean:
 # 	first version used (run (as su) from $PETSC_DIR):
 # ./configure --with-cc=gcc --with-fc=gfortran --download-f-blas-lapack --download-mpich
 #	second version used (mpich2, lapack and blas installed in std. paths):
-#./configure --with-mpi-dir=/usr/lib/mpich2
+#./configure --with-mpi-dir=/usr/lib/mpich2, or /usr/lib/openmpi

@@ -5,19 +5,20 @@ include ${PETSC_DIR}/conf/rules
 
 # default values, will be overwritten by bash
 
-DPATH := ../order_verification/
+#DPATH := ../order_verification/
+DPATH := ../multiblock/
 
 solver_src = \
 	${DPATH}parameterModule.F90 \
 	controlModule.F90 \
 	boundaryModule.F90 \
-	characterModule.F90 \
+	charModule.F90 \
 	fluxModule.F90 \
 	geoModule.F90 \
 	gradModule.F90 \
 	indexModule.F90 \
 	varModule.F90 \
-	scModule.F90 \
+	scalarModule.F90 \
 	mmsModule.F90 \
 	petsc_ksp_module.F90 \
 	coefModule.F90 \
