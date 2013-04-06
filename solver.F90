@@ -202,6 +202,7 @@ subroutine init
     
     ! calculate processor load
     N=sum(NBL)
+    NIJK=sum(NIJKBL)
 
     do B=1,NB
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
@@ -308,11 +309,19 @@ subroutine init
     call VecSetFromOptions(solvec,ierr)
     call VecDuplicate(solvec,bvec,ierr)
 
+    ! Create Vector DTX/Y/Z
+    print *, size(DTX)
+    call VecCreate(PETSC_COMM_WORLD,DTX_vec,ierr)
+    call VecSetSizes(DTX_vec,NXYZA,PETSC_DECIDE,ierr)
+    call VecSetFromOptions(DTX_vec,ierr)
+    call VecDuplicate(DTX_vec,DTY_vec,ierr)
+    call VecDuplicate(DTX_vec,DTZ_vec,ierr)
+
 end subroutine init
 
 !========================================================
-!>  This subroutine sets the initial field values if a
-!>  instationary problem is solved
+!>  sets the initial field values if a instationary
+!>  problem is solved
 !#########################################################
 subroutine setField
 !#########################################################
@@ -338,8 +347,8 @@ subroutine setField
 end subroutine setField
 
 !========================================================
-!>  This subroutine creates a .vtk containing grid geometry
-!>  and scalar field values of the current block
+!>  creates a .vtk containing grid geometry and scalar
+!>  field values of the current block
 !#########################################################
 subroutine writeVtk
 !#########################################################
@@ -397,8 +406,8 @@ subroutine writeVtk
 end subroutine writeVtk
 
 !=======================================================
-!>  This subroutine updates the boundary field values
-!>  if a instationary problem is being solved
+!>  updates the boundary field values if a instationary
+!>  problem is being solved
 !########################################################
 subroutine updateBd
 !#########################################################
@@ -431,9 +440,9 @@ subroutine updateBd
 end subroutine updateBd
 
 !=========================================================
-!>   This routine gathers all necessary neighbour values
-!>   needed for the correct calculation of diffusive and 
-!>   convective fluxes through block boundary faces
+!>   gathers all necessary neighbour values needed for
+!>   the correct calculation of diffusive and convective
+!>   fluxes through block boundary faces
 !#########################################################
 subroutine updateGhost
 !#########################################################
@@ -938,7 +947,7 @@ end subroutine calcSc
 !>  north side, FIT at top side Contributions from boundary
 !>  faces are calculated in  separate loops.
 !################################################################
-subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
+subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
 !################################################################
 
     use boundaryModule
@@ -948,20 +957,27 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
     use parameterModule
     use scalarModule
     implicit none
+#include <finclude/petscsys.h>
+#include <finclude/petscvec.h>
 
-    real(KIND=PREC), intent(in out) :: FI(NIJK),FIR(NFACE),DFX(NIJK),DFY(NIJK),DFZ(NIJK)
+    real(KIND=PREC), intent(in out) :: FI(NXYZA),FIR(NFACEAL),DFX(NXYZA),DFY(NXYZA),DFZ(NXYZA)
+    Vec , intent(in out) :: DFX_vec,DFY_vec,DFZ_vec
     integer :: IJK1, IJK2, IJK3, IJK4
+    PetscErrorCode :: ierr
 
     do B=1,NB
         call setBlockInd(B)
 !
 !.....INITIALIZE FIELDS
 !
-        do IJK=IJKST+1,IJKST+NIJK
-            DFX(IJK)=0.0d0
-            DFY(IJK)=0.0d0
-            DFZ(IJK)=0.0d0
-        end do
+        !do IJK=IJKST+1,IJKST+NIJK
+        !    DFX(IJK)=0.0d0
+        !    DFY(IJK)=0.0d0
+        !    DFZ(IJK)=0.0d0
+        !end do
+        DFX=0.0d0
+        DFY=0.0d0
+        DFZ=0.0d0
 !
 !.....CONTRRIBUTION FROM INNER EAST SIDES
 !
@@ -1156,6 +1172,21 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ)
         end do
         end do
     end do
+
+    !print *, size(MIJK)
+    !print *, MIJK
+    !print *, size(DFX)
+    !print *, DFX
+    !call VecSetValues(DFX_vec,NXYZA,MIJK,DFX,INSERT_VALUES,ierr)
+    !call VecAssemblyBegin(DFX_vec,ierr)
+    !call VecSetValues(DFY_vec,NIJK,MIJK,DFY,INSERT_VALUES,ierr)
+    !call VecAssemblyBegin(DFY_vec,ierr)
+    !call VecSetValues(DFZ_vec,NIJK,MIJK,DFZ,INSERT_VALUES,ierr)
+    !call VecAssemblyBegin(DFZ_vec,ierr)
+    !call VecAssemblyEnd(DFX_vec,ierr)
+    !call VecAssemblyEnd(DFY_vec,ierr)
+    !call VecAssemblyEnd(DFZ_vec,ierr)
+    stop
 
 end subroutine gradfi
 
