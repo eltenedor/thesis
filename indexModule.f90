@@ -8,7 +8,7 @@ module indexModule
                 ! Time stepping indices
                 ITIM,ITIMS,ITIME,&
                 ! Global Size Variables
-                NIA,NJA,NKA,NIJA,NIJKA,NDIRA,NNEUA,NWALA,NBLOA,&
+                NIA,NJA,NKA,NIJA,NIJKA,NDIRA,NNEUA,NWALA,NBLOA,NA,NPROCS,&
                 ! Regular Indices block independent (IJKB needed?)
                 I,J,K,IJ,IK,JK,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKNEU,IJKWAL,IJKB,IJKBLO,IJKP,&
                 IJKSTL,IJKENL,IJKSTR,IJKENR,&
@@ -41,7 +41,7 @@ module indexModule
                 F,NF,&
                 FACEST,FACEBL(NBLOCKS),NFACEBL(NBLOCKS),NFACE,&
                 ! mapping related indices
-                IJK_GLO,IJK_LOC,MIJK(NXYZA),&
+                IJK_GLO,IJK_LOC,MIJK(NXYZA),RMIJK(0:NAL-1),&
                 B_GLO(NBLOCKS),& !NBL(NBLOCKS),
                 IJKPROC,&
                 ! indices for outer iterations

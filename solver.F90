@@ -83,7 +83,7 @@ program main
 !....FREE WORK SPACE AND FINALIZE PROGRAM
 !==========================================================
 !
-    call cleanUp(Amat,bvec,solvec)
+    call cleanUp(A_Mat,B_Vec,SOL_Vec)
     call PetscFinalize(ierr)
 
 end program main
@@ -202,7 +202,6 @@ subroutine init
     
     ! calculate processor load
     N=sum(NBL)
-    NIJK=sum(NIJKBL)
 
     do B=1,NB
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
@@ -293,29 +292,8 @@ subroutine init
         !call writeVtk
     end if
 
-    ! Create Matrix
-
-    call MatCreate(PETSC_COMM_WORLD,Amat,ierr)
-    call MatSetSizes(Amat,N,N,PETSC_DECIDE,PETSC_DECIDE,ierr)
-    call MatSetFromOptions(Amat,ierr)
-    call MatMPIAIJSetPreallocation(Amat,PETSC_NULL_INTEGER,DNNZ,PETSC_NULL_INTEGER,ONNZ,ierr)
-    call MatSeqAIJSetPreallocation(Amat,PETSC_NULL_INTEGER,DNNZ,ierr)
-    call MatSetUp(Amat,ierr) !not necessary because already using Preallocation routine
-
-    ! Create Vector
-    call VecCreate(PETSC_COMM_WORLD,solvec,ierr)
-    !call VecSetSizes(solvec,PETSC_DECIDE,N,ierr)
-    call VecSetSizes(solvec,N,PETSC_DECIDE,ierr)
-    call VecSetFromOptions(solvec,ierr)
-    call VecDuplicate(solvec,bvec,ierr)
-
     ! Create Vector DTX/Y/Z
-    print *, size(DTX)
-    call VecCreate(PETSC_COMM_WORLD,DTX_vec,ierr)
-    call VecSetSizes(DTX_vec,NXYZA,PETSC_DECIDE,ierr)
-    call VecSetFromOptions(DTX_vec,ierr)
-    call VecDuplicate(DTX_vec,DTY_vec,ierr)
-    call VecDuplicate(DTX_vec,DTZ_vec,ierr)
+    !print *, size(DTX)
 
 end subroutine init
 
@@ -552,7 +530,7 @@ subroutine calcSc
     URF=1.0d0
 
     !print *, '  CALCULATE CV-CENTER GRADIENTS'
-    call gradfi(T,TR,DTX,DTY,DTZ)
+    call gradfi(T,TR,DTX,DTY,DTZ,DTX_Vec,DTY_Vec,DTZ_Vec)
     call updateGrad
 !
 !.....START BLOCK LOOP
@@ -711,8 +689,8 @@ subroutine calcSc
             valq=Q(IJK)
             !print *, row, col
             !
-            call MatSetValues(Amat,i1,row,i7,col,val,INSERT_VALUES,ierr)
-            call VecSetValue(bvec,row,valq,INSERT_VALUES,ierr)
+            call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
+            call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
         end do
         end do
@@ -753,8 +731,8 @@ subroutine calcSc
                 col(7)=IJKP+NIJCV
             end if
             !
-            call MatSetValues(Amat,i1,row,i7,col,val,INSERT_VALUES,ierr)
-            call VecSetValue(bvec,row,valq,INSERT_VALUES,ierr)
+            call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
+            call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
         end do
 
@@ -793,8 +771,8 @@ subroutine calcSc
                 col(7)=IJKP+NIJCV
             end if
             !
-            call MatSetValues(Amat,i1,row,i7,col,val,INSERT_VALUES,ierr)
-            call VecSetValue(bvec,row,valq,INSERT_VALUES,ierr)
+            call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
+            call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
         end do
 
@@ -834,8 +812,8 @@ subroutine calcSc
                 col(7)=IJKP+NIJCV
             end if
             !
-            call MatSetValues(Amat,i1,row,i7,col,val,INSERT_VALUES,ierr)
-            call VecSetValue(bvec,row,valq,INSERT_VALUES,ierr)
+            call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
+            call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
         end do
 
@@ -875,8 +853,8 @@ subroutine calcSc
                 col(7)=IJKP+NIJCV
             end if
             !
-            call MatSetValues(Amat,i1,row,i7,col,val,INSERT_VALUES,ierr)
-            call VecSetValue(bvec,row,valq,INSERT_VALUES,ierr)
+            call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
+            call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
         end do
 
@@ -887,33 +865,33 @@ subroutine calcSc
             col1=MIJK(R(F))
             !print *, F,row,col1
             val1=AF(F)
-            !call MatSetValues(Amat,i1,col1,val1,INSERT_VALUES,ierr)
-            call MatSetValue(Amat,row,col1,val1,INSERT_VALUES,ierr)
+            !call MatSetValues(A_Mat,i1,col1,val1,INSERT_VALUES,ierr)
+            call MatSetValue(A_Mat,row,col1,val1,INSERT_VALUES,ierr)
         end do
 
     end do
 
     ! Assembly matrix and right hand vector
     print *, '  STARTING MATRIX ASSEMBLY'
-    call MatAssemblyBegin(Amat,MAT_FINAL_ASSEMBLY,ierr)
-    call VecAssemblyBegin(bvec,ierr)
-    call MatAssemblyEnd(Amat,MAT_FINAL_ASSEMBLY,ierr)
-    call VecAssemblyEnd(bvec,ierr)
+    call MatAssemblyBegin(A_Mat,MAT_FINAL_ASSEMBLY,ierr)
+    call VecAssemblyBegin(B_Vec,ierr)
+    call MatAssemblyEnd(A_Mat,MAT_FINAL_ASSEMBLY,ierr)
+    call VecAssemblyEnd(B_Vec,ierr)
 
     ! muss noch implementiert werden
-    !call MatGetInfo(Amat,MAT_LOCAL,ierr)
+    !call MatGetInfo(A_Mat,MAT_LOCAL,ierr)
     !stop
-    !call MatView(Amat,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !call MatView(A_Mat,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !print *, ''
-    !call VecView(bvec,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    !call VecView(solvec,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !call VecView(B_Vec,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !call VecView(SOL_Vec,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !stop
 !
 !.....SOLVE LINEAR SYSTEM
 !
     print *, '  SOLVING LINEAR SYSTEM'
     call PetscGetCPUTime(time1,ierr)
-    call solveSys(Amat,bvec,solvec,N,LS,tol)
+    call solveSys(A_Mat,B_Vec,SOL_Vec,N,LS,tol)
     call PetscGetCPUTime(time2,ierr)
 
     if (CONVERGED) then
@@ -929,7 +907,7 @@ subroutine calcSc
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             row=MIJK(IJK)
-            call VecGetValues(solvec,i1,row,valt,ierr)
+            call VecGetValues(SOL_Vec,i1,row,valt,ierr)
             T(IJK)=valt
         end do
         end do
@@ -959,25 +937,32 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
     implicit none
 #include <finclude/petscsys.h>
 #include <finclude/petscvec.h>
+#include <finclude/petscvec.h90>
 
     real(KIND=PREC), intent(in out) :: FI(NXYZA),FIR(NFACEAL),DFX(NXYZA),DFY(NXYZA),DFZ(NXYZA)
     Vec , intent(in out) :: DFX_vec,DFY_vec,DFZ_vec
     integer :: IJK1, IJK2, IJK3, IJK4
     PetscErrorCode :: ierr
+    PetscScalar, pointer :: DFX_Sca(:),DFY_Sca(:),DFZ_Sca(:)
+
+    ! modify the local portion of the vector
+    call VecGetArrayF90(DFX_Vec,DFX_Sca,ierr)
+    call VecGetArrayF90(DFY_Vec,DFY_Sca,ierr)
+    call VecGetArrayF90(DFZ_Vec,DFZ_Sca,ierr)
 
     do B=1,NB
         call setBlockInd(B)
 !
 !.....INITIALIZE FIELDS
 !
-        !do IJK=IJKST+1,IJKST+NIJK
-        !    DFX(IJK)=0.0d0
-        !    DFY(IJK)=0.0d0
-        !    DFZ(IJK)=0.0d0
-        !end do
-        DFX=0.0d0
-        DFY=0.0d0
-        DFZ=0.0d0
+        do IJK=IJKST+1,IJKST+NIJK
+            DFX(IJK)=0.0d0
+            DFY(IJK)=0.0d0
+            DFZ(IJK)=0.0d0
+        end do
+        !DFX=0.0d0
+        !DFY=0.0d0
+        !DFZ=0.0d0
 !
 !.....CONTRRIBUTION FROM INNER EAST SIDES
 !
@@ -1165,13 +1150,21 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
         do I=2,NIM
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            DFX(IJK)=DFX(IJK)/VOL
-            DFY(IJK)=DFY(IJK)/VOL
-            DFZ(IJK)=DFZ(IJK)/VOL
+            !DFX(IJK)=DFX(IJK)/VOL
+            !DFY(IJK)=DFY(IJK)/VOL
+            !DFZ(IJK)=DFZ(IJK)/VOL
+
+            DFX_Sca(MIJK(IJK)+1)=DFX(IJK)/VOL
+            DFY_Sca(MIJK(IJK)+1)=DFY(IJK)/VOL
+            DFZ_Sca(MIJK(IJK)+1)=DFZ(IJK)/VOL
         end do
         end do
         end do
     end do
+
+    call VecRestoreArrayF90(DFX_Vec,DFX_Sca,ierr)
+    call VecRestoreArrayF90(DFY_Vec,DFY_Sca,ierr)
+    call VecRestoreArrayF90(DFZ_Vec,DFZ_Sca,ierr)
 
     !print *, size(MIJK)
     !print *, MIJK
@@ -1186,7 +1179,6 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
     !call VecAssemblyEnd(DFX_vec,ierr)
     !call VecAssemblyEnd(DFY_vec,ierr)
     !call VecAssemblyEnd(DFZ_vec,ierr)
-    stop
 
 end subroutine gradfi
 
@@ -1203,14 +1195,9 @@ subroutine updateGrad
     use varModule
     implicit none
 
-    do B=1,NB
-        call setBlockInd(B)
-        do F=FACEST+1,FACEST+NFACE
-          DTXR(F)=DTX(R(F))  
-          DTYR(F)=DTY(R(F))
-          DTZR(F)=DTZ(R(F))
-        end do
-    end do
+    call VecToArr(NFACEAL,MIJK(R),DTX_Vec,DTXR)
+    call VecToArr(NFACEAL,MIJK(R),DTY_Vec,DTYR)
+    call VecToArr(NFACEAL,MIJK(R),DTZ_Vec,DTZR)
 
 end subroutine updateGrad
 

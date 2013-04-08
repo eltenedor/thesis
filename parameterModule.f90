@@ -12,6 +12,7 @@ module parameterModule
     integer, parameter :: NBLOAL=786432
     integer, parameter :: PREC=8
     integer, parameter :: NBLOCKS=10
+    integer, parameter :: NAL=2097152
     integer, parameter :: NFACEAL=786432
 
 end module parameterModule
