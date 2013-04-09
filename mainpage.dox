@@ -1,18 +1,81 @@
 /**
 \mainpage The mainpage documentation
 \section sec1 Installation
-    \subsection sec1_1 Basic Requirements
-    This program has been tested with 
-    \subsection sec1_2 Configuring PETSc
-    Get the latest tarball on http://www.mcs.anl.gov/petsc/download/index.html and follow the instructions on http://www.mcs.anl.gov/petsc/documentation/installation.html.\n
-    Depending on your setup you can either setup PETSc quickly with.
-    \subsection sec1_3 Configuring Opencascade
-    Use your os's repository: e.g. \b apt-cache \b search \b opencascade
+
+    \subsection sec1_1 Author's Setup
+    <p>
+    This program has been tested with:
+    <UL>
+    <LI>DEBIAN SQUEEZE,MPI_VERSION,COMPILER_VERSION,petsc-3.3-p6,libopencascade-ocaf-6.3.0 \n
+    <LI>UBUNTU 12.04 precise pangolin,MPI_VERSION,COMPILER_VERSION,petsc-3.3-p6,libopencascade-ocaf-6.5.0
+    </UL>
+    </p>
+
+    \subsection sec1_2 Configuring PETSc   
+    <p>
+    Get the latest tarball on <a href="http://www.mcs.anl.gov/petsc/download/index.html">http://www.mcs.anl.gov/petsc/download/index.html</a> and follow the instructions on <a href="http://www.mcs.anl.gov/petsc/documentation/installation.html">http://www.mcs.anl.gov/petsc/documentation/installation.html</a>.
+    
+    To be able to use PETSc properly add the following environmental variables to your <i>.bashrc</i>:
+    
+    <b>export PETSC_DIR=<i>location of petsc</i></b> # e.g. /home/username/util/petsc/petsc-3.3-p6\n
+    <b>export PETSC_ARCH=<i>architecture</i></b> # e.g. arch-linux2-c-debug
+    
+    Depending on your local setup one can either setup PETSc quickly with:
+    <b><UL>
+    <LI>./configure \-\-with-cc=gcc \-\-with-fc=gfortran \-\-download-f-blas-lapack \-\-download-mpich
+    <LI>make all test
+    </UL></b>
+    
+    or use the existent libraries of the local machine. If the library path of the used variable can be found in LD_LIBRARY_PATH no further informations need to be passed to the <i>./configure</i> regarding the library. If one wants to use his local MPI version, other than let <i>./configure</i> download MPICH2, he has to use the <b>\-\-with-mpi-dir=MPI_DIR</b> option. For further options type <b>./configure \-\-help</b> from PETSC_DIR to get the complete list of arguments passable to ./configure.
+   
+    In case that the setup of the local machine changes in a PETSc affecting way ore one simply wants to reconfigure PETSc with different options than the previous build, one should make sure to delete the <i>PETSC_DIR/PETSC_ARCH</i> before rerunning <i>./configure</i>.
+    </p>
+
+    \subsection sec1_3 Configuring Open CASCADE
+    <p>
+    Use your os's repository to find, download and install opencascade library:
+    <b> <UL>
+    <LI>apt-cache search opencascade
+    <LI>sudo apt-get install <i>repo version of opencascade</i>
+    </UL> </b>
+    
+    Alternatively one can download the latest version of Open CASCADE at <a href="http://www.opencascade.org/getocc/download/loadocc/">http://www.opencascade.org/getocc/download/loadocc/</a>
+    You should be aware that this approach relies on the user providing all necessary ThirdPartyTools needed to build Open CASCADE. Informations can be found on <a href="http://www.opencascade.org/org/gettingstarted/install/building/">http://www.opencascade.org/org/gettingstarted/install/building/</a> and in <i>OPENCASCADE_DIR/doc/OCCT_Build3rdParty_Linux_V2.pdf</i>. Since this approach is different from the one expected by the makefiles, it may be necessary to adopt INCLUDES and LIBS in premakefile.
+    </p>
+
 \section sec2 Program Usage
+
     \subsection sec2_1 Makefiles
+    <p>
+    Every subprogram uses its own makefile for compilation. Every Makefile uses the same structure. First of all the include and library paths are specified, then compilers and flags will be listed. To adapt the compilation to the used system, only the executable paths - DPATH - have to be actualized. The compilation process of the object <i>parameterModule.o</i> differs slightly between <i>grgen</i>,<i>preprocessing</i> and <i>solver</i>, because each program generates a new source for its succesor program (s.a. subroutine writeParam*). Hence the source for <i>prepocessing</i> and <i>solver</i> will be found in DPATH. One should not let DPATH coincide with the location from which the makefile is called. Since every new version of <i>parameterModule.f90</i> provides updated information on array sizes, to avoid linking an old object file one should always call <b>make clean -f <i>MAKEFILENAME</i></b> before compiling a new program. If compilation fails either call <b>make clean -f <i>MAKEFILENAME</i></b> or delete <i>$(DPATH)parameterModule.o</i> and <i>$(DPATH)parameterModule.mod</i> manually.
+    
+    If problems surge compiling and linking source that makes use of PETSc one can always run the provided makefile <i>makefile</i> which makes use of an automated compiling and linking process or one of the makefiles in the tutorial folders e.g <i>PETSC_DIR/src/vec/vec/examples/tutorials</i> to extract the INCLUDES and LIBS variables. One can also check the variables which can be found in <i>PETSC_DIR/conf/variables</i>.
+
     \subsection sec2_2 Grid Generation
+    <p>
+    INPUTFILES\n
+    INPUTPARAMETERS\n
+    OUTPUTFILES\n
+    </p>
+
     \subsection sec2_3 Preprocessing
+    <p>
+    INPUTFILES\n
+    OUTPUTFILES\n
+    </p>
+
     \subsection sec2_4 Solver
+    <p>
+    INPUTFILES\n
+    RUNTIME ARGUMENTS FOR PETSc\n
+    OUTPUTFILES\n
+    </p>
+
     \subsection sec2_5 Postprocessing with Paraview
+    <p>
+    <a href="http://www.paraview.org/paraview/resources/software.php">Paraview</a> has been used to visualize both grid and scalar fields by generating .vtk files. At high grid resolutions (2048x2048) problems have been encountered with Paraview 3.12.0. Using Paraview 3.8.0 this type of problem didn't show up. Multiple Blocks of data can be viewed simultaneously in Paraview by just making all of them visible in a single 3d-View.
+    </p>
+    For further information on using Paraview check out <a href="http://www.paraview.org/Wiki/The_ParaView_Tutorial">http://www.paraview.org/Wiki/The_ParaView_Tutorial</a>.\n
+    A for this purposes sufficient introduction to the ASCII Legacy VTK File Format can be found on <a href="http://www.visitusers.org/index.php?title=ASCII_VTK_Files">http://www.visitusers.org/index.php?title=ASCII_VTK_Files</a>.
 
 */
