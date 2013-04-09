@@ -12,11 +12,13 @@ module varModule
                         F1(NXYZA),F2(NXYZA),F3(NXYZA),&
                         FDIR(NDIRAL),FNEU(NNEUAL)
 
-    Vec :: DTX_Vec,DTY_Vec,DTZ_Vec,TR_Vec
+    Vec :: DTX_Vec,DTY_Vec,DTZ_Vec,TR_Vec,MMS_Vec,ERR_Vec
 
 contains
 
+!################################################################
 subroutine VecToArr(N,MAP,INP_Vec,OUTP)
+!################################################################
 
     use parameterModule
     implicit none

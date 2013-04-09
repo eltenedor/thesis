@@ -56,13 +56,15 @@ program main
 
        print *, 'UPDATING BOUNDARIES'
        call updateBd
+       print *, 'SETTING ANALYTICAL SOLUTION'
+       call setSolution
 !
 !==========================================================
 !....START OUTER ITERATIONS
 !==========================================================
 !
-        LSG=100
-        !LSG=2
+        !LSG=100
+        LSG=1
         do LS=1,LSG
             print *, 'OUTER ITERATION: ', LS
             print *, '  UPDATING GHOST VALUES'
@@ -639,17 +641,17 @@ subroutine calcSc
 !
 !.....DIRICHLET BOUNARIES
 !
-        !print *, 'DIRET BOUNDARIES'
+        !print *, 'DIRICHLET BOUNDARIES'
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKP=IJKPDIR(IJKDIR)
-            IJKB=IJKBDIR(IJKDIR)
-            !IJK1=IJKDIR1(IJKDIR)
-            IJK2=IJKDIR2(IJKDIR)
-            IJK3=IJKDIR3(IJKDIR)
-            IJK4=IJKDIR4(IJKDIR)
-            DTX(IJKB)=DTX(IJKP)
-            DTY(IJKB)=DTY(IJKP)
-            DTZ(IJKB)=DTZ(IJKP)
+            IJKP=IJKPDIR(IJKDIR)-IJKPROC
+            IJKB=IJKBDIR(IJKDIR)-IJKPROC
+            !IJK1=IJKDIR1(IJKDIR)-IJKPROC
+            IJK2=IJKDIR2(IJKDIR)-IJKPROC
+            IJK3=IJKDIR3(IJKDIR)-IJKPROC
+            IJK4=IJKDIR4(IJKDIR)-IJKPROC
+            DTX(IJKB)=DTX(IJKP)-IJKPROC
+            DTY(IJKB)=DTY(IJKP)-IJKPROC
+            DTZ(IJKB)=DTZ(IJKP)-IJKPROC
 
             call fluxsc(IJKP,IJKB,IJK2,IJK3,IJK4,FDIR(IJKDIR),CP,CB,ONE,ZERO)
 
@@ -702,10 +704,12 @@ subroutine calcSc
 !.....ASSEMBLE MATRIX AND RHS-VECTOR
 !
         ! Assemble inner CV matrix coefficients
+        print *, 'BLOCK: ', B
+        print *, 'Assembling inner CV matrix coefficients'
         do K=3,NKM-1
         do I=3,NIM-1
         do J=3,NJM-1
-            IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
+            IJK=IJKPROC+IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             IJKP=MIJK(IJK)
             row=IJKP
             !
@@ -725,7 +729,7 @@ subroutine calcSc
             val(6)=AE(IJK)
             val(7)=AT(IJK)
             valq=Q(IJK)
-            !print *, row, col
+            !print *,IJKPROC, row, col
             !
             call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
             call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
@@ -735,9 +739,12 @@ subroutine calcSc
         end do
 
         ! Assembly matrix coefficients of inlet boundaries
+        print *, 'Assembling inlet boundary terms'
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJK=IJKPDIR(IJKDIR)
             IJKP=MIJK(IJK)
+            IJK=IJK-IJKPROC
+            !print *, IJKP
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
             !
@@ -768,15 +775,16 @@ subroutine calcSc
                 val(7)=AT(IJK)
                 col(7)=IJKP+NIJCV
             end if
+            !print *,IJKPROC,MIJK(IJK),col,val
             !
             call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
             call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
         end do
 
-        ! Assembly matrix coefficients of wall boundaries
+        ! Assembly matrix coefficients of neumann boundaries
         do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
-            IJK=IJKPNEU(IJKNEU)
+            IJK=IJKPROC+IJKPNEU(IJKNEU)
             IJKP=MIJK(IJK)
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
@@ -856,9 +864,11 @@ subroutine calcSc
         end do
 
         ! Assembly matrix coefficients of block boundary cells
+        print *, 'Assembly block boundary coefficients'
         do IJKBLO=IJKBLOST+1,IJKBLOST+NBLO
             IJK=IJKPBLO(IJKBLO)
             IJKP=MIJK(IJK)
+            IJK=IJK-IJKPROC
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
             !print *, IJKBLOCK,IJKPBL(IJKBLOCK),row
@@ -891,22 +901,22 @@ subroutine calcSc
                 col(7)=IJKP+NIJCV
             end if
             !
+            !print *,IJKPROC,row,col
             call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
             call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
         end do
 
         ! Assembly off diagonal matrix coefficients of block boundaries
-        print *, 'BLOCK: ', B
+        !print *, 'FACES'
         do F=FACEST+1,FACEST+NFACE
             row=MIJK(L(F))
             col1=MIJK(R(F))
-            !print *, F,row,col1
+            !print *, IJKPROC,row,col1
             val1=AF(F)
             !call MatSetValues(A_Mat,i1,col1,val1,INSERT_VALUES,ierr)
             call MatSetValue(A_Mat,row,col1,val1,INSERT_VALUES,ierr)
         end do
-
     end do
 
     ! Assembly matrix and right hand vector
@@ -915,13 +925,15 @@ subroutine calcSc
     call VecAssemblyBegin(B_Vec,ierr)
     call MatAssemblyEnd(A_Mat,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyEnd(B_Vec,ierr)
+    !call MatView(A_Mat,PETSC_VIEWER_STDOUT_WORLD,ierr)
 
+    !stop
     ! muss noch implementiert werden
     !call MatGetInfo(A_Mat,MAT_LOCAL,ierr)
     !stop
-    !call MatView(A_Mat,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    call MatView(A_Mat,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !print *, ''
-    !call VecView(B_Vec,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    call VecView(B_Vec,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !call VecView(SOL_Vec,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !stop
 !
@@ -938,20 +950,21 @@ subroutine calcSc
 
     tges=time2-time1
 
-    do B=1,NB
-        call setBlockInd(B)
-        do K=2,NKM
-        do I=2,NIM
-        do J=2,NJM
-            IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            row=MIJK(IJK)
-            call VecGetValues(SOL_Vec,i1,row,valt,ierr)
-            T(IJK)=valt
-        end do
-        end do
-        end do
-    end do
+    !do B=1,NB
+    !    call setBlockInd(B)
+    !    do K=2,NKM
+    !    do I=2,NIM
+    !    do J=2,NJM
+    !        IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
+    !        row=MIJK(IJK)
+    !        call VecGetValues(SOL_Vec,i1,row,valt,ierr)
+    !        T(IJK)=valt
+    !    end do
+    !    end do
+    !    end do
+    !end do
 
+    !stop
     call calcErr
 
 end subroutine calcSc
@@ -1361,12 +1374,12 @@ subroutine blockBdFlux
     do F=FACEST+1,FACEST+NFACE
         FAC=FF(F)
         FACP=1.0d0-FAC
-        FII=TR(F)*FAC+T(L(F))*FACP
-        DFXI=DTXR(F)*FAC+DTX(L(F))*FACP
-        DFYI=DTYR(F)*FAC+DTY(L(F))*FACP
-        DFZI=DTZR(F)*FAC+DTZ(L(F))*FACP
+        FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP
+        DFXI=DTXR(F)*FAC+DTX(L(F)-IJKPROC)*FACP
+        DFYI=DTYR(F)*FAC+DTY(L(F)-IJKPROC)*FACP
+        DFZI=DTZR(F)*FAC+DTZ(L(F)-IJKPROC)*FACP
 
-        FM=F1(L(F))*NXF(F)+F2(L(F))*NYF(F)+F3(L(F))*NZF(F)
+        FM=F1(L(F)-IJKPROC)*NXF(F)+F2(L(F)-IJKPROC)*NYF(F)+F3(L(F)-IJKPROC)*NZF(F)
 
         VSOL=ALPHA*ARF(F)/(DNF(F)+SMALL)
 !
@@ -1377,7 +1390,7 @@ subroutine blockBdFlux
 !
 !.....IMPLICIT CONVECTIVE AND DIFFUSIVE FLUXES
 !
-        FCFII=MIN(FM,ZERO)*TR(F)+MAX(FM,ZERO)*T(L(F))
+        FCFII=MIN(FM,ZERO)*TR(F)+MAX(FM,ZERO)*T(L(F)-IJKPROC)
         FDFII=VSOL*(DFXI*XPNF(F)*NXF(F)+DFYI*YPNF(F)*NYF(F)+DFZI*ZPNF(F)*NZF(F))
         !print *, MIJK(L(F)),VSOL,FM
 !
@@ -1386,51 +1399,84 @@ subroutine blockBdFlux
         ! Boundary must be treated inoutflow like
         AF(F)=-VSOL+MIN(FM,ZERO)
         !print *, AP(L(F))
-        AP(L(F))=AP(L(F))-AF(F)
+        AP(L(F)-IJKPROC)=AP(L(F)-IJKPROC)-AF(F)
         !print *, MIJK(L(F)),MIJK(R(F)),MIN(FM,ZERO),AF(F),AP(L(F))
         FFIC=G*(FCFIE-FCFII)
-        Q(L(F))=Q(L(F))-FFIC+FDFIE-FDFII
+        Q(L(F)-IJKPROC)=Q(L(F)-IJKPROC)-FFIC+FDFIE-FDFII
     end do
 
 end subroutine blockBdFlux
 
 !================================================================
-!> calculates the mean error of the current block
+!> calculates the global mean error and outputs error, time and
+!> iterations
 !################################################################
 subroutine calcErr
 !################################################################
 
+    use parameterModule
+    use coefModule
     use geoModule
     use indexModule
     use controlModule
     use mmsModule
-    use parameterModule
     use varModule
     implicit none
+#include <finclude/petscsys.h>
+#include <finclude/petscvec.h>
+#include <finclude/petscvec.h90>
 
     real(KIND=PREC) :: E,ER
-    E=0.0d0
-    ER=0.0d0
+    PetscErrorCode :: ierr
+    PetscMPIInt :: rank
+    PetscScalar :: ERR_Sca,MULT
+    PetscInt :: N_GLO
 
+    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
+
+    call VecWAXPY(ERR_Vec,-1.0d0,MMS_Vec,SOL_Vec,ierr)
+    call VecNorm(ERR_Vec,NORM_1,ERR_Sca,ierr)
+    call VecGetSize(ERR_Vec,N_GLO,ierr)
+
+    if (rank.eq.0) print *,'ERROR ',ERR_Sca/N_GLO,tges,itsInt 
+
+end subroutine calcErr
+
+!================================================================
+!>  sets the manufactured solution for the current timestep
+!################################################################
+subroutine setSolution
+!################################################################
+    use parameterModule
+    use controlModule
+    use geoModule
+    use indexModule
+    use mmsModule
+    use varModule
+    implicit none
+#include <finclude/petscsys.h>
+#include <finclude/petscvec.h>
+#include <finclude/petscvec.h90>
+
+    PetscErrorCode :: ierr
+    PetscScalar, pointer :: TEMP_Sca(:)
+
+    call VecGetArrayF90(MMS_Vec,TEMP_Sca,ierr)
+
+    IJKP=0
     do B=1,NB
         call setBlockInd(B)
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
+            IJKP=IJKP+1
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            !ER=T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME)
-            !E=abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
-            E=E+dabs(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))
-            ER=ER+(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))**2
-            !ER=max(E,ER)
+            TEMP_Sca(IJKP)=phi(XC(IJK),YC(IJK),ZC(IJK),TIME)
         end do
         end do
         end do
     end do
-    
-    !rewind 9
-    !write(9, *), E/dble(N), tges, reasonInt, itsInt, LS
-    !print *, 'ERROR ', E/dble(N), tges, reasonInt, itsInt, LS
-    print *, 'ERROR ', E/dble(N), dsqrt(ER/dble(N)), tges, itsInt
 
-end subroutine calcErr
+    call VecRestoreArrayF90(MMS_Vec,TEMP_Sca,ierr)
+
+end subroutine setSolution

@@ -119,7 +119,7 @@ subroutine solveSys(A,b,x,N,LS,tol)
     !print *, TOL
     ! View solver info
     call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    if(N.le.32) then
+    if(N.le.16) then
         call PetscObjectSetName(A,'Matrix A:',ierr)
         call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call PetscObjectSetName(vt2,'Vector vt2:',ierr)
