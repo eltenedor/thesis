@@ -35,12 +35,14 @@ subroutine distributeLoad(NLOCAL)
     integer, intent(in) :: NLOCAL
     Integer, Dimension(:), allocatable :: DNNZ(:),ONNZ(:)
 
-    allocate(DNNZ(0:N-1),ONNZ(0:N-1))
+    !print *, N
+    allocate(DNNZ(0:NLOCAL-1),ONNZ(0:NLOCAL-1))
 
     DNNZ=1
     ONNZ=0
 
     do B=1,NB
+        print *, 'Starting Loop... ', B
         call setBlockInd(B)
 
     !inner cells
@@ -48,9 +50,9 @@ subroutine distributeLoad(NLOCAL)
         do K=2,NKM
         do I=2,NIM-1
         do J=2,NJM
-            IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            IJKP=MIJK(IJK)
-            !print *, IJKP
+            IJK=IJKPROC+IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
+            IJKP=MIJK(IJK)-IJKPROC_GLO
+            print *,IJKPROC,IJKPROC_GLO,IJK,MIJK(IJK),IJKP
             DNNZ(IJKP)=DNNZ(IJKP)+1
             DNNZ(IJKP+NJCV)=DNNZ(IJKP+NJCV)+1
         end do
@@ -61,8 +63,8 @@ subroutine distributeLoad(NLOCAL)
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM-1
-            IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            IJKP=MIJK(IJK)
+            IJK=IJKPROC+IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
+            IJKP=MIJK(IJK)-IJKPROC_GLO
             !print *, IJKP
             DNNZ(IJKP)=DNNZ(IJKP)+1
             DNNZ(IJKP+1)=DNNZ(IJKP+1)+1
@@ -74,8 +76,9 @@ subroutine distributeLoad(NLOCAL)
         do K=2,NKM-1
         do I=2,NIM
         do J=2,NJM
+            IJKST=IJKPROC+IJKST+IJKPROC
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            IJKP=MIJK(IJK)
+            IJKP=MIJK(IJK)-IJKPROC_GLO
             !print *, IJKP
             DNNZ(IJKP)=DNNZ(IJKP)+1
             DNNZ(IJKP+(NICV*NJCV))=DNNZ(IJKP+(NICV*NJCV))+1
@@ -86,16 +89,25 @@ subroutine distributeLoad(NLOCAL)
     !block boundaries, identify local and offproc neighbours
         !print *, 'FACES: ',FACEST,NFACE
         do F=FACEST+1,FACEST+NFACE
-            IJKP=MIJK(L(F))
+            IJKP=MIJK(L(F))-IJKPROC_GLO
             IJKB=MIJK(R(F))
-            if (IJKB.ge.IJKPROC+N) then
+            !if ((IJKB.ge.IJKPROC+N).or.(IJKB.lt.IJKPROC)) then
+            if(IJKB.ge.IJKPROC+N.or.IJKB.lt.IJKPROC) then
+                !print *,'OFFPROC! ',IJKPROC,IJKP+IJKPROC,IJKB
                 ONNZ(IJKP)=ONNZ(IJKP)+1
             else
+                !print *, IJKPROC,IJKP+IJKPROC,IJKB
                 DNNZ(IJKP)=DNNZ(IJKP)+1
             end if
         end do
+        print *, 'BLOCK: ', B, 'finished successfully'
     end do
 
+    !print *, IJKPROC,'MIJK: ',MIJK
+    !print *, IJKPROC,'L(F): ',L
+    !print *, IJKPROC,'R(F): ',R
+
+    stop
 
     ! Create Matrix
     call MatCreate(PETSC_COMM_WORLD,A_Mat,ierr)
@@ -117,10 +129,12 @@ subroutine distributeLoad(NLOCAL)
     call VecDuplicate(DTX_Vec,DTY_Vec,ierr)
     call VecDuplicate(DTX_Vec,DTZ_Vec,ierr)
 
-    call VecCreateSeq(PETSC_COMM_WORLD,NFACEAL,TR_Vec,ierr)
-    call VecDuplicate(TR_Vec,DTXR_Vec,ierr)
-    call VecDuplicate(TR_Vec,DTYR_Vec,ierr)
-    call VecDuplicate(TR_Vec,DTYR_Vec,ierr)
+    call VecCreateSeq(PETSC_COMM_SELF,NFACEAL,TR_Vec,ierr)
+    !call VecDuplicate(TR_Vec,DTXR_Vec,ierr)
+    !call VecDuplicate(TR_Vec,DTYR_Vec,ierr)
+    !call VecDuplicate(TR_Vec,DTYR_Vec,ierr)
+
+    stop
 
 end subroutine distributeLoad
 

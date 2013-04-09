@@ -37,6 +37,10 @@ subroutine setUpKSP
 
 end subroutine setUpKSP
 
+!=========================================================
+!>  solves a linear system. Linear System Matrix A can be
+!>  updated for each solve, but the same preconditioning 
+!>  matrix is retained for all calls of this subroutine
 !#########################################################
 subroutine solveSys(A,b,x,N,LS,tol)
 !#########################################################
@@ -59,7 +63,8 @@ subroutine solveSys(A,b,x,N,LS,tol)
     ! Calculate initial Residual
     
     if(LS.eq.1) then
-        ! Navier Stokes, muss die Matrix aktualisiert werden
+        ! save initial stiffness matrix inside the scope of the module
+        ! to retain matrix between successive subroutine calls
         call MatConvert(A,MATSAME,MAT_INITIAL_MATRIX,A2,ierr)
         call VecDuplicate(x,vt1,ierr)
         call VecDuplicate(x,vt2,ierr)
@@ -72,11 +77,15 @@ subroutine solveSys(A,b,x,N,LS,tol)
     else
         call KSPSetInitialGuessNonzero(ksp,PETSC_TRUE,ierr)
         !
-        ! Check convergence and calculate new relative Tolerance
+        ! Check convergence by calculating the 2-Norm of the residual vector
+        ! and calculate new relative Tolerance (
+        ! (available are 1-,2- and INFTY-Norm; if the spectral radius of A < 1
+        ! every Norm should converge to zero)
         !
         call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
-        call VecMin(res,PETSC_NULL_INTEGER,tol,ierr)
-        tol=abs(tol)
+        !call VecMin(res,PETSC_NULL_INTEGER,tol,ierr)
+        call VecNorm(res,NORM_2,tol,ierr)
+        !tol=abs(tol)
         if (tol<1e-12 .and. rtol < 1e-9) then
             CONVERGED=.true.
             print *, "Final tolerance: ", tol
@@ -111,15 +120,15 @@ subroutine solveSys(A,b,x,N,LS,tol)
     ! View solver info
     call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
     if(N.le.32) then
-        print *, 'Matrix A:'
+        call PetscObjectSetName(A,'Matrix A:',ierr)
         call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        print *, 'Vector vt2:'
+        call PetscObjectSetName(vt2,'Vector vt2:',ierr)
         call VecView(vt2,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        print *, 'Vector res:'
+        call PetscObjectSetName(res,'Vector res:',ierr)
         call VecView(res,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        print *, 'Vector x:'
+        call PetscObjectSetName(x,'Vector x:',ierr)
         call VecView(x,PETSC_VIEWER_STDOUT_WORLD,ierr)
-        print *, 'Vector b:'
+        call PetscObjectSetName(b,'Vector b:',ierr)
         call VecView(b,PETSC_VIEWER_STDOUT_WORLD,ierr)
     end if
 

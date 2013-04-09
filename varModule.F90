@@ -12,7 +12,7 @@ module varModule
                         F1(NXYZA),F2(NXYZA),F3(NXYZA),&
                         FDIR(NDIRAL),FNEU(NNEUAL)
 
-    Vec :: DTX_Vec,DTY_Vec,DTZ_Vec,DTXR_Vec,DTYR_Vec,DTZR_Vec,TR_Vec
+    Vec :: DTX_Vec,DTY_Vec,DTZ_Vec,TR_Vec
 
 contains
 
@@ -35,6 +35,8 @@ subroutine VecToArr(N,MAP,INP_Vec,OUTP)
     integer, intent(in) :: N,MAP(N)
     integer :: I
     real(kind=PREC) ,intent(inout) :: OUTP(N)
+
+    !print *, MAP
 
     call VecCreateSeq(PETSC_COMM_SELF,N,TEMP_Vec,ierr)
     call ISCreateGeneral(PETSC_COMM_SELF,N,MAP,PETSC_COPY_VALUES,FROM_Is,ierr)

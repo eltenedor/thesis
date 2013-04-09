@@ -40,7 +40,7 @@ subroutine readData
     implicit none
     
     print *, 'ENTER NUMBER OF PROCS: '
-    read *, NPROCS
+    read *, NPROCSA
     
     NB=NBLOCKS
     BLOCKUNIT=OFFSET+1
@@ -599,7 +599,6 @@ subroutine writeBlockData(IB)
     BLOCKUNIT=OFFSET+IB
     call setBlockInd(IB)
     
-    !
     ! read in rest of relevant data
     read(BLOCKUNIT,*)  (FX(I), I=1,NIJK)
     read(BLOCKUNIT,*)  (FY(I), I=1,NIJK)
@@ -618,7 +617,7 @@ subroutine writeBlockData(IB)
     print *, 'WRITING TO FILE: ', BLOCKFILE
     rewind BLOCKUNIT
     N=(NK-2)*(NI-2)*(NJ-2)
-    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N,IJKST
+    write(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N,IJKST,IJK_GLOBL(B)
     !write(BLOCKUNIT,*) (NEIGH(B,I),I=1,6)
     !write(BLOCKUNIT,*) (LK(KST+K),K=1,NK)
     !write(BLOCKUNIT,*) (LI(IST+I),I=1,NI)
@@ -708,10 +707,12 @@ subroutine createMapping
             IJK_GLO=IJK_GLO+1
             IJK_LOC=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             MIJK(IJK_LOC)=IJK_GLO
+            print *, IJK_GLO, IJK_LOC,MIJK(IJK_LOC)
             RMIJK(IJK_GLO)=IJK_LOC
         end do
         end do
         end do
+        IJK_GLOBL(B)=IJK_GLO-NBL(B)+1
     end do
 
     NA = IJK_GLO+1
@@ -730,18 +731,19 @@ subroutine writeParameterModule
     REWIND 9
     read(9,*) ! 'module parameterModule'
     read(9,*) ! 'implicit none'
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NXA=', NXA/NPROCS
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NYA=', NYA/NPROCS
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NZA=', NZA/NPROCS
-    write(9,'(4X, A22, A6, I9)') 'integer, parameter :: ', 'NXYZA=', NXYZA/NPROCS
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NDIRAL=', NDIRAL/NPROCS
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NNEUAL=', NNEUAL/NPROCS
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NWALAL=', NWALAL/NPROCS
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOAL/NPROCS
-    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NBLOCKS=',NBLOCKS/NPROCS
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NXA=', NXA/NPROCSA
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NYA=', NYA/NPROCSA
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NZA=', NZA/NPROCSA
+    write(9,'(4X, A22, A6, I9)') 'integer, parameter :: ', 'NXYZA=', NXYZA/NPROCSA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NDIRAL=', NDIRAL/NPROCSA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NNEUAL=', NNEUAL/NPROCSA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NWALAL=', NWALAL/NPROCSA
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOAL/NPROCSA
+    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NBLOCKS=',NBLOCKS/NPROCSA
     write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
     write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NAL=', NAL
-    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NFACEAL=',NF/NPROCS
+    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NFACEAL=',NF/NPROCSA
+    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NPROCS=',NPROCSA
     write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParameterModule

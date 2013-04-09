@@ -1,5 +1,5 @@
 /**
-\mainpage The mainpage documentation
+\mainpage Getting Started
 \section sec1 Installation
 
     \subsection sec1_1 Author's Setup
@@ -26,7 +26,7 @@
     <LI>make all test
     </UL></b>
     
-    or use the existent libraries of the local machine. If the library path of the used variable can be found in LD_LIBRARY_PATH no further informations need to be passed to the <i>./configure</i> regarding the library. If one wants to use his local MPI version, other than let <i>./configure</i> download MPICH2, he has to use the <b>\-\-with-mpi-dir=MPI_DIR</b> option. For further options type <b>./configure \-\-help</b> from PETSC_DIR to get the complete list of arguments passable to ./configure.
+    or use the existent libraries of the local machine. If the library path of the used variable can be found in LD_LIBRARY_PATH no further informations need to be passed to the <i>./configure</i> regarding the library. If one wants to use his local MPI version, other than let <i>./configure</i> download MPICH2, he has to use the <b>\-\-with-mpi-dir=MPI_DIR</b> (e.g. <b>\-\-with-mpi-dir=/usr/lib/openmpi</b>) option. For further options type <b>./configure \-\-help</b> from PETSC_DIR to get the complete list of arguments passable to ./configure.
    
     In case that the setup of the local machine changes in a PETSc affecting way ore one simply wants to reconfigure PETSc with different options than the previous build, one should make sure to delete the <i>PETSC_DIR/PETSC_ARCH</i> before rerunning <i>./configure</i>.
     </p>
@@ -77,5 +77,7 @@
     </p>
     For further information on using Paraview check out <a href="http://www.paraview.org/Wiki/The_ParaView_Tutorial">http://www.paraview.org/Wiki/The_ParaView_Tutorial</a>.\n
     A for this purposes sufficient introduction to the ASCII Legacy VTK File Format can be found on <a href="http://www.visitusers.org/index.php?title=ASCII_VTK_Files">http://www.visitusers.org/index.php?title=ASCII_VTK_Files</a>.
+    
+    \subsection sec2_6 Example Programm Calling Sequence
 
 */

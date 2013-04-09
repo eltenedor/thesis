@@ -8,15 +8,16 @@ module indexModule
                 ! Time stepping indices
                 ITIM,ITIMS,ITIME,&
                 ! Global Size Variables
-                NIA,NJA,NKA,NIJA,NIJKA,NDIRA,NNEUA,NWALA,NBLOA,NA,NPROCS,&
+                NIA,NJA,NKA,NIJA,NIJKA,NDIRA,NNEUA,NWALA,NBLOA,NA,NPROCSA,&
                 ! Regular Indices block independent (IJKB needed?)
                 I,J,K,IJ,IK,JK,IJK,NI,NIM,NJ,NJM,NK,NKM,NIJ,NIJK,NICV,NJCV,NKCV,NIJCV,N,IJKDIR,IJKNEU,IJKWAL,IJKB,IJKBLO,IJKP,&
                 IJKSTL,IJKENL,IJKSTR,IJKENR,&
-                ! Indices for complete Blocks
+                ! Indices for complete Blocks, Processor dependent
                 B,BB,NB,&
+                NIJKPROC,NDIRPROC,NNEUPROC,NWALPROC,NBLOPROC,NFACEPROC,&
                 ! Indices inside Blocks
                 IJKL,IJKR,&
-                ! Neighbour Block Indices
+                ! Neighbour Block Indices, only needed in grgen and preprocessing
                 INEIGH,NEIGH(NBLOCKS,6),&
                 ! Indices storing boundary type, only needed in grgen
                 P,ITB(2,NXA*NZA),JTB(2,NYA*NZA),KTB(2,NXA*NZA),&
@@ -41,12 +42,11 @@ module indexModule
                 F,NF,&
                 FACEST,FACEBL(NBLOCKS),NFACEBL(NBLOCKS),NFACE,&
                 ! mapping related indices
-                IJK_GLO,IJK_LOC,MIJK(NXYZA),RMIJK(0:NAL-1),&
+                IJK_GLO,IJK_GLOBL(NBLOCKS),IJK_LOC,MIJK(NXYZA*NPROCS),RMIJK(0:NAL-1),&
                 B_GLO(NBLOCKS),& !NBL(NBLOCKS),
-                IJKPROC,&
+                IJKPROC,IJKPROC_GLO,&
                 ! indices for outer iterations
                 LS,LSG
-                
                 
     public :: setBlockInd
     private :: setBlockInd2Int,setBlockInd1Int
@@ -97,7 +97,7 @@ subroutine setBlockInd1Int(B)
 
     IJKST=IJKBL(B)
     NIJK=NIJKBL(B)
-    
+
     IJKDIRST=IJKDIRBL(B)
     NDIR=NDIRBL(B)
     

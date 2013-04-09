@@ -19,8 +19,8 @@ program main
 !
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
 
-    open(unit=9,FILE='ERR.out')
-    rewind 9
+    !open(unit=9,FILE='ERR.out')
+    !rewind 9
 
     print *, 'STARTING SOLVER'
     call init
@@ -112,18 +112,20 @@ subroutine init
     PetscErrorCode :: ierr
     PetscMPIInt :: rank
 
-    print *, 'ENTER DT (0 - stationary)'
-    read *, DT
-    if (DT.gt.0.0d0) then
-        LTIME=.true.
-        print *, 'ENTER T_0'
-        read *, T_0
-    else
-        LTIME=.false.
-    end if
-
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
-    print *, rank
+
+    DT=0.0d0
+    !if (rank.eq.0) then
+        !print *, 'ENTER DT (0 - stationary)'
+        !read *, DT
+        if (DT.gt.0.0d0) then
+            LTIME=.true.
+            print *, 'ENTER T_0'
+            read *, T_0
+        else
+            LTIME=.false.
+        end if
+    !end if
 
     PROC=rank
     write(PROC_CH,'(I1)') PROC
@@ -131,24 +133,27 @@ subroutine init
     PROCFILE='proc_'//trim(PROC_CH)//'.inp'
 
     open(UNIT=PROCUNIT,FILE=PROCFILE)
+    print *, 'opening ... ', PROCFILE
     rewind PROCUNIT 
 
     read(PROCUNIT,*) NB
+    print *, NB
     read(PROCUNIT,*) (B_GLO(B),B=1,NB)
-    !print *, (B_GLO(B),B=1,NB)
+    print *, (B_GLO(B),B=1,NB)
 
     write(BLOCK_CH,'(I1)') B_GLO(1)
     BLOCKUNIT=BLOCKOFFSET+B_GLO(1)
     BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
+    print *, 'opening ... ', BLOCKFILE
     rewind BLOCKUNIT
-    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N,IJKST
-    print *, NDIR,NNEU
+    read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N,IJKPROC,IJKPROC_GLO
+    !print *, NDIR,NNEU
     
     IBL(1)=0
     JBL(1)=0
     KBL(1)=0
-    IJKBL(1)=0
+    IJKBL(1)=0 
     IJKDIRBL(1)=0
     IJKNEUBL(1)=0
     IJKWALBL(1)=0
@@ -162,9 +167,10 @@ subroutine init
     NWALBL(1)=NWAL
     NBLOBL(1)=NBLO
     NFACEBL(1)=NFACE
-    IJKPROC=IJKST
+    !IJKPROC=IJKST
+    !IJKPROC_GLO=IJKPROC
     NBL(1)=N
-    print *, 1,N
+    !print *, 1,N,IJKPROC
 
     do B=2,NB
         !read(PROCUNIT,*) B_GLO(B)
@@ -173,8 +179,9 @@ subroutine init
         BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
         !print *, BLOCKFILE
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
+        print *, 'opening ... ', BLOCKFILE
         rewind BLOCKUNIT
-        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N,IJKST
+        read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N
 
         BB=B-1
         IBL(B)=IBL(BB)+NIBL(BB)
@@ -197,11 +204,18 @@ subroutine init
         NFACEBL(B)=NFACE
         !IJKBL_GLO(B)=IJKST
         NBL(B)=N
-        print *, B,N
+        !print *, B,N
     end do
     
     ! calculate processor load
     N=sum(NBL)
+    NIJKPROC=sum(NIJKBL)
+    NDIRPROC=sum(NDIRBL)
+    NNEUPROC=sum(NNEUBL)
+    NWALPROC=sum(NWALBL)
+    NBLOPROC=sum(NBLOBL)
+    NFACEPROC=sum(NFACEBL)
+    print *, NIJKPROC,NDIRPROC,NNEUPROC,NWALPROC,NBLOPROC,NFACEPROC
 
     do B=1,NB
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
@@ -266,9 +280,22 @@ subroutine init
         read(BLOCKUNIT,*) (NYF(FACEST+I),I=1,NFACE)
         read(BLOCKUNIT,*) (NZF(FACEST+I),I=1,NFACE)
     end do
-    
+
     BLOCKUNIT=BLOCKOFFSET+B_GLO(1)
-    read(BLOCKUNIT,*) (MIJK(IJK),IJK=1,NXYZA)
+    read(BLOCKUNIT,*) (MIJK(IJK),IJK=1,NXYZA*NPROCS)
+    !if (rank.eq.1) then
+    !    print *, NXYZA*NPROCS, NFACEAL
+    !    print *, MIJK
+    !    do F = 1,NFACEAL
+    !        print *,rank,F, L(F),R(F),MIJK(L(F)),MIJK(R(F))
+    !    end do
+    !    stop
+    !else
+    !    do
+    !        i=i+1
+    !    end do
+    !end if 
+    !read(BLOCKUNIT,*) (RMIJK(IJK),IJK=0,NA-1)
 
     do B=1,NB
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
@@ -276,10 +303,18 @@ subroutine init
     end do
 
     !print *, 'LOCAL LOAD: ', N, 'RANGE: ',IJKPROC+N
-    ncolsmax=(maxval(NBL)**(1.0/3.0)/(minval(NBL)**(1.0/3.0)))**2*3+4
-    print *,maxval(NBL),minval(NBL),'NCOLSMAX:', ncolsmax
+    !ncolsmax=(maxval(NBL)**(1.0/3.0)/(minval(NBL)**(1.0/3.0)))**2*3+4
+    !print *,maxval(NBL),minval(NBL),'NCOLSMAX:', ncolsmax
+    !print *, rank, N
 
-    call distributeLoad(N)
+    !if (rank.ne.0) then
+        call distributeLoad(N)
+    !else
+    !    do
+    !        I=I+1
+    !    end do
+    !end if
+    !stop
     !print *, size(DNNZ)
     !do I=0,N-1
     !    print *, I, DNNZ(I)
@@ -426,6 +461,7 @@ subroutine updateGhost
 !#########################################################
 
     use boundaryModule
+    use coefModule
     use geoModule
     use indexModule
     use mmsModule
@@ -435,13 +471,15 @@ subroutine updateGhost
     implicit none
     integer :: IJK1,IJK2,IJK3,IJK4
 
+    call VecToArr(NFACEAL,MIJK(R),SOL_Vec,TR)
+
     do B=1,NB
         call setBlockInd(B)
 
         !...Block BC
-        do F=FACEST+1,FACEST+NFACE
-            TR(F)=T(R(F)) 
-        end do
+        !do F=FACEST+1,FACEST+NFACE
+        !    TR(F)=T(R(F)) 
+        !end do
 
         !...Calculate Mass Fluxes at all(!) cell faces
         do K=2,NKM
@@ -922,8 +960,8 @@ end subroutine calcSc
 !>  calculates the components of the gradient vector of a
 !>  scalar FI at the CV center, using conservative scheme based
 !>  on the Gauss theorem; FIE are values at east side, FIN at
-!>  north side, FIT at top side Contributions from boundary
-!>  faces are calculated in  separate loops.
+!>  north side, FIT at top side. Contributions from boundary
+!>  faces are calculated in separate loops. s.a. updateGrad
 !################################################################
 subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
 !################################################################
@@ -1150,13 +1188,13 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
         do I=2,NIM
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            !DFX(IJK)=DFX(IJK)/VOL
-            !DFY(IJK)=DFY(IJK)/VOL
-            !DFZ(IJK)=DFZ(IJK)/VOL
+            DFX(IJK)=DFX(IJK)/VOL
+            DFY(IJK)=DFY(IJK)/VOL
+            DFZ(IJK)=DFZ(IJK)/VOL
 
-            DFX_Sca(MIJK(IJK)+1)=DFX(IJK)/VOL
-            DFY_Sca(MIJK(IJK)+1)=DFY(IJK)/VOL
-            DFZ_Sca(MIJK(IJK)+1)=DFZ(IJK)/VOL
+            DFX_Sca(MIJK(IJK)+1)=DFX(IJK)
+            DFY_Sca(MIJK(IJK)+1)=DFY(IJK)
+            DFZ_Sca(MIJK(IJK)+1)=DFZ(IJK)
         end do
         end do
         end do
@@ -1166,25 +1204,12 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
     call VecRestoreArrayF90(DFY_Vec,DFY_Sca,ierr)
     call VecRestoreArrayF90(DFZ_Vec,DFZ_Sca,ierr)
 
-    !print *, size(MIJK)
-    !print *, MIJK
-    !print *, size(DFX)
-    !print *, DFX
-    !call VecSetValues(DFX_vec,NXYZA,MIJK,DFX,INSERT_VALUES,ierr)
-    !call VecAssemblyBegin(DFX_vec,ierr)
-    !call VecSetValues(DFY_vec,NIJK,MIJK,DFY,INSERT_VALUES,ierr)
-    !call VecAssemblyBegin(DFY_vec,ierr)
-    !call VecSetValues(DFZ_vec,NIJK,MIJK,DFZ,INSERT_VALUES,ierr)
-    !call VecAssemblyBegin(DFZ_vec,ierr)
-    !call VecAssemblyEnd(DFX_vec,ierr)
-    !call VecAssemblyEnd(DFY_vec,ierr)
-    !call VecAssemblyEnd(DFZ_vec,ierr)
-
 end subroutine gradfi
 
 !===============================================================
-!>   updates the components of the gradient vector of the scalar
-!>   FI at the CV center.
+!>  scatters the block neighbour components of the gradient
+!>  vector of the scalar  FI at the CV center (both local
+!>  and off-processor).
 !################################################################
 subroutine updateGrad
 !################################################################
@@ -1203,14 +1228,14 @@ end subroutine updateGrad
 
 !==============================================================
 !>   calculates fluxes (convective and diffusive) through the
-!>   cell face between nodes IJP and IJN. IJK1...4 are the
+!>   inner cell face between nodes IJKP and IJKN. IJK1...4 are the
 !>   indices of CV corners defining the cell face. FM is the
 !>   mass flux through the face, and FAC is the interpolation
-!>   factor (distance from node IJP to cell face center over
+!>   factor (distance from node IJKP to cell face center over
 !>   the sum of this distance and the distance from cell face
 !>   center to node IJN). CAP and CAN are the contributions to
-!>   matrix coefficients in the transport equations at nodes IJP
-!>   and IJN. Diffusive fluxes are discretized using central
+!>   matrix coefficients in the transport equation at nodes IJKP
+!>   and IJKN. Diffusive fluxes are discretized using central
 !>   differences; for convective fluxes, linear interpolation
 !>   can be blended (G) with upwind approximation. Note: cell
 !>   face surface vector is directed from P to N.
@@ -1266,9 +1291,9 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
 end subroutine fluxsc
 
 !===============================================================
-!>   This routine assembles the source terms (volume integrals)
-!>   and applies wall boundary conditions (velocity equals 0)
-!>   for the scalar transport equation.
+!>  assembles the source terms (volume integrals) and applies
+!>  wall boundary conditions (velocity equals 0) for the
+!>  scalar transport equation.
 !################################################################
 subroutine walBdFlux
 !################################################################
@@ -1312,8 +1337,10 @@ subroutine walBdFlux
 end subroutine walBdFlux
 
 !===============================================================
-!>   This routine assembles the source terms (volume integrals)
-!>   and realizes the proximity relationship of the current block
+!>  assembles the source terms (volume integrals), and calculates
+!>  the convective and diffusive fluxes resulting from the
+!>  the proximity relationship of the current block to its 
+!>  neighbours
 !################################################################
 subroutine blockBdFlux
 !################################################################
@@ -1401,7 +1428,7 @@ subroutine calcErr
         end do
     end do
     
-    rewind 9
+    !rewind 9
     !write(9, *), E/dble(N), tges, reasonInt, itsInt, LS
     !print *, 'ERROR ', E/dble(N), tges, reasonInt, itsInt, LS
     print *, 'ERROR ', E/dble(N), dsqrt(ER/dble(N)), tges, itsInt

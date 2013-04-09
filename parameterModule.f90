@@ -14,5 +14,6 @@ module parameterModule
     integer, parameter :: NBLOCKS=10
     integer, parameter :: NAL=2097152
     integer, parameter :: NFACEAL=786432
+    integer, parameter :: NPROCS=1
 
 end module parameterModule
