@@ -63,8 +63,8 @@ program main
 !....START OUTER ITERATIONS
 !==========================================================
 !
-        !LSG=100
-        LSG=1
+        LSG=100
+        !LSG=1
         do LS=1,LSG
             print *, 'OUTER ITERATION: ', LS
             print *, '  UPDATING GHOST VALUES'
@@ -968,19 +968,19 @@ subroutine calcSc
 
     tges=time2-time1
 
-    !do B=1,NB
-    !    call setBlockInd(B)
-    !    do K=2,NKM
-    !    do I=2,NIM
-    !    do J=2,NJM
-    !        IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-    !        row=MIJK(IJK)
-    !        call VecGetValues(SOL_Vec,i1,row,valt,ierr)
-    !        T(IJK)=valt
-    !    end do
-    !    end do
-    !    end do
-    !end do
+    do B=1,NB
+        call setBlockInd(B)
+        do K=2,NKM
+        do I=2,NIM
+        do J=2,NJM
+            IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
+            row=MIJK(IJK)+IJKPROC_GLO
+            call VecGetValues(SOL_Vec,i1,row,valt,ierr)
+            T(IJK)=valt
+        end do
+        end do
+        end do
+    end do
 
     !stop
     call calcErr
@@ -1457,8 +1457,24 @@ subroutine calcErr
     call VecGetSize(ERR_Vec,N_GLO,ierr)
 
     !if (rank.eq.0)
-    print *,'ERROR ',ERR_Sca/N_GLO,tges,itsInt 
 
+    !do B=1,NB
+    !    call setBlockInd(B)
+    !    do K=2,NKM
+    !    do I=2,NIM
+    !    do J=2,NJM
+    !        IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
+    !        !ER=T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME)
+    !        !E=abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
+    !        E=E+dabs(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))
+    !        !ER=ER+(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))**2
+    !        !ER=max(E,ER)
+    !    end do
+    !    end do
+    !    end do
+    !end do
+
+    print *,'ERROR ',E/N,'vs',ERR_Sca/N_GLO,tges,itsInt 
 end subroutine calcErr
 
 !================================================================

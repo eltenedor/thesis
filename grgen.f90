@@ -769,15 +769,15 @@ subroutine writeParamMod
     write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NYA=', NJA
     write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NZA=', NKA
     write(9,'(4X, A22, A6, I9)') 'integer, parameter :: ', 'NXYZA=', NIJKA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NDIRAL=', NDIRA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NNEUAL=', NNEUA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NWALAL=', NWALA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOA
-    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NBLOCKS=',NB
+    write(9,'(4X, A22, A7, I7)') 'integer, parameter :: ', 'NDIRAL=', NDIRA
+    write(9,'(4X, A22, A7, I7)') 'integer, parameter :: ', 'NNEUAL=', NNEUA
+    write(9,'(4X, A22, A7, I7)') 'integer, parameter :: ', 'NWALAL=', NWALA
+    write(9,'(4X, A22, A7, I7)') 'integer, parameter :: ', 'NBLOAL=', NBLOA
+    write(9,'(4X, A22, A8, I7)') 'integer, parameter :: ', 'NBLOCKS=',NB
     write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NAL=',(NIA-2)*(NJA-2)*(NKA-2)
-    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NFACEAL=',100000
-    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NPROCS=',1
+    write(9,'(4X, A22, A4, I9)') 'integer, parameter :: ', 'NAL=',(NIA-2)*(NJA-2)*(NKA-2)
+    write(9,'(4X, A22, A8, I7)') 'integer, parameter :: ', 'NFACEAL=',100000
+    write(9,'(4X, A22, A8, I2)') 'integer, parameter :: ', 'NPROCS=',1
     write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParamMod

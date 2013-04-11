@@ -741,9 +741,9 @@ subroutine writeParameterModule
     write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOAL/NPROCSA
     write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NBLOCKS=',NBLOCKS/NPROCSA
     write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NAL=', NAL
+    write(9,'(4X, A22, A4, I9)') 'integer, parameter :: ', 'NAL=', NAL
     write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NFACEAL=',NF/NPROCSA
-    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NPROCS=',NPROCSA
+    write(9,'(4X, A22, A8, I2)') 'integer, parameter :: ', 'NPROCS=',NPROCSA
     write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParameterModule
