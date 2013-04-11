@@ -23,6 +23,7 @@ CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
 
 #DPATH := ../order_verification/
 DPATH := ../multiblock/
+#DPATH := ../singleproc/
 
 OBJS := \
 	$(DPATH)parameterModule.o \

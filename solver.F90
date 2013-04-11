@@ -439,15 +439,15 @@ subroutine updateBd
     do B=1,NB
         call setBlockInd(B)
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKB=IJKBDIR(IJKDIR)
+            IJKB=IJKBDIR(IJKDIR)-IJKPROC
             T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
         end do
         do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
-            IJKB=IJKBNEU(IJKNEU)
+            IJKB=IJKBNEU(IJKNEU)-IJKPROC
             T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
         end do
         do IJKWAL=IJKWALST+1,IJKWALST+NWAL
-            IJKB=IJKBWAL(IJKWAL)
+            IJKB=IJKBWAL(IJKWAL)-IJKPROC
             T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
         end do
     end do
@@ -516,12 +516,12 @@ subroutine updateGhost
 
         !print *, 'mass fluxes'
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKB=IJKBDIR(IJKDIR)
-            IJKP=IJKPDIR(IJKDIR)
-            !IJK1=IJKDIR1(IJKDIR)
-            IJK2=IJKDIR2(IJKDIR)
-            IJK3=IJKDIR3(IJKDIR)
-            IJK4=IJKDIR4(IJKDIR)
+            IJKB=IJKBDIR(IJKDIR)-IJKPROC
+            IJKP=IJKPDIR(IJKDIR)-IJKPROC
+            !IJK1=IJKDIR1(IJKDIR)-IJKPROC
+            IJK2=IJKDIR2(IJKDIR)-IJKPROC
+            IJK3=IJKDIR3(IJKDIR)-IJKPROC
+            IJK4=IJKDIR4(IJKDIR)-IJKPROC
             call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
             FDIR(IJKDIR)=RHO*AR*(VX*NX+VY*NY+VZ*NZ)
         end do
@@ -566,6 +566,10 @@ subroutine calcSc
     real*8 :: APT,URF,CB,CP
     integer :: IJK1,IJK2,IJK3,IJK4
     PetscLogDouble :: time1, time2
+    !PetscErrorCode :: ierr
+    PetscMPIInt :: rank
+
+    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
     URF=1.0d0
 
@@ -585,6 +589,7 @@ subroutine calcSc
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             Q(IJK)=src(XC(IJK), YC(IJK), ZC(IJK), TIME)*VOL
+            !print *,MIJK(IJK)+IJKPROC_GLO,Q(IJK)
             AP(IJK)=0.0d0
         end do
         end do
@@ -638,10 +643,22 @@ subroutine calcSc
             end do
             end do
         end if
+
+        !if (rank.eq.1) then
+        !    do K=2,NKM
+        !    do I=2,NIM
+        !    do J=2,NJM
+        !        IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
+        !        print *, MIJK(IJK)+IJKPROC_GLO,(AP(IJK)-AE(IJK)-AW(IJK)-AN(IJK)-AS(IJK)-AT(IJK)-AB(IJK)),Q(IJK)
+        !    end do
+        !    end do
+        !    end do
+        !end if
 !
 !.....DIRICHLET BOUNARIES
 !
         !print *, 'DIRICHLET BOUNDARIES'
+        !print *, 'BLOCK: ', B
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJKP=IJKPDIR(IJKDIR)-IJKPROC
             IJKB=IJKBDIR(IJKDIR)-IJKPROC
@@ -649,16 +666,19 @@ subroutine calcSc
             IJK2=IJKDIR2(IJKDIR)-IJKPROC
             IJK3=IJKDIR3(IJKDIR)-IJKPROC
             IJK4=IJKDIR4(IJKDIR)-IJKPROC
-            DTX(IJKB)=DTX(IJKP)-IJKPROC
-            DTY(IJKB)=DTY(IJKP)-IJKPROC
-            DTZ(IJKB)=DTZ(IJKP)-IJKPROC
+            DTX(IJKB)=DTX(IJKP)
+            DTY(IJKB)=DTY(IJKP)
+            DTZ(IJKB)=DTZ(IJKP)
 
             call fluxsc(IJKP,IJKB,IJK2,IJK3,IJK4,FDIR(IJKDIR),CP,CB,ONE,ZERO)
 
+            !if (rank .eq. 1) then
+            !    print *,IJKDIR,MIJK(IJKP)+IJKPROC_GLO,IJKP,IJKB,FDIR(IJKDIR),CB
+            !end if
             AP(IJKP)=AP(IJKP)-CB
-            !print *, Q(IJKP)
+            !if (rank .eq. 1) print *,IJKDIR,Q(IJKP)
             Q(IJKP)=Q(IJKP)-CB*T(IJKB)
-            !print *,MIJK(IJKP),AP(IJKP),Q(IJKP),CB
+            !if (rank .eq. 1) print *,
         end do
 !
 !.....NEUMANN ZERO GRADIENT BOUNARIES
@@ -676,7 +696,6 @@ subroutine calcSc
             DTY(IJKB)=DTY(IJKP)
             DTZ(IJKB)=DTZ(IJKP)
 
-            !print *,Q(IJKP)
             call fluxsc(IJKP,IJKB,IJK2,IJK3,IJK4,FNEU(IJKNEU),CP,CB,ONE,ZERO)
 
         end do
@@ -704,8 +723,8 @@ subroutine calcSc
 !.....ASSEMBLE MATRIX AND RHS-VECTOR
 !
         ! Assemble inner CV matrix coefficients
-        print *, 'BLOCK: ', B
-        print *, 'Assembling inner CV matrix coefficients'
+        !print *, 'BLOCK: ', B
+        !print *, 'Assembling inner CV matrix coefficients'
         do K=3,NKM-1
         do I=3,NIM-1
         do J=3,NJM-1
@@ -739,7 +758,7 @@ subroutine calcSc
         end do
 
         ! Assembly matrix coefficients of inlet boundaries
-        print *, 'Assembling inlet boundary terms'
+        !print *, 'Assembling inlet boundary terms'
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJK=IJKPDIR(IJKDIR)
             IJKP=MIJK(IJK)
@@ -864,7 +883,7 @@ subroutine calcSc
         end do
 
         ! Assembly matrix coefficients of block boundary cells
-        print *, 'Assembly block boundary coefficients'
+        !print *, 'Assembly block boundary coefficients'
         do IJKBLO=IJKBLOST+1,IJKBLOST+NBLO
             IJK=IJKPBLO(IJKBLO)
             IJKP=MIJK(IJK)
@@ -931,11 +950,10 @@ subroutine calcSc
     ! muss noch implementiert werden
     !call MatGetInfo(A_Mat,MAT_LOCAL,ierr)
     !stop
-    call MatView(A_Mat,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !call MatView(A_Mat,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !print *, ''
-    call VecView(B_Vec,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !call VecView(B_Vec,PETSC_VIEWER_STDOUT_WORLD,ierr)
     !call VecView(SOL_Vec,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    !stop
 !
 !.....SOLVE LINEAR SYSTEM
 !
@@ -1429,7 +1447,7 @@ subroutine calcErr
     real(KIND=PREC) :: E,ER
     PetscErrorCode :: ierr
     PetscMPIInt :: rank
-    PetscScalar :: ERR_Sca,MULT
+    PetscScalar :: ERR_Sca
     PetscInt :: N_GLO
 
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
@@ -1438,7 +1456,8 @@ subroutine calcErr
     call VecNorm(ERR_Vec,NORM_1,ERR_Sca,ierr)
     call VecGetSize(ERR_Vec,N_GLO,ierr)
 
-    if (rank.eq.0) print *,'ERROR ',ERR_Sca/N_GLO,tges,itsInt 
+    !if (rank.eq.0)
+    print *,'ERROR ',ERR_Sca/N_GLO,tges,itsInt 
 
 end subroutine calcErr
 

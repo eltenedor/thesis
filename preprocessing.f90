@@ -707,7 +707,7 @@ subroutine createMapping
             IJK_GLO=IJK_GLO+1
             IJK_LOC=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             MIJK(IJK_LOC)=IJK_GLO
-            print *, IJK_GLO, IJK_LOC,MIJK(IJK_LOC)
+            !print *, IJK_GLO, IJK_LOC,MIJK(IJK_LOC)
             RMIJK(IJK_GLO)=IJK_LOC
         end do
         end do
