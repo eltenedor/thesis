@@ -1,0 +1,27 @@
+Introduction to MPI, basic concepts
+
+Use VecCreateGhost(MPI Comm comm,int n,int N,int nghost,int *ghosts,Vec *vv) instead of scatter routines
+
+Peric -> PetscMapping über AO realisieren
+
+Variablengrößen an "maximal load" bei Kompilierung anpassen (Aufgabe von preprocessing.f90)
+
+nochmal .git manual durcharbeiten
+http://rwehner.wordpress.com/2010/03/01/a-simple-way-to-create-git-repository-on-a-server-machine-connecting-via-ssh/
+
+Solver mit nicht quadratische domain testen (order verification)
+
+Use Petsc LOG-FILES
+
+Remapping im preprocessing abschaffen!!!
+
+DTX vektor zu groß?!
+
+Problem mit Local to Global Mapping klären, kein remapping im preprocessing!
+
+rank als globale variable einführen -> control module sauber commentieren (äußere iterationen von hieraus steuern
+
+OPTIONAL: 
+
+Iterationen in GradFi einbauen
+Use PETSC-Routine to determine Convergence: KSPDefaultConverged

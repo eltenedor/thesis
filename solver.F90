@@ -1237,7 +1237,7 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
 !.....CONTRIBUTION FROM BLOCK BOUNDARIES
 !
         do F=FACEST+1,FACEST+NFACE
-            FIF=FIR(F)*FF(F)+FI(L(F))*(1.0d0-FF(F))
+            FIF=FIR(F)*FF(F)+FI(L(F)-IJKPROC)*(1.0d0-FF(F))
             
             SX=ARF(F)*NXF(F)
             SY=ARF(F)*NYF(F)
@@ -1262,9 +1262,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
             DFY(IJK)=DFY(IJK)/VOL
             DFZ(IJK)=DFZ(IJK)/VOL
 
-            DFX_Sca(MIJK(IJK)+1)=DFX(IJK)
-            DFY_Sca(MIJK(IJK)+1)=DFY(IJK)
-            DFZ_Sca(MIJK(IJK)+1)=DFZ(IJK)
+            DFX_Sca(MIJK(IJK+IJKPROC)-IJKPROC_GLO+1)=DFX(IJK)
+            DFY_Sca(MIJK(IJK+IJKPROC)-IJKPROC_GLO+1)=DFY(IJK)
+            DFZ_Sca(MIJK(IJK+IJKPROC)-IJKPROC_GLO+1)=DFZ(IJK)
         end do
         end do
         end do
