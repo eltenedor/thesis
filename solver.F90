@@ -65,6 +65,7 @@ program main
 !
         LSG=100
         !LSG=1
+        !LSG=2
         do LS=1,LSG
             print *, 'OUTER ITERATION: ', LS
             print *, '  UPDATING GHOST VALUES'
@@ -471,7 +472,12 @@ subroutine updateGhost
     use parameterModule
     use varModule
     implicit none
+#include <finclude/petscsys.h>
     integer :: IJK1,IJK2,IJK3,IJK4
+    PetscErrorCode :: ierr
+    PetscMPIInt :: rank
+
+    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
     call VecToArr(NFACEAL,MIJK(R),SOL_Vec,TR)
 
@@ -484,12 +490,14 @@ subroutine updateGhost
         !end do
 
         !...Calculate Mass Fluxes at all(!) cell faces
+        !if (rank .eq. 1) print *, 'CALCULATE MASS FLUXES'
         do K=2,NKM
         !do I=2,NIM-1
         do I=2,NIM
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             F1(IJK)=RHO*DY*DZ*VX
+            !if (rank .eq. 1) print *, F1(IJK)
         end do
         end do
         end do
@@ -574,16 +582,21 @@ subroutine calcSc
     URF=1.0d0
 
     !print *, '  CALCULATE CV-CENTER GRADIENTS'
+    !if (rank .eq. 1) print *, 'BEFORE GRADFI', F1(276-NJCV)
     call gradfi(T,TR,DTX,DTY,DTZ,DTX_Vec,DTY_Vec,DTZ_Vec)
+    !if (rank .eq. 1) print *, 'BEFORE UPDATEGRAD', F1(276-NJCV)
     call updateGrad
 !
 !.....START BLOCK LOOP
 !
     do B=1,NB
+        !if (rank .eq. 1) print *, 'BLOCK: ', B
         call setBlockInd(B)
 !
 !.....INITIALIZE Q AND AP
 !
+        !if (rank .eq. 1) print *, 'BEFORE INIT', F1(276-NJCV)
+
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
@@ -596,15 +609,20 @@ subroutine calcSc
         end do
 !
 !.....FLUXES THROUGH EAST FACE
+        !if (rank .eq. 1) print *, 'BEFORE FLUX', F1(276-NJCV)
 !
         do K=2,NKM
         do I=2,NIM-1
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             call fluxsc(IJK,IJK+NJ,IJK-NIJ-1,IJK-1,IJK,F1(IJK),AW(IJK+NJ),AE(IJK),FX(IJK),1.0d0)
+            if (MIJK(IJK+IJKPROC) .eq. 276-NJCV .and. rank .eq. 1) then
+                !print *, 'EAST FACE - Iteration No.', LS,IJK, AW(IJK+NJ),AE(IJK), 'MASS FLUX: ', F1(IJK)
+            end if
         end do
         end do
         end do
+        !if (rank .eq. 1) print *, 'before final', AW(86)
 !
 !.....FLUXES THROUGH NORTH FACE
 !
@@ -613,6 +631,9 @@ subroutine calcSc
         do J=2,NJM-1
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             call fluxsc(IJK,IJK+1,IJK-NIJ,IJK,IJK-NJ,F2(IJK),AS(IJK+1),AN(IJK),FY(IJK),1.0d0)
+            !if (MIJK(IJK+IJKPROC) .eq. 276) then
+            !    print *, 'NORTH FACE - Iteration No.', LS, AS(IJK+NJ),AN(IJK),FY(IJK)
+            !end if
         end do
         end do
         end do
@@ -624,6 +645,9 @@ subroutine calcSc
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             call fluxsc(IJK,IJK+NIJ,IJK-NJ-1,IJK-NJ,IJK,F3(IJK),AB(IJK+NIJ),AT(IJK),FZ(IJK),1.0d0)
+            !if (MIJK(IJK+IJKPROC) .eq. 276) then
+            !    print *, 'TOP FACE - Iteration No.', LS, AB(IJK+NJ),AT(IJK),FZ(IJK)
+            !end if
         end do
         end do
         end do
@@ -659,6 +683,7 @@ subroutine calcSc
 !
         !print *, 'DIRICHLET BOUNDARIES'
         !print *, 'BLOCK: ', B
+        !if (rank .eq. 1) print *, 'before boundary', AW(86)
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJKP=IJKPDIR(IJKDIR)-IJKPROC
             IJKB=IJKBDIR(IJKDIR)-IJKPROC
@@ -710,6 +735,8 @@ subroutine calcSc
 !
 !.....FINAL COEFFICIENT AND SOURCE MATRIX FOR FI-EQUATION
 !
+
+        !if (rank .eq. 1) print *, 'before final', AW(86)
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
@@ -725,11 +752,13 @@ subroutine calcSc
         ! Assemble inner CV matrix coefficients
         !print *, 'BLOCK: ', B
         !print *, 'Assembling inner CV matrix coefficients'
+        !print *, 'TEST'
+        !if (rank .eq. 1) print *, 'before inner', AW(86)
         do K=3,NKM-1
         do I=3,NIM-1
         do J=3,NJM-1
-            IJK=IJKPROC+IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            IJKP=MIJK(IJK)
+            IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
+            IJKP=MIJK(IJK+IJKPROC)
             row=IJKP
             !
             col(1)=IJKP-NIJCV
@@ -748,6 +777,7 @@ subroutine calcSc
             val(6)=AE(IJK)
             val(7)=AT(IJK)
             valq=Q(IJK)
+
             !print *,IJKPROC, row, col
             !
             call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
@@ -756,9 +786,11 @@ subroutine calcSc
         end do
         end do
         end do
+        !stop
 
         ! Assembly matrix coefficients of inlet boundaries
         !print *, 'Assembling inlet boundary terms'
+        !if (rank .eq. 1) print *, 'before dir', AW(86)
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJK=IJKPDIR(IJKDIR)
             IJKP=MIJK(IJK)
@@ -799,6 +831,11 @@ subroutine calcSc
             call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
             call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
+            !print *, row
+            if (row .eq. 276) then
+                !print *, 'Matrix coefficients to set - Iteration No.', LS,IJK,IJKP, val
+            end if
+
         end do
 
         ! Assembly matrix coefficients of neumann boundaries
@@ -968,6 +1005,7 @@ subroutine calcSc
 
     tges=time2-time1
 
+    !if (rank .eq. 1) print *, 'AFTER'
     do B=1,NB
         call setBlockInd(B)
         do K=2,NKM
@@ -976,6 +1014,7 @@ subroutine calcSc
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             row=MIJK(IJK)+IJKPROC_GLO
             call VecGetValues(SOL_Vec,i1,row,valt,ierr)
+            !if (rank .eq. 1) print *, F1(IJK)
             T(IJK)=valt
         end do
         end do
@@ -1135,12 +1174,12 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
 !.....CONTRIBUTION FROM DIRICHLET BOUNDARIES
 !
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKB=IJKBDIR(IJKDIR)
-            IJKP=IJKPDIR(IJKDIR)
-            !IJK1=IJKDIR1(IJKDIR)
-            IJK2=IJKDIR2(IJKDIR)
-            IJK3=IJKDIR3(IJKDIR)
-            IJK4=IJKDIR4(IJKDIR)
+            IJKB=IJKBDIR(IJKDIR)-IJKPROC
+            IJKP=IJKPDIR(IJKDIR)-IJKPROC
+            !IJK1=IJKDIR1(IJKDIR)-IJKPROC
+            IJK2=IJKDIR2(IJKDIR)-IJKPROC
+            IJK3=IJKDIR3(IJKDIR)-IJKPROC
+            IJK4=IJKDIR4(IJKDIR)-IJKPROC
             
             call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
             
@@ -1148,9 +1187,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
             SY=AR*NY
             SZ=AR*NZ
 
-            DFX(IJKPDIR(IJKDIR))=DFX(IJKPDIR(IJKDIR))+FI(IJKBDIR(IJKDIR))*SX
-            DFY(IJKPDIR(IJKDIR))=DFY(IJKPDIR(IJKDIR))+FI(IJKBDIR(IJKDIR))*SY
-            DFZ(IJKPDIR(IJKDIR))=DFZ(IJKPDIR(IJKDIR))+FI(IJKBDIR(IJKDIR))*SZ
+            DFX(IJKP)=DFX(IJKP)+FI(IJKB)*SX
+            DFY(IJKP)=DFY(IJKP)+FI(IJKB)*SY
+            DFZ(IJKP)=DFZ(IJKP)+FI(IJKB)*SZ
         end do
 !
 !.....CONTRIBUTION FROM NEUMANN BOUNDARIES
@@ -1208,9 +1247,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
             DFYF=FIF*SY
             DFZF=FIF*SZ
             
-            DFX(L(F))=DFX(L(F))+DFXF
-            DFY(L(F))=DFY(L(F))+DFYF
-            DFZ(L(F))=DFZ(L(F))+DFZF
+            DFX(L(F)-IJKPROC)=DFX(L(F)-IJKPROC)+DFXF
+            DFY(L(F)-IJKPROC)=DFY(L(F)-IJKPROC)+DFYF
+            DFZ(L(F)-IJKPROC)=DFZ(L(F)-IJKPROC)+DFZF
         end do
 !
 !.....CALCULATE GRADIENT COMPONENTS AT CV-CENTERS
@@ -1318,6 +1357,7 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
     Q(IJKP)=Q(IJKP)-FFIC+FDFIE-FDFII
     Q(IJKN)=Q(IJKN)+FFIC-FDFIE+FDFII
     !print *, MIJK(IJKP),VSOL,FM
+    !if (IJKN.eq.86) print *,'MASS FLUX: ', FM,VSOL 
 
 end subroutine fluxsc
 
@@ -1474,7 +1514,7 @@ subroutine calcErr
     !    end do
     !end do
 
-    print *,'ERROR ',E/N,'vs',ERR_Sca/N_GLO,tges,itsInt 
+    if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,tges,itsInt 
 end subroutine calcErr
 
 !================================================================
