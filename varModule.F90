@@ -53,6 +53,10 @@ subroutine VecToArr(N,MAP,INP_Vec,OUTP)
     end do
 
     call VecRestoreArrayF90(TEMP_Vec,TEMP_Sca,ierr)
+    call VecDestroy(TEMP_Vec,ierr)
+    call ISDestroy(FROM_Is,ierr)
+    call ISDestroy(TO_Is,ierr)
+    call VecScatterDestroy(scatter,ierr)
 
 end subroutine VecToArr
 

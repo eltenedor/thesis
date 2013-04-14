@@ -1,27 +1,31 @@
 Introduction to MPI, basic concepts
 
+einarbeiten in valgrind -> an openmpi anpassen (openmpi neu kompilieren)
+
 Use VecCreateGhost(MPI Comm comm,int n,int N,int nghost,int *ghosts,Vec *vv) instead of scatter routines
 
 Peric -> PetscMapping über AO realisieren
 
-Variablengrößen an "maximal load" bei Kompilierung anpassen (Aufgabe von preprocessing.f90)
-
 nochmal .git manual durcharbeiten
 http://rwehner.wordpress.com/2010/03/01/a-simple-way-to-create-git-repository-on-a-server-machine-connecting-via-ssh/
 
+
+
+WICHTIG:
+
+Konvergenzkriterium greift bei 256^3 nicht richtig (vielleicht zu wenig äußere Iterationen)
+Mit Michel petsc configuration am FNB besprechen
 Solver mit nicht quadratische domain testen (order verification)
-
-Use Petsc LOG-FILES
-
 Remapping im preprocessing abschaffen!!!
-
-DTX vektor zu groß?!
-
-Problem mit Local to Global Mapping klären, kein remapping im preprocessing!
-
-rank als globale variable einführen -> control module sauber commentieren (äußere iterationen von hieraus steuern
+rank als globale variable einführen -> control module sauber commentieren 
+automatisierung der gittergenerierung preprocessing und solve mittels bash-skript
+Variablengrößen an "maximal load" bei Kompilierung anpassen (Aufgabe von preprocessing.f90)
 
 OPTIONAL: 
 
+Use Petsc LOG-FILES
 Iterationen in GradFi einbauen
 Use PETSC-Routine to determine Convergence: KSPDefaultConverged
+preprocessing und grgen parallelisieren (müsste über geeignete input files machbar sein)
+
+Delete PETSc Objects to avoid memory leak -> no memory leak

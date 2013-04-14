@@ -100,6 +100,7 @@ subroutine init
     
     use boundaryModule
     use coefModule
+    use controlModule, only: ierr, rank
     use charModule
     use geoModule
     use indexModule
@@ -111,9 +112,6 @@ subroutine init
 #include <finclude/petscsys.h>
 #include <finclude/petscksp.h>
 #include <finclude/petscpc.h>
-
-    PetscErrorCode :: ierr
-    PetscMPIInt :: rank
 
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
@@ -286,42 +284,13 @@ subroutine init
 
     BLOCKUNIT=BLOCKOFFSET+B_GLO(1)
     read(BLOCKUNIT,*) (MIJK(IJK),IJK=1,NXYZA*NPROCS)
-    !if (rank.eq.1) then
-    !    print *, NXYZA*NPROCS, NFACEAL
-    !    print *, MIJK
-    !    do F = 1,NFACEAL
-    !        print *,rank,F, L(F),R(F),MIJK(L(F)),MIJK(R(F))
-    !    end do
-    !    stop
-    !else
-    !    do
-    !        i=i+1
-    !    end do
-    !end if 
-    !read(BLOCKUNIT,*) (RMIJK(IJK),IJK=0,NA-1)
 
     do B=1,NB
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
         close(UNIT=BLOCKUNIT)
     end do
 
-    !print *, 'LOCAL LOAD: ', N, 'RANGE: ',IJKPROC+N
-    !ncolsmax=(maxval(NBL)**(1.0/3.0)/(minval(NBL)**(1.0/3.0)))**2*3+4
-    !print *,maxval(NBL),minval(NBL),'NCOLSMAX:', ncolsmax
-    !print *, rank, N
-
-    !if (rank.ne.0) then
-        call distributeLoad(N)
-    !else
-    !    do
-    !        I=I+1
-    !    end do
-    !end if
-    !stop
-    !print *, size(DNNZ)
-    !do I=0,N-1
-    !    print *, I, DNNZ(I)
-    !end do
+    call distributeLoad(N)
 
     TIME=0.0d0
 
@@ -329,9 +298,6 @@ subroutine init
         call setField
         !call writeVtk
     end if
-
-    ! Create Vector DTX/Y/Z
-    !print *, size(DTX)
 
 end subroutine init
 
@@ -465,6 +431,7 @@ subroutine updateGhost
 
     use boundaryModule
     use coefModule
+    use controlModule, only: ierr, rank
     use geoModule
     use indexModule
     use mmsModule
@@ -474,8 +441,6 @@ subroutine updateGhost
     implicit none
 #include <finclude/petscsys.h>
     integer :: IJK1,IJK2,IJK3,IJK4
-    PetscErrorCode :: ierr
-    PetscMPIInt :: rank
 
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
@@ -483,11 +448,6 @@ subroutine updateGhost
 
     do B=1,NB
         call setBlockInd(B)
-
-        !...Block BC
-        !do F=FACEST+1,FACEST+NFACE
-        !    TR(F)=T(R(F)) 
-        !end do
 
         !...Calculate Mass Fluxes at all(!) cell faces
         !if (rank .eq. 1) print *, 'CALCULATE MASS FLUXES'
@@ -558,6 +518,7 @@ subroutine calcSc
 
     use boundaryModule
     use coefModule
+    use controlModule, only: ierr, rank
     use geoModule
     use gradModule
     use indexModule
@@ -574,8 +535,6 @@ subroutine calcSc
     real*8 :: APT,URF,CB,CP
     integer :: IJK1,IJK2,IJK3,IJK4
     PetscLogDouble :: time1, time2
-    !PetscErrorCode :: ierr
-    PetscMPIInt :: rank
 
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
@@ -667,17 +626,6 @@ subroutine calcSc
             end do
             end do
         end if
-
-        !if (rank.eq.1) then
-        !    do K=2,NKM
-        !    do I=2,NIM
-        !    do J=2,NJM
-        !        IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-        !        print *, MIJK(IJK)+IJKPROC_GLO,(AP(IJK)-AE(IJK)-AW(IJK)-AN(IJK)-AS(IJK)-AT(IJK)-AB(IJK)),Q(IJK)
-        !    end do
-        !    end do
-        !    end do
-        !end if
 !
 !.....DIRICHLET BOUNARIES
 !
@@ -735,7 +683,6 @@ subroutine calcSc
 !
 !.....FINAL COEFFICIENT AND SOURCE MATRIX FOR FI-EQUATION
 !
-
         !if (rank .eq. 1) print *, 'before final', AW(86)
         do K=2,NKM
         do I=2,NIM
@@ -749,11 +696,6 @@ subroutine calcSc
 !        
 !.....ASSEMBLE MATRIX AND RHS-VECTOR
 !
-        ! Assemble inner CV matrix coefficients
-        !print *, 'BLOCK: ', B
-        !print *, 'Assembling inner CV matrix coefficients'
-        !print *, 'TEST'
-        !if (rank .eq. 1) print *, 'before inner', AW(86)
         do K=3,NKM-1
         do I=3,NIM-1
         do J=3,NJM-1
@@ -790,7 +732,6 @@ subroutine calcSc
 
         ! Assembly matrix coefficients of inlet boundaries
         !print *, 'Assembling inlet boundary terms'
-        !if (rank .eq. 1) print *, 'before dir', AW(86)
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJK=IJKPDIR(IJKDIR)
             IJKP=MIJK(IJK)
@@ -981,7 +922,6 @@ subroutine calcSc
     call VecAssemblyBegin(B_Vec,ierr)
     call MatAssemblyEnd(A_Mat,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyEnd(B_Vec,ierr)
-    !call MatView(A_Mat,PETSC_VIEWER_STDOUT_WORLD,ierr)
 
     !stop
     ! muss noch implementiert werden
@@ -1037,6 +977,7 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
 !################################################################
 
     use boundaryModule
+    use controlModule, only: ierr
     use geoModule
     use gradModule
     use indexModule
@@ -1050,7 +991,6 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
     real(KIND=PREC), intent(in out) :: FI(NXYZA),FIR(NFACEAL),DFX(NXYZA),DFY(NXYZA),DFZ(NXYZA)
     Vec , intent(in out) :: DFX_vec,DFY_vec,DFZ_vec
     integer :: IJK1, IJK2, IJK3, IJK4
-    PetscErrorCode :: ierr
     PetscScalar, pointer :: DFX_Sca(:),DFY_Sca(:),DFZ_Sca(:)
 
     ! modify the local portion of the vector
@@ -1474,6 +1414,7 @@ subroutine calcErr
 
     use parameterModule
     use coefModule
+    use controlModule, only: ierr, rank
     use geoModule
     use indexModule
     use controlModule
@@ -1485,8 +1426,6 @@ subroutine calcErr
 #include <finclude/petscvec.h90>
 
     real(KIND=PREC) :: E,ER
-    PetscErrorCode :: ierr
-    PetscMPIInt :: rank
     PetscScalar :: ERR_Sca
     PetscInt :: N_GLO
 
@@ -1495,24 +1434,6 @@ subroutine calcErr
     call VecWAXPY(ERR_Vec,-1.0d0,MMS_Vec,SOL_Vec,ierr)
     call VecNorm(ERR_Vec,NORM_1,ERR_Sca,ierr)
     call VecGetSize(ERR_Vec,N_GLO,ierr)
-
-    !if (rank.eq.0)
-
-    !do B=1,NB
-    !    call setBlockInd(B)
-    !    do K=2,NKM
-    !    do I=2,NIM
-    !    do J=2,NJM
-    !        IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-    !        !ER=T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME)
-    !        !E=abs(T(IJ)-phi(XC(IJ),YC(IJ),0.0d0,TIME))
-    !        E=E+dabs(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))
-    !        !ER=ER+(T(IJK)-phi(XC(IJK),YC(IJK),ZC(IJK),TIME))**2
-    !        !ER=max(E,ER)
-    !    end do
-    !    end do
-    !    end do
-    !end do
 
     if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,tges,itsInt 
 end subroutine calcErr
@@ -1523,7 +1444,7 @@ end subroutine calcErr
 subroutine setSolution
 !################################################################
     use parameterModule
-    use controlModule
+    use controlModule, only: ierr
     use geoModule
     use indexModule
     use mmsModule
@@ -1533,7 +1454,6 @@ subroutine setSolution
 #include <finclude/petscvec.h>
 #include <finclude/petscvec.h90>
 
-    PetscErrorCode :: ierr
     PetscScalar, pointer :: TEMP_Sca(:)
 
     call VecGetArrayF90(MMS_Vec,TEMP_Sca,ierr)

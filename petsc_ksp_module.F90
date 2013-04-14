@@ -11,11 +11,14 @@ module petsc_ksp_module
 
     KSP :: ksp
     PC :: pc
-    PetscErrorCode :: ierr
     KSPConvergedReason :: reason
     PetscInt :: its
     Mat :: A2
     Vec :: vt1,vt2,res
+
+    PetscErrorCode :: ierr
+
+    Private::ierr
 
 contains
 

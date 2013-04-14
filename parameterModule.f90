@@ -1,7 +1,6 @@
 module parameterModule
 ! File with Dummy Parameters
 
-    implicit none
     integer, parameter :: NXA=130
     integer, parameter :: NYA=130
     integer, parameter :: NZA=130
