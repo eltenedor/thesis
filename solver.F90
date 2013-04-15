@@ -18,6 +18,7 @@ program main
 !==========================================================
 !
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
     !open(unit=9,FILE='ERR.out')
     !rewind 9
@@ -113,8 +114,7 @@ subroutine init
 #include <finclude/petscksp.h>
 #include <finclude/petscpc.h>
 
-    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
-
+    ! MUSS NOCH ANGEPASST WERDEN, ENTWEDER PROCFILE ODER NUR AUS SCALAR MODULE!
     DT=0.0d0
     !if (rank.eq.0) then
         !print *, 'ENTER DT (0 - stationary)'
@@ -180,7 +180,7 @@ subroutine init
         BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
         !print *, BLOCKFILE
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
-        print *, 'opening ... ', BLOCKFILE
+        !print *, 'opening ... ', BLOCKFILE
         rewind BLOCKUNIT
         read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N
 
@@ -216,7 +216,7 @@ subroutine init
     NWALPROC=sum(NWALBL)
     NBLOPROC=sum(NBLOBL)
     NFACEPROC=sum(NFACEBL)
-    print *, NIJKPROC,NDIRPROC,NNEUPROC,NWALPROC,NBLOPROC,NFACEPROC
+    !print *, NIJKPROC,NDIRPROC,NNEUPROC,NWALPROC,NBLOPROC,NFACEPROC
 
     do B=1,NB
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
@@ -442,8 +442,6 @@ subroutine updateGhost
 #include <finclude/petscsys.h>
     integer :: IJK1,IJK2,IJK3,IJK4
 
-    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
-
     call VecToArr(NFACEAL,MIJK(R),SOL_Vec,TR)
 
     do B=1,NB
@@ -536,8 +534,6 @@ subroutine calcSc
     integer :: IJK1,IJK2,IJK3,IJK4
     PetscLogDouble :: time1, time2
 
-    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
-
     URF=1.0d0
 
     !print *, '  CALCULATE CV-CENTER GRADIENTS'
@@ -568,20 +564,15 @@ subroutine calcSc
         end do
 !
 !.....FLUXES THROUGH EAST FACE
-        !if (rank .eq. 1) print *, 'BEFORE FLUX', F1(276-NJCV)
 !
         do K=2,NKM
         do I=2,NIM-1
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             call fluxsc(IJK,IJK+NJ,IJK-NIJ-1,IJK-1,IJK,F1(IJK),AW(IJK+NJ),AE(IJK),FX(IJK),1.0d0)
-            if (MIJK(IJK+IJKPROC) .eq. 276-NJCV .and. rank .eq. 1) then
-                !print *, 'EAST FACE - Iteration No.', LS,IJK, AW(IJK+NJ),AE(IJK), 'MASS FLUX: ', F1(IJK)
-            end if
         end do
         end do
         end do
-        !if (rank .eq. 1) print *, 'before final', AW(86)
 !
 !.....FLUXES THROUGH NORTH FACE
 !
@@ -590,9 +581,6 @@ subroutine calcSc
         do J=2,NJM-1
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             call fluxsc(IJK,IJK+1,IJK-NIJ,IJK,IJK-NJ,F2(IJK),AS(IJK+1),AN(IJK),FY(IJK),1.0d0)
-            !if (MIJK(IJK+IJKPROC) .eq. 276) then
-            !    print *, 'NORTH FACE - Iteration No.', LS, AS(IJK+NJ),AN(IJK),FY(IJK)
-            !end if
         end do
         end do
         end do
@@ -604,9 +592,6 @@ subroutine calcSc
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             call fluxsc(IJK,IJK+NIJ,IJK-NJ-1,IJK-NJ,IJK,F3(IJK),AB(IJK+NIJ),AT(IJK),FZ(IJK),1.0d0)
-            !if (MIJK(IJK+IJKPROC) .eq. 276) then
-            !    print *, 'TOP FACE - Iteration No.', LS, AB(IJK+NJ),AT(IJK),FZ(IJK)
-            !end if
         end do
         end do
         end do
@@ -630,8 +615,6 @@ subroutine calcSc
 !.....DIRICHLET BOUNARIES
 !
         !print *, 'DIRICHLET BOUNDARIES'
-        !print *, 'BLOCK: ', B
-        !if (rank .eq. 1) print *, 'before boundary', AW(86)
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJKP=IJKPDIR(IJKDIR)-IJKPROC
             IJKB=IJKBDIR(IJKDIR)-IJKPROC
@@ -645,13 +628,8 @@ subroutine calcSc
 
             call fluxsc(IJKP,IJKB,IJK2,IJK3,IJK4,FDIR(IJKDIR),CP,CB,ONE,ZERO)
 
-            !if (rank .eq. 1) then
-            !    print *,IJKDIR,MIJK(IJKP)+IJKPROC_GLO,IJKP,IJKB,FDIR(IJKDIR),CB
-            !end if
             AP(IJKP)=AP(IJKP)-CB
-            !if (rank .eq. 1) print *,IJKDIR,Q(IJKP)
             Q(IJKP)=Q(IJKP)-CB*T(IJKB)
-            !if (rank .eq. 1) print *,
         end do
 !
 !.....NEUMANN ZERO GRADIENT BOUNARIES
@@ -683,7 +661,6 @@ subroutine calcSc
 !
 !.....FINAL COEFFICIENT AND SOURCE MATRIX FOR FI-EQUATION
 !
-        !if (rank .eq. 1) print *, 'before final', AW(86)
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
@@ -952,7 +929,7 @@ subroutine calcSc
         do I=2,NIM
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
-            row=MIJK(IJK)+IJKPROC_GLO
+            row=MIJK(IJK+IJKPROC)
             call VecGetValues(SOL_Vec,i1,row,valt,ierr)
             !if (rank .eq. 1) print *, F1(IJK)
             T(IJK)=valt
@@ -1008,9 +985,6 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
             DFY(IJK)=0.0d0
             DFZ(IJK)=0.0d0
         end do
-        !DFX=0.0d0
-        !DFY=0.0d0
-        !DFZ=0.0d0
 !
 !.....CONTRRIBUTION FROM INNER EAST SIDES
 !
@@ -1423,19 +1397,18 @@ subroutine calcErr
     implicit none
 #include <finclude/petscsys.h>
 #include <finclude/petscvec.h>
-#include <finclude/petscvec.h90>
+!#include <finclude/petscvec.h90>
 
     real(KIND=PREC) :: E,ER
     PetscScalar :: ERR_Sca
     PetscInt :: N_GLO
 
-    call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
-
     call VecWAXPY(ERR_Vec,-1.0d0,MMS_Vec,SOL_Vec,ierr)
     call VecNorm(ERR_Vec,NORM_1,ERR_Sca,ierr)
     call VecGetSize(ERR_Vec,N_GLO,ierr)
 
-    if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,tges,itsInt 
+    if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,'TGES ',tges,'ITS ',itsInt 
+
 end subroutine calcErr
 
 !================================================================

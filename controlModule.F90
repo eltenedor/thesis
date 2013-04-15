@@ -9,7 +9,7 @@ module controlModule
     !integer :: pcInd, kspInd
     integer :: reasonInt, itsInt ! store convergedReason and numer of innerIterations
     integer,parameter :: PROCOFFSET=10,BLOCKOFFSET=20 ! used to determine inputfile names
-    real*8 :: tges
+    real*8 :: tges ! cpu time used for linear solve
 
     PetscErrorCode :: ierr
     PetscMPIInt :: rank

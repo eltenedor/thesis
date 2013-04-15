@@ -182,20 +182,6 @@ subroutine readData
         end do
     end do
 
-    !print *, 'REMAPPED VALUES'
-    !do B=1,NB
-        !call setBlockInd(B)
-        !print *, 'BLOCK: ', B
-        !do IJKWAL=IJKWALST+1,IJKWALST+NWAL
-        !    IJKBWAL(IJKWAL)
-        !print *, IJKPWAL(IJKWAL)
-        !    IJKWAL1(IJKWAL)
-        !    IJKWAL2(IJKWAL)
-        !    IJKWAL3(IJKWAL)
-        !    IJKWAL4(IJKWAL)
-    !    end do
-    !end do
-
 end subroutine readData
 
 !#########################################################

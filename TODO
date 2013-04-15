@@ -9,17 +9,18 @@ Peric -> PetscMapping über AO realisieren
 nochmal .git manual durcharbeiten
 http://rwehner.wordpress.com/2010/03/01/a-simple-way-to-create-git-repository-on-a-server-machine-connecting-via-ssh/
 
-
-
 WICHTIG:
 
-Konvergenzkriterium greift bei 256^3 nicht richtig (vielleicht zu wenig äußere Iterationen)
+Error Output in Textfile wieder implementieren
+Nochmals komplette Order Verification durchspielen (mit Zeitabhängigkeit)
+Comment Variables in index module
 Mit Michel petsc configuration am FNB besprechen
-Solver mit nicht quadratische domain testen (order verification)
-Remapping im preprocessing abschaffen!!!
-rank als globale variable einführen -> control module sauber commentieren 
+Solver mit nicht quadratischer domain testen (order verification)
+Remapping im preprocessing abschaffen!!! Am besten ist wohl ein prozessor locales remapping -> IJKPROC muss nur noch bei MIJK verwendet werden
 automatisierung der gittergenerierung preprocessing und solve mittels bash-skript
 Variablengrößen an "maximal load" bei Kompilierung anpassen (Aufgabe von preprocessing.f90)
+Entweder DT in controlModule setzen oder aus processorFile lesen (dort dann aber auch Blending und URF setzen
+MMS mit Trigonometrischen Funktionen für Skalarfeld und Geschwindigkeit
 
 OPTIONAL: 
 
@@ -27,5 +28,7 @@ Use Petsc LOG-FILES
 Iterationen in GradFi einbauen
 Use PETSC-Routine to determine Convergence: KSPDefaultConverged
 preprocessing und grgen parallelisieren (müsste über geeignete input files machbar sein)
+Mat get info verwenden
+
 
 Delete PETSc Objects to avoid memory leak -> no memory leak
