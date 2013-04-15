@@ -299,6 +299,46 @@ subroutine init
         !call writeVtk
     end if
 
+    print *, 'REMAPPING VALUES'
+    do B=1,NB
+        call setBlockInd(B)
+        do IJKBLO=IJKBLOST+1,IJKBLOST+NBLO
+            IJKBBLO(IJKBLO)=IJKBBLO(IJKBLO)-IJKPROC
+            IJKPBLO(IJKBLO)=IJKPBLO(IJKBLO)-IJKPROC
+            IJKBLO1(IJKBLO)=IJKBLO1(IJKBLO)-IJKPROC
+            IJKBLO2(IJKBLO)=IJKBLO2(IJKBLO)-IJKPROC
+            IJKBLO3(IJKBLO)=IJKBLO3(IJKBLO)-IJKPROC
+            IJKBLO4(IJKBLO)=IJKBLO4(IJKBLO)-IJKPROC
+        end do
+        !
+        do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
+            IJKBDIR(IJKDIR)=IJKBDIR(IJKDIR)-IJKPROC
+            IJKPDIR(IJKDIR)=IJKPDIR(IJKDIR)-IJKPROC
+            IJKDIR1(IJKDIR)=IJKDIR1(IJKDIR)-IJKPROC
+            IJKDIR2(IJKDIR)=IJKDIR2(IJKDIR)-IJKPROC
+            IJKDIR3(IJKDIR)=IJKDIR3(IJKDIR)-IJKPROC
+            IJKDIR4(IJKDIR)=IJKDIR4(IJKDIR)-IJKPROC
+        end do
+        !
+        do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
+            IJKBNEU(IJKNEU)=IJKBNEU(IJKNEU)-IJKPROC
+            IJKPNEU(IJKNEU)=IJKPNEU(IJKNEU)-IJKPROC
+            IJKNEU1(IJKNEU)=IJKNEU1(IJKNEU)-IJKPROC
+            IJKNEU2(IJKNEU)=IJKNEU2(IJKNEU)-IJKPROC
+            IJKNEU3(IJKNEU)=IJKNEU3(IJKNEU)-IJKPROC
+            IJKNEU4(IJKNEU)=IJKNEU4(IJKNEU)-IJKPROC
+        end do
+        !
+        do IJKWAL=IJKWALST+1,IJKWALST+NWAL
+            IJKBWAL(IJKWAL)=IJKBWAL(IJKWAL)-IJKPROC
+            IJKPWAL(IJKWAL)=IJKPWAL(IJKWAL)-IJKPROC
+            IJKWAL1(IJKWAL)=IJKWAL1(IJKWAL)-IJKPROC
+            IJKWAL2(IJKWAL)=IJKWAL2(IJKWAL)-IJKPROC
+            IJKWAL3(IJKWAL)=IJKWAL3(IJKWAL)-IJKPROC
+            IJKWAL4(IJKWAL)=IJKWAL4(IJKWAL)-IJKPROC
+        end do
+    end do
+
 end subroutine init
 
 !========================================================
@@ -406,15 +446,15 @@ subroutine updateBd
     do B=1,NB
         call setBlockInd(B)
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKB=IJKBDIR(IJKDIR)-IJKPROC
+            IJKB=IJKBDIR(IJKDIR)
             T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
         end do
         do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
-            IJKB=IJKBNEU(IJKNEU)-IJKPROC
+            IJKB=IJKBNEU(IJKNEU)
             T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
         end do
         do IJKWAL=IJKWALST+1,IJKWALST+NWAL
-            IJKB=IJKBWAL(IJKWAL)-IJKPROC
+            IJKB=IJKBWAL(IJKWAL)
             T(IJKB)=phi(XC(IJKB),YC(IJKB),ZC(IJKB),TIME)
         end do
     end do
@@ -482,12 +522,12 @@ subroutine updateGhost
 
         !print *, 'mass fluxes'
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKB=IJKBDIR(IJKDIR)-IJKPROC
-            IJKP=IJKPDIR(IJKDIR)-IJKPROC
-            !IJK1=IJKDIR1(IJKDIR)-IJKPROC
-            IJK2=IJKDIR2(IJKDIR)-IJKPROC
-            IJK3=IJKDIR3(IJKDIR)-IJKPROC
-            IJK4=IJKDIR4(IJKDIR)-IJKPROC
+            IJKB=IJKBDIR(IJKDIR)
+            IJKP=IJKPDIR(IJKDIR)
+            !IJK1=IJKDIR1(IJKDIR)
+            IJK2=IJKDIR2(IJKDIR)
+            IJK3=IJKDIR3(IJKDIR)
+            IJK4=IJKDIR4(IJKDIR)
             call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
             FDIR(IJKDIR)=RHO*AR*(VX*NX+VY*NY+VZ*NZ)
         end do
@@ -616,12 +656,12 @@ subroutine calcSc
 !
         !print *, 'DIRICHLET BOUNDARIES'
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKP=IJKPDIR(IJKDIR)-IJKPROC
-            IJKB=IJKBDIR(IJKDIR)-IJKPROC
-            !IJK1=IJKDIR1(IJKDIR)-IJKPROC
-            IJK2=IJKDIR2(IJKDIR)-IJKPROC
-            IJK3=IJKDIR3(IJKDIR)-IJKPROC
-            IJK4=IJKDIR4(IJKDIR)-IJKPROC
+            IJKP=IJKPDIR(IJKDIR)
+            IJKB=IJKBDIR(IJKDIR)
+            !IJK1=IJKDIR1(IJKDIR)
+            IJK2=IJKDIR2(IJKDIR)
+            IJK3=IJKDIR3(IJKDIR)
+            IJK4=IJKDIR4(IJKDIR)
             DTX(IJKB)=DTX(IJKP)
             DTY(IJKB)=DTY(IJKP)
             DTZ(IJKB)=DTZ(IJKP)
@@ -711,8 +751,7 @@ subroutine calcSc
         !print *, 'Assembling inlet boundary terms'
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJK=IJKPDIR(IJKDIR)
-            IJKP=MIJK(IJK)
-            IJK=IJK-IJKPROC
+            IJKP=MIJK(IJK+IJKPROC)
             !print *, IJKP
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
@@ -758,8 +797,8 @@ subroutine calcSc
 
         ! Assembly matrix coefficients of neumann boundaries
         do IJKNEU=IJKNEUST+1,IJKNEUST+NNEU
-            IJK=IJKPROC+IJKPNEU(IJKNEU)
-            IJKP=MIJK(IJK)
+            IJK=IJKPNEU(IJKNEU)
+            IJKP=MIJK(IJK+IJKPROC)
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
             !
@@ -799,7 +838,7 @@ subroutine calcSc
         ! Assembly matrix coefficients of wall boundaries
         do IJKWAL=IJKWALST+1,IJKWALST+NWAL
             IJK=IJKPWAL(IJKWAL)
-            IJKP=MIJK(IJK)
+            IJKP=MIJK(IJK+IJKPROC)
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
             !print *, IJKWAL,IJKPDI(IJKWAL),row
@@ -841,8 +880,7 @@ subroutine calcSc
         !print *, 'Assembly block boundary coefficients'
         do IJKBLO=IJKBLOST+1,IJKBLOST+NBLO
             IJK=IJKPBLO(IJKBLO)
-            IJKP=MIJK(IJK)
-            IJK=IJK-IJKPROC
+            IJKP=MIJK(IJK+IJKPROC)
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
             !print *, IJKBLOCK,IJKPBL(IJKBLOCK),row
@@ -1088,12 +1126,12 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
 !.....CONTRIBUTION FROM DIRICHLET BOUNDARIES
 !
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
-            IJKB=IJKBDIR(IJKDIR)-IJKPROC
-            IJKP=IJKPDIR(IJKDIR)-IJKPROC
-            !IJK1=IJKDIR1(IJKDIR)-IJKPROC
-            IJK2=IJKDIR2(IJKDIR)-IJKPROC
-            IJK3=IJKDIR3(IJKDIR)-IJKPROC
-            IJK4=IJKDIR4(IJKDIR)-IJKPROC
+            IJKB=IJKBDIR(IJKDIR)
+            IJKP=IJKPDIR(IJKDIR)
+            !IJK1=IJKDIR1(IJKDIR)
+            IJK2=IJKDIR2(IJKDIR)
+            IJK3=IJKDIR3(IJKDIR)
+            IJK4=IJKDIR4(IJKDIR)
             
             call normalArea(IJKP,IJKB,IJK2,IJK3,IJK4,AR,DN,XPN,YPN,ZPN,NX,NY,NZ)
             
