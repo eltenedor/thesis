@@ -667,7 +667,7 @@ subroutine writeBlockData(IB)
     !
     ! Map
     !
-    print *, NXYZA
+    !print *, NXYZA
     write(BLOCKUNIT,*) (MIJK(IJK),IJK=1,NXYZA)
     write(BLOCKUNIT,*) (RMIJK(IJK),IJK=0,NA-1)
     close(unit=BLOCKUNIT)
@@ -733,3 +733,44 @@ subroutine writeParameterModule
     print *, 'NFACEAL= ', NF, NPROCSA, NF/NPROCSA
 
 end subroutine writeParameterModule
+
+!#####################################################
+subroutine calcProcessorLoad
+!#####################################################
+
+    use parameterModule
+    use charModule
+    use controlModule
+    use indexModule
+    implicit none
+
+    integer :: NXMAX,NYMAX,NZMAX,NXYZMAX,&
+               NDIRMAX,NNEUMAX,NWALMAX,NBLOMAX,&
+               NBLOCKSMAX,NFMAX
+    integer :: NXMAX_TEMP,NYMAX_TEMP,NZMAX_TEMP,&
+               NXYZMAX_TEMP,NDIRMAX_TEMP,NNEUMAX_TEMP,NWALMAX_TEMP,NBLOMAX_TEMP,&
+               NBLOCKSMAX_TEMP,NFMAX _TEMP
+    do PROC=0,NPROCSA-1
+        write(PROC_CH,'(I1)') PROC
+        PROCUNIT=PROC+PROCOFFSET
+        PROCFILE='proc_'//trim(PROC_CH)//'.inp'
+
+        open(UNIT=PROCUNIT,FILE=PROCFILE)
+        print *, 'opening ... ', PROCFILE
+        rewind PROCUNIT
+        read(PROCUNIT,*) NB
+        ! allocate statement could handle load imbalance
+        read(PROCUNIT,*) (B_GLO(B),B=1,NB)
+        NXMAX_TEMP=sum(
+        NYMAX_TEMP=sum(
+        NZMAX_TEMP=sum(
+        NXYZMAX_TEMP=sum(
+        NDIRMAX_TEMP=sum(
+        NNEUMAX_TEMP=sum(
+        NWALMAX_TEMP=sum(
+        NBLOMAX_TEMP=sum(
+        NBLOCKSMAX_TEMP=sum(
+        NFMAX _TEMP=sum(
+
+
+

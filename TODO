@@ -9,6 +9,8 @@ Peric -> PetscMapping über AO realisieren
 nochmal .git manual durcharbeiten
 http://rwehner.wordpress.com/2010/03/01/a-simple-way-to-create-git-repository-on-a-server-machine-connecting-via-ssh/
 
+---------------------------------------------------------------------------
+
 WICHTIG:
 
 Error Output in Textfile wieder implementieren
@@ -23,6 +25,8 @@ Variablengrößen an "maximal load" bei Kompilierung anpassen (Aufgabe von prepr
 Entweder DT in controlModule setzen oder aus processorFile lesen (dort dann aber auch Blending und URF setzen
 
 MMS mit Trigonometrischen Funktionen für Skalarfeld und Geschwindigkeit
+
+---------------------------------------------------------------------------
 
 OPTIONAL: 
 
