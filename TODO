@@ -26,6 +26,8 @@ Entweder DT in controlModule setzen oder aus processorFile lesen (dort dann aber
 
 MMS mit Trigonometrischen Funktionen für Skalarfeld und Geschwindigkeit
 
+TAU
+
 ---------------------------------------------------------------------------
 
 OPTIONAL: 
@@ -51,8 +53,14 @@ BLENDING FACTOR (G)
 UNDERRELAXATION FACTOR (URF)
 INFO LOCICAL
 
+----------------------------------------------------------------------------------
 
+GESRÄCH MIT PROFESSOR SCHÄFER
 
-
+wie ist Petsc aufgebaut
+wie verwende ich petsc -> was wäre noch interessant zu testen
+was kann mein löser
+welche tests habe ich geplant
+was möchte ich mit fastest vergleichen
 
 

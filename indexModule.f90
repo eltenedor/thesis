@@ -36,7 +36,7 @@ module indexModule
                 IJKWALST,IJKWALBL(NBLOCKS),NWALBL(NBLOCKS),NWAL,&
                 ! block dependent indices (block boundary - BLO, left - L, right - R)
                 IJKBLOBL(NBLOCKS),NBLOBL(NBLOCKS),&
-                IJKBLOST,NBLO,IJKBLOSTL,NBLOL,IJKBLOSTR,NBLOR,&
+                IJKBLOST,NBLO,IJKBLOSTL,NBLOL,NIJKL,IJKBLOSTR,NBLOR,NIJKR,&
                 IJKMARKL,IJKMARKR,&
                 ! block dependent indices (boundary faces)
                 F,NF,&
@@ -47,6 +47,11 @@ module indexModule
                 IJKPROC,IJKPROC_GLO,&
                 ! indices for outer iterations
                 LS,LSG
+               ! integer values used in preprocessing to determine maximal
+               ! processor load
+    integer :: NXMAX,NYMAX,NZMAX,NXYZMAX,&
+               NDIRMAX,NNEUMAX,NWALMAX,NBLOMAX,&
+               NBLOCKSMAX,NFMAX
                 
     public :: setBlockInd
     private :: setBlockInd2Int,setBlockInd1Int
@@ -66,9 +71,11 @@ subroutine setBlockInd2Int(BL,BR)
 
     IJKBLOSTL=IJKBLOBL(BL)
     NBLOL=NBLOBL(BL)
+    NIJKL=NIJKBL(BL)
     
     IJKBLOSTR=IJKBLOBL(BR)
     NBLOR=NBLOBL(BR)
+    NIJKR=NIJKBL(BR)
 
 end subroutine setBlockInd2Int
 

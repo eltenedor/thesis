@@ -20,10 +20,15 @@ program main
     end interface cpp_interface
 
     call readData
+
     call cpu_time(T1)
     call findNeighbours
     call cpu_time(T2)
     print *, 'T2-T1 = ', T2-T1
+
+    print *, 'CALCULATING MAXIMAL PROCESSOR LOAD'
+    call calcProcessorLoad
+    print *, 'WRITING parameterModule.f90'
     call writeParameterModule
 
 end program main
@@ -223,7 +228,7 @@ subroutine findNeighbours
         neighbour: do INEIGH=1,6
             if (NEIGH(B,INEIGH).gt.0) then
                 call setBlockInd(B,NEIGH(B,INEIGH))
-                if (NBLOL.eq.NBLOR) then
+                if (NIJKL.eq.NIJKR) then ! this works only with quadratic grids
                     equalSize=.true.
                 else
                     equalSize=.false.
@@ -716,18 +721,18 @@ subroutine writeParameterModule
     REWIND 9
     read(9,*) ! 'module parameterModule'
     read(9,*) ! 'implicit none'
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NXA=', NXA/NPROCSA
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NYA=', NYA/NPROCSA
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NZA=', NZA/NPROCSA
-    write(9,'(4X, A22, A6, I9)') 'integer, parameter :: ', 'NXYZA=', NXYZA/NPROCSA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NDIRAL=', NDIRAL/NPROCSA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NNEUAL=', NNEUAL/NPROCSA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NWALAL=', NWALAL/NPROCSA
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOAL/NPROCSA
-    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NBLOCKS=',NBLOCKS/NPROCSA
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NXA=', NXMAX
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NYA=', NYMAX
+    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NZA=', NZMAX
+    write(9,'(4X, A22, A6, I9)') 'integer, parameter :: ', 'NXYZA=', NXYZMAX
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NDIRAL=', NDIRMAX
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NNEUAL=', NNEUMAX
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NWALAL=', NWALMAX
+    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOMAX
+    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NBLOCKS=',NBLOCKSMAX
     write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
     write(9,'(4X, A22, A4, I12)') 'integer, parameter :: ', 'NAL=', NA
-    write(9,'(4X, A22, A8, I8)') 'integer, parameter :: ', 'NFACEAL=',NF/NPROCSA
+    write(9,'(4X, A22, A8, I8)') 'integer, parameter :: ', 'NFACEAL=',NFMAX
     write(9,'(4X, A22, A8, I2)') 'integer, parameter :: ', 'NPROCS=',NPROCSA
     write(9,'(A)') 'end module parameterModule'
     print *, 'NFACEAL= ', NF, NPROCSA, NF/NPROCSA
@@ -744,12 +749,20 @@ subroutine calcProcessorLoad
     use indexModule
     implicit none
 
-    integer :: NXMAX,NYMAX,NZMAX,NXYZMAX,&
-               NDIRMAX,NNEUMAX,NWALMAX,NBLOMAX,&
-               NBLOCKSMAX,NFMAX
     integer :: NXMAX_TEMP,NYMAX_TEMP,NZMAX_TEMP,&
                NXYZMAX_TEMP,NDIRMAX_TEMP,NNEUMAX_TEMP,NWALMAX_TEMP,NBLOMAX_TEMP,&
-               NBLOCKSMAX_TEMP,NFMAX _TEMP
+               NBLOCKSMAX_TEMP,NFMAX_TEMP
+
+    NXMAX=0
+    NYMAX=0
+    NXYZMAX=0
+    NDIRMAX=0
+    NWALMAX=0
+    NNEUMAX=0
+    NBLOMAX=0
+    NBLOCKSMAX=0
+    NFMAX=0
+
     do PROC=0,NPROCSA-1
         write(PROC_CH,'(I1)') PROC
         PROCUNIT=PROC+PROCOFFSET
@@ -761,16 +774,26 @@ subroutine calcProcessorLoad
         read(PROCUNIT,*) NB
         ! allocate statement could handle load imbalance
         read(PROCUNIT,*) (B_GLO(B),B=1,NB)
-        NXMAX_TEMP=sum(
-        NYMAX_TEMP=sum(
-        NZMAX_TEMP=sum(
-        NXYZMAX_TEMP=sum(
-        NDIRMAX_TEMP=sum(
-        NNEUMAX_TEMP=sum(
-        NWALMAX_TEMP=sum(
-        NBLOMAX_TEMP=sum(
-        NBLOCKSMAX_TEMP=sum(
-        NFMAX _TEMP=sum(
+        NXMAX_TEMP=sum(NIBL(B_GLO(1:NB)))
+        NYMAX_TEMP=sum(NJBL(B_GLO(1:NB)))
+        NZMAX_TEMP=sum(NKBL(B_GLO(1:NB)))
+        NXYZMAX_TEMP=sum(NIJKBL(B_GLO(1:NB)))
+        NDIRMAX_TEMP=sum(NDIRBL(B_GLO(1:NB)))
+        NNEUMAX_TEMP=sum(NNEUBL(B_GLO(1:NB)))
+        NWALMAX_TEMP=sum(NWALBL(B_GLO(1:NB)))
+        NBLOMAX_TEMP=sum(NBLOBL(B_GLO(1:NB)))
+        NFMAX_TEMP=sum(NFACEBL(B_GLO(1:NB)))
 
+        NXMAX=max(NXMAX,NXMAX_TEMP)
+        NYMAX=max(NYMAX,NYMAX_TEMP)
+        NZMAX=max(NZMAX,NZMAX_TEMP)
+        NXYZMAX=max(NXYZMAX,NXYZMAX_TEMP)
+        NDIRMAX=max(NDIRMAX,NDIRMAX_TEMP)
+        NNEUMAX=max(NNEUMAX,NNEUMAX_TEMP)
+        NWALMAX=max(NWALMAX,NWALMAX_TEMP)
+        NBLOMAX=max(NBLOMAX,NBLOMAX_TEMP)
+        NBLOCKSMAX=max(NBLOCKSMAX,NB)
+        NFMAX=max(NFMAX,NFMAX_TEMP)
+    end do
 
-
+end subroutine calcProcessorLoad
