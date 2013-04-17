@@ -50,17 +50,36 @@ NUMBER OF BLOCKS
 LOCAL BLOCK INDEXING
 DT (0 -> STATIONARY)
 BLENDING FACTOR (G)
-UNDERRELAXATION FACTOR (URF)
+UNDERRELAXATION FACTOR (URF)                                 
 INFO LOCICAL
 
 ----------------------------------------------------------------------------------
 
 GESRÄCH MIT PROFESSOR SCHÄFER
 
+worum geht es in meiner Arbeit
+wie untersuchen wir das
 wie ist Petsc aufgebaut
+
+was habe ich bisher gemacht (sequentiell - verifikation mittels mms - multiblock seq - ver - parallel - ver)
 wie verwende ich petsc -> was wäre noch interessant zu testen
-was kann mein löser
-welche tests habe ich geplant
-was möchte ich mit fastest vergleichen
+welche tests habe ich noch geplant
+
+optional, falls noch Zeit ist: was möchte ich mit fastest vergleichen
+
+---------------------------------------------------------------------------------------
+
+TESTS
+
+STRONG SCALING:
+    -fixed problem sizes (64^3, 128^3, 256^3 (512^3, falls interessant))
+    -erstmal nur auf einem Node, dann auch auf mehreren Nodes (einfluss des Netzwerkes)
+    
+WEAK SCALING (alpha=1):
+    -variable problem sizes (46^3 auf einem Procs), (58^3 auf zwei Procs), (73^3 auf vier Procs), (92^3 auf 8 Procs), (116^3 auf 16 Procs).
+    
+    https://www.sharcnet.ca/help/index.php/Measuring_Parallel_Scaling_Performance
+    
+   
 
 
