@@ -4,8 +4,8 @@ currDir=$PWD
 
 if [ -z "$1" ]
 then
-    iSt=2
-    iEn=64
+    iSt=4
+    iEn=128
 else
     iSt=$1
     if [ -z "$2" ]
@@ -17,7 +17,7 @@ else
 fi
 
 
-expath=../order_verification/blockStructured
+expath=../multiblock
 
 if [ ! -d $expath ]
 then

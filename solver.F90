@@ -12,12 +12,15 @@ program main
     use varModule
     implicit none
 #include <finclude/petscsys.h>
+
+    PetscLogDouble :: time1, time2
 !
 !==========================================================
 !....INPUT DATA AND INITIALIZATION
 !==========================================================
 !
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+    call PetscGetCPUTime(time1,ierr)
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
     !open(unit=9,FILE='ERR.out')
@@ -88,6 +91,9 @@ program main
 !==========================================================
 !
     call cleanUp(A_Mat,B_Vec,SOL_Vec)
+    call PetscGetCPUTime(time2,ierr)
+    tges=time2-time1
+    if (rank .eq. 0) print *, 'TGES ', tges
     call PetscFinalize(ierr)
 
 end program main
@@ -121,8 +127,8 @@ subroutine init
         !read *, DT
         if (DT.gt.0.0d0) then
             LTIME=.true.
-            print *, 'ENTER T_0'
-            read *, T_0
+            !print *, 'ENTER T_0'
+            !read *, T_0
         else
             LTIME=.false.
         end if
@@ -950,7 +956,7 @@ subroutine calcSc
 !.....SOLVE LINEAR SYSTEM
 !
     print *, '  SOLVING LINEAR SYSTEM'
-    call PetscGetCPUTime(time1,ierr)
+    !call PetscGetCPUTime(time1,ierr)
     call solveSys(A_Mat,B_Vec,SOL_Vec,N,LS,tol)
     call PetscGetCPUTime(time2,ierr)
 
@@ -958,7 +964,7 @@ subroutine calcSc
         return
     end if
 
-    tges=time2-time1
+    !tges=time2-time1
 
     !if (rank .eq. 1) print *, 'AFTER'
     do B=1,NB
@@ -1445,7 +1451,8 @@ subroutine calcErr
     call VecNorm(ERR_Vec,NORM_1,ERR_Sca,ierr)
     call VecGetSize(ERR_Vec,N_GLO,ierr)
 
-    if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,'TGES ',tges,'ITS ',itsInt 
+    !if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,'TGES ',tges,'ITS ',itsInt 
+    if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO
 
 end subroutine calcErr
 

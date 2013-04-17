@@ -72,7 +72,7 @@ optional, falls noch Zeit ist: was möchte ich mit fastest vergleichen
 TESTS
 
 STRONG SCALING:
-    -fixed problem sizes (64^3, 128^3, 256^3 (512^3, falls interessant))
+    -fixed problem sizes (64^3, 128^3, 256^3 (512^3, 1024^3 falls interessant -> neue Manufactured solution ist anspruchsvoller))
     -erstmal nur auf einem Node, dann auch auf mehreren Nodes (einfluss des Netzwerkes)
     
 WEAK SCALING (alpha=1):
