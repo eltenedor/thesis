@@ -99,6 +99,7 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
         if (rinit<rfinal) then
             CONVERGED=.true.
             if (rank .eq. 0) print *, 'FINAL RESIDUAL: ', rinit
+            if (rank .eq. 0) write (9,*) 'FINAL RESIDUAL: ', rinit
             r_scalar = rinit
             return
         else
