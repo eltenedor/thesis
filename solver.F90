@@ -27,9 +27,9 @@ program main
     open(unit=9,FILE='ERR.out')
     rewind 9
 
-    print *, 'STARTING SOLVER'
+    if (rank .eq. 0) print *, 'STARTING SOLVER'
     call init
-    print *, 'SETTING UP KSP'
+    print '(I2 A)', rank, ': SETTING UP KSP'
     call setUpKSP
 !
 !==========================================================
@@ -38,7 +38,7 @@ program main
 !
     ITIMS=1
     ITIME=1
-    print *, 'STARTING TIMELOOP'
+    print '(I2 A)',rank, ': STARTING TIMELOOP'
     do ITIM=ITIMS,ITIME
 !
 !.....SHIFT SOLUTIONS IN TIME (OLD = CURRENT)
@@ -59,9 +59,9 @@ program main
             end do
        end if
 
-       print *, 'UPDATING BOUNDARIES'
+       print '(I2 A)', rank, ': UPDATING BOUNDARIES'
        call updateBd
-       print *, 'SETTING ANALYTICAL SOLUTION'
+       print '(I2 A)', rank, ': SETTING ANALYTICAL SOLUTION'
        call setSolution
 !
 !==========================================================
@@ -72,16 +72,17 @@ program main
         !LSG=1
         !LSG=2
         do LS=1,LSG
-            print *, 'OUTER ITERATION: ', LS
-            print *, '  UPDATING GHOST VALUES'
-            call updateGhost
-            !print *, '  CALCULATING VELOCITY FIELD'
-            !call calcuvw
-            print *, '  SOLVING TRANSPORT EQUATION'
-            call calcsc
             if (CONVERGED) then
                 call writeVtk
                 exit
+            else
+                if (rank .eq. 1) print *, 'OUTER ITERATION: ', LS
+                print '(I2 A)', rank, ': UPDATING GHOST VALUES'
+                call updateGhost
+                !print *, '  CALCULATING VELOCITY FIELD'
+                !call calcuvw
+                print '(I2 A)', rank, ': SOLVING TRANSPORT EQUATION'
+                call calcsc
             end if
         end do
         !call setField
@@ -940,7 +941,7 @@ subroutine calcSc
     end do
 
     ! Assembly matrix and right hand vector
-    print *, '  STARTING MATRIX ASSEMBLY'
+    print '(I2 A)', rank,  ': STARTING MATRIX ASSEMBLY'
     call MatAssemblyBegin(A_Mat,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyBegin(B_Vec,ierr)
     call MatAssemblyEnd(A_Mat,MAT_FINAL_ASSEMBLY,ierr)
@@ -957,9 +958,9 @@ subroutine calcSc
 !
 !.....SOLVE LINEAR SYSTEM
 !
-    print *, '  SOLVING LINEAR SYSTEM'
+    print '(I2 A)', rank, ': SOLVING LINEAR SYSTEM'
     !call PetscGetCPUTime(time1,ierr)
-    call solveSys(A_Mat,B_Vec,SOL_Vec,N,LS,tol)
+    call solveSys(A_Mat,B_Vec,SOL_Vec,N,LS,res_Scalar)
 
     if (CONVERGED) then
         return
@@ -1433,7 +1434,7 @@ subroutine calcErr
 
     use parameterModule
     use coefModule
-    use controlModule, only: ierr, rank
+    use controlModule, only: ierr, rank, res_Scalar
     use geoModule
     use indexModule
     use controlModule
@@ -1454,7 +1455,7 @@ subroutine calcErr
 
     !if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,'TGES ',tges,'ITS ',itsInt 
     if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO
-    if (rank.eq. 0) write(9,*),'ERROR ',ERR_Sca/N_GLO, 'ITS ', itsInt
+    if (rank.eq. 0) write(9,*),'ERROR ',ERR_Sca/N_GLO, 'RESNORM ', res_Scalar, 'ITS ', itsInt
 
 end subroutine calcErr
 

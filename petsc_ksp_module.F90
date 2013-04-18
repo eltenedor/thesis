@@ -47,7 +47,7 @@ end subroutine setUpKSP
 !>  updated for each solve, but the same preconditioning 
 !>  matrix is retained for all calls of this subroutine
 !#########################################################
-subroutine solveSys(A,b,x,N,LS,tol)
+subroutine solveSys(A,b,x,N,LS,r_scalar)
 !#########################################################
 
     use controlModule
@@ -62,7 +62,7 @@ subroutine solveSys(A,b,x,N,LS,tol)
     Vec, intent(in) :: b
     Vec, intent(in out) :: x
     integer, intent(in) :: N,LS
-    PetscScalar, intent(in out) :: tol
+    PetscScalar, intent(in out) :: r_scalar
     
     
     if(LS.eq.1) then
@@ -76,11 +76,14 @@ subroutine solveSys(A,b,x,N,LS,tol)
         call VecDuplicate(x,res,ierr)
 
         ! Calculate initial Residual
-        call VecNorm(b,NORM_2,rinit,ierr)
+        call VecNorm(b,NORM_2,b_real,ierr)
         ! set final tolerance
-        rfinal = rinit*1e-8
-        rtol = rinit*1e-2
-        print *, "SETTING FINAL TOLERANCE", rfinal
+        rfinal = b_real*1e-8
+        rtol = 1e-2
+        if (rank .eq. 0) print *, 'SETTING FINAL RESIDUAL TO: ', rfinal
+        if (rank .eq. 0) print *, 'SETTING RELATIVE TOLERANCE TO: ', rtol
+        if (rank .eq. 0) print *, 'INITIAL RESIDUAL: ', b_real
+        r_scalar = b_real
     else
         call KSPSetInitialGuessNonzero(ksp,PETSC_TRUE,ierr)
         !
@@ -91,17 +94,19 @@ subroutine solveSys(A,b,x,N,LS,tol)
         !
         ! Calculate initial Residual
         call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
-        call VecNorm(res,NORM_2,rinit,ierr)
+        call VecNorm(vt2,NORM_2,rinit,ierr)
 
-        if (tol<rfinal) then
+        if (rinit<rfinal) then
             CONVERGED=.true.
-            print *, "Final tolerance: ", tol
+            if (rank .eq. 0) print *, 'FINAL RESIDUAL: ', rinit
+            r_scalar = rinit
             return
         else
             call VecNorm(b,NORM_2,b_real,ierr)
-            rtol=(rinit/b_real)/100.0            
-            print *, "MOMENTARY TOLERANCE: ", tol
-            print *, "SETTING RELATIVE TOLERANCE TO: ", rtol
+            rtol=(rinit/b_real)*1e-2
+            if (rank .eq. 0) print *, 'MOMENTARY RESIDUAL: ', rinit
+            !if (rank .eq. 0) print *, "SETTING RELATIVE TOLERANCE TO: ", rtol
+            r_scalar = rinit
         endif
     endif
 
@@ -124,10 +129,12 @@ subroutine solveSys(A,b,x,N,LS,tol)
     reasonInt=reason
     itsInt=its
 
+    if (rank .eq. 0) print '(A I6 A I2)', '... REACHED AFTER: ', its, ', REASON: #', reason
+
     !print *, TOL
     ! View solver info
     !call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
-    if(N.le.16) then
+    if (N.le.16) then
         call PetscObjectSetName(A,'Matrix A:',ierr)
         call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)
         call PetscObjectSetName(vt2,'Vector vt2:',ierr)

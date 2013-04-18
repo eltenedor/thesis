@@ -13,5 +13,6 @@ module controlModule
 
     PetscErrorCode :: ierr
     PetscMPIInt :: rank
+    PetscScalar :: res_Scalar
 
 end module controlModule
