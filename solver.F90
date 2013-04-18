@@ -12,6 +12,7 @@ program main
     use varModule
     implicit none
 #include <finclude/petscsys.h>
+!#include <finclude/petsctime.h>
 
     PetscLogDouble :: time1, time2
 !
@@ -20,11 +21,12 @@ program main
 !==========================================================
 !
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-    call PetscGetCPUTime(time1,ierr)
+    !call PetscGetCPUTime(time1,ierr)
+    call PetscGetTime(time1,ierr)
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
-    !open(unit=9,FILE='ERR.out')
-    !rewind 9
+    open(unit=9,FILE='ERR.out')
+    rewind 9
 
     print *, 'STARTING SOLVER'
     call init
@@ -91,9 +93,11 @@ program main
 !==========================================================
 !
     call cleanUp(A_Mat,B_Vec,SOL_Vec)
-    call PetscGetCPUTime(time2,ierr)
+    !call PetscGetCPUTime(time2,ierr)
+    call PetscGetTime(time2,ierr)
     tges=time2-time1
     if (rank .eq. 0) print *, 'TGES ', tges
+    if (rank .eq. 0) write(9,*), 'TGES ', tges
     call PetscFinalize(ierr)
 
 end program main
@@ -1453,6 +1457,7 @@ subroutine calcErr
 
     !if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,'TGES ',tges,'ITS ',itsInt 
     if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO
+    if (rank.eq. 0) write(9,*),'ERROR ',ERR_Sca/N_GLO
 
 end subroutine calcErr
 

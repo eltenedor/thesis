@@ -1,0 +1,16 @@
+module parameterModule
+    implicit none
+    integer, parameter :: NXA=   258
+    integer, parameter :: NYA=   258
+    integer, parameter :: NZA=   258
+    integer, parameter :: NXYZA=    17173512
+    integer, parameter :: NDIRAL= 393216
+    integer, parameter :: NNEUAL=      0
+    integer, parameter :: NWALAL=      0
+    integer, parameter :: NBLOAL=      0
+    integer, parameter :: NBLOCKS=      1
+    integer, parameter :: PREC=8
+    integer, parameter :: NAL=    17173512
+    integer, parameter :: NFACEAL= 1000000
+    integer, parameter ::  NPROCS= 1
+end module parameterModule
