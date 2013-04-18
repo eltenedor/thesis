@@ -21,7 +21,6 @@ program main
 !==========================================================
 !
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-    !call PetscGetCPUTime(time1,ierr)
     call PetscGetTime(time1,ierr)
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
@@ -93,7 +92,6 @@ program main
 !==========================================================
 !
     call cleanUp(A_Mat,B_Vec,SOL_Vec)
-    !call PetscGetCPUTime(time2,ierr)
     call PetscGetTime(time2,ierr)
     tges=time2-time1
     if (rank .eq. 0) print *, 'TGES ', tges
@@ -139,9 +137,9 @@ subroutine init
     !end if
 
     PROC=rank
-    write(PROC_CH,'(I1)') PROC
+    write(PROC_CH,*) PROC
     PROCUNIT=PROC+PROCOFFSET
-    PROCFILE='proc_'//trim(PROC_CH)//'.inp'
+    PROCFILE='proc_'//trim(adjustl(PROC_CH))//'.inp'
 
     open(UNIT=PROCUNIT,FILE=PROCFILE)
     print *, 'opening ... ', PROCFILE
@@ -152,9 +150,9 @@ subroutine init
     read(PROCUNIT,*) (B_GLO(B),B=1,NB)
     print *, (B_GLO(B),B=1,NB)
 
-    write(BLOCK_CH,'(I1)') B_GLO(1)
+    write(BLOCK_CH,*) B_GLO(1)
     BLOCKUNIT=BLOCKOFFSET+B_GLO(1)
-    BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
+    BLOCKFILE='grid_'//trim(adjustl(BLOCK_CH))//'.out'
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     print *, 'opening ... ', BLOCKFILE
     rewind BLOCKUNIT
@@ -186,8 +184,8 @@ subroutine init
     do B=2,NB
         !read(PROCUNIT,*) B_GLO(B)
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
-        write(BLOCK_CH,'(I1)') B_GLO(B)
-        BLOCKFILE='grid_'//trim(BLOCK_CH)//'.out'
+        write(BLOCK_CH,*) B_GLO(B)
+        BLOCKFILE='grid_'//trim(adjustl(BLOCK_CH))//'.out'
         !print *, BLOCKFILE
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         !print *, 'opening ... ', BLOCKFILE
@@ -396,10 +394,10 @@ subroutine writeVtk
         call setBlockInd(B)
         BLOCKUNIT=B_GLO(B)+BLOCKOFFSET
         !write(TIME_CH,'(f6.4)') TIME
-        write(TIME_CH,'(I1)') ITIM
-        write(BLOCK_CH,'(I1)') B_GLO(B)
+        write(TIME_CH,*) ITIM
+        write(BLOCK_CH,*) B_GLO(B)
         !write(TIME_CH,'(I1)') LS
-        VTKFILE='grid_'//trim(BLOCK_CH)//'_'//trim(TIME_CH)//'.vtk'
+        VTKFILE='grid_'//trim(adjustl(BLOCK_CH))//'_'//trim(adjustl(TIME_CH))//'.vtk'
         print *, ' *** GENERATING .VTK *** '
         !
         open (UNIT=BLOCKUNIT,FILE=VTKFILE)
@@ -962,7 +960,6 @@ subroutine calcSc
     print *, '  SOLVING LINEAR SYSTEM'
     !call PetscGetCPUTime(time1,ierr)
     call solveSys(A_Mat,B_Vec,SOL_Vec,N,LS,tol)
-    call PetscGetCPUTime(time2,ierr)
 
     if (CONVERGED) then
         return
@@ -1457,7 +1454,7 @@ subroutine calcErr
 
     !if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,'TGES ',tges,'ITS ',itsInt 
     if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO
-    if (rank.eq. 0) write(9,*),'ERROR ',ERR_Sca/N_GLO
+    if (rank.eq. 0) write(9,*),'ERROR ',ERR_Sca/N_GLO, 'ITS ', itsInt
 
 end subroutine calcErr
 

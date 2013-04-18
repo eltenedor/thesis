@@ -18,6 +18,7 @@ CCPPFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable
 
 CMPIF := mpif90
 #CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
+#CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
 CMPIFFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable -g
 
 #DPATH := ../order_verification/

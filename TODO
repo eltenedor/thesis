@@ -13,20 +13,18 @@ http://rwehner.wordpress.com/2010/03/01/a-simple-way-to-create-git-repository-on
 
 WICHTIG:
 
-Error Output in Textfile wieder implementieren
 Nochmals komplette Order Verification durchspielen (mit Zeitabhängigkeit)
 Comment Variables in index module
-Mit Michel petsc configuration am FNB besprechen
 Solver mit nicht quadratischer domain testen (order verification)
 
 automatisierung der gittergenerierung preprocessing und solve mittels bash-skript
-Variablengrößen an "maximal load" bei Kompilierung anpassen (Aufgabe von preprocessing.f90) -> preprocessing muss bereits über die prozessorbelastung informiert sein: Einlesen von proc_*.inp, sodass die locale Auslastung berechnet werden kann.
-
 Entweder DT in controlModule setzen oder aus processorFile lesen (dort dann aber auch Blending und URF setzen
 
 MMS mit Trigonometrischen Funktionen für Skalarfeld und Geschwindigkeit
 
 TAU
+
+Einarbeitung Multigrid-Verfahren
 
 ---------------------------------------------------------------------------
 

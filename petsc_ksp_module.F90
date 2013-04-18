@@ -15,6 +15,7 @@ module petsc_ksp_module
     PetscInt :: its
     Mat :: A2
     Vec :: vt1,vt2,res
+    PetscReal :: b_real, rtol, rinit, rfinal
 
     PetscErrorCode :: ierr
 
@@ -37,6 +38,7 @@ subroutine setUpKSP
     ! Set runtime options
 
     call KSPSetFromOptions(ksp,ierr)
+
 
 end subroutine setUpKSP
 
@@ -61,22 +63,24 @@ subroutine solveSys(A,b,x,N,LS,tol)
     Vec, intent(in out) :: x
     integer, intent(in) :: N,LS
     PetscScalar, intent(in out) :: tol
-    PetscReal :: r2, b2, rtol, rinit
     
-    ! Calculate initial Residual
     
     if(LS.eq.1) then
         ! save initial stiffness matrix inside the scope of the module
         ! to retain matrix between successive subroutine calls
         call MatConvert(A,MATSAME,MAT_INITIAL_MATRIX,A2,ierr)
+
+        ! Initialize temporary work vectors
         call VecDuplicate(x,vt1,ierr)
         call VecDuplicate(x,vt2,ierr)
         call VecDuplicate(x,res,ierr)
-        !
-        ! Set starting tolerance 1e-4
-        !
-        rtol = 1e-4
-        !rtol = 1e-10
+
+        ! Calculate initial Residual
+        call VecNorm(b,NORM_2,rinit,ierr)
+        ! set final tolerance
+        rfinal = rinit*1e-8
+        rtol = rinit*1e-2
+        print *, "SETTING FINAL TOLERANCE", rfinal
     else
         call KSPSetInitialGuessNonzero(ksp,PETSC_TRUE,ierr)
         !
@@ -85,18 +89,19 @@ subroutine solveSys(A,b,x,N,LS,tol)
         ! (available are 1-,2- and INFTY-Norm; if the spectral radius of A < 1
         ! every Norm should converge to zero)
         !
+        ! Calculate initial Residual
         call KSPInitialResidual(ksp,x,vt1,vt2,res,b,ierr)
-        !call VecMin(res,PETSC_NULL_INTEGER,tol,ierr)
-        call VecNorm(res,NORM_2,tol,ierr)
-        !tol=abs(tol)
-        if (tol<1e-12 .and. rtol < 1e-9) then
+        call VecNorm(res,NORM_2,rinit,ierr)
+
+        if (tol<rfinal) then
             CONVERGED=.true.
             print *, "Final tolerance: ", tol
             return
         else
-            call VecNorm(vt2,NORM_2,r2,ierr)
-            call VecNorm(b,NORM_2,b2,ierr)
-            rtol=(r2/b2)/100.0            
+            call VecNorm(b,NORM_2,b_real,ierr)
+            rtol=(rinit/b_real)/100.0            
+            print *, "MOMENTARY TOLERANCE: ", tol
+            print *, "SETTING RELATIVE TOLERANCE TO: ", rtol
         endif
     endif
 
@@ -121,7 +126,7 @@ subroutine solveSys(A,b,x,N,LS,tol)
 
     !print *, TOL
     ! View solver info
-    call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
+    !call KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD,ierr)
     if(N.le.16) then
         call PetscObjectSetName(A,'Matrix A:',ierr)
         call MatView(A,PETSC_VIEWER_STDOUT_WORLD,ierr)

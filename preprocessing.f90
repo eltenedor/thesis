@@ -49,8 +49,8 @@ subroutine readData
     
     NB=NBLOCKS
     BLOCKUNIT=OFFSET+1
-    write(BLOCK_CH,'(I1)') (BLOCKUNIT-OFFSET)
-    BLOCKFILE='grid_'//trim(BLOCK_CH)//'.pre'
+    write(BLOCK_CH,*) (BLOCKUNIT-OFFSET)
+    BLOCKFILE='grid_'//trim(adjustl(BLOCK_CH))//'.pre'
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     rewind BLOCKUNIT
@@ -75,8 +75,8 @@ subroutine readData
     
     do B=2,NB
         BLOCKUNIT=OFFSET+B
-        write(BLOCK_CH,'(I1)') (BLOCKUNIT-OFFSET)
-        BLOCKFILE='grid_'//trim(BLOCK_CH)//'.pre'
+        write(BLOCK_CH,*) (BLOCKUNIT-OFFSET)
+        BLOCKFILE='grid_'//trim(adjustl(BLOCK_CH))//'.pre'
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         rewind BLOCKUNIT
         read(BLOCKUNIT,*) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO
@@ -567,6 +567,7 @@ subroutine findNeighbours
             end if
         end do neighbour
         NFACEBL(B)=NF-FACEBL(B)
+        print *, NFACEBL(B)
         call writeBlockData(B)
     end do
 
@@ -600,8 +601,8 @@ subroutine writeBlockData(IB)
     !
     ! overwrite data back to input file
     !
-    write(UNIT_CH,'(I1)') IB
-    BLOCKFILE='grid_'//trim(UNIT_CH)//'.out'
+    write(UNIT_CH,*) IB
+    BLOCKFILE='grid_'//trim(adjustl(UNIT_CH))//'.out'
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE)
     print *, 'WRITING TO FILE: ', BLOCKFILE
@@ -764,9 +765,9 @@ subroutine calcProcessorLoad
     NFMAX=0
 
     do PROC=0,NPROCSA-1
-        write(PROC_CH,'(I1)') PROC
+        write(PROC_CH,*) PROC
         PROCUNIT=PROC+PROCOFFSET
-        PROCFILE='proc_'//trim(PROC_CH)//'.inp'
+        PROCFILE='proc_'//trim(adjustl(PROC_CH))//'.inp'
 
         open(UNIT=PROCUNIT,FILE=PROCFILE)
         print *, 'opening ... ', PROCFILE
