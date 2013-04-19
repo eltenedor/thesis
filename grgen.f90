@@ -263,8 +263,8 @@ subroutine gridExport
     write(BLOCKUNIT,'(A)') 'grid'
     write(BLOCKUNIT,'(A)') 'ASCII'
     write(BLOCKUNIT,'(A)') 'DATASET STRUCTURED_GRID'
-    write(BLOCKUNIT,'(A I6 I6 I6)') 'DIMENSIONS', NIM,NJM,NKM
-    write(BLOCKUNIT,'(A I10 A)') 'Points ', NIM*NJM*NKM, ' float'
+    write(BLOCKUNIT,'(A,I6,I6,I6)') 'DIMENSIONS', NIM,NJM,NKM
+    write(BLOCKUNIT,'(A6,I10,A5)') 'Points ', NIM*NJM*NKM, ' float'
     do K=1,NKM
     do J=1,NJM
     do I=1,NIM
