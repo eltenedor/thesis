@@ -21,11 +21,11 @@ CMPIF := mpif90
 #CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
 CMPIFFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable -g
 
-#DPATH := ../order_verification/
-DPATH := ../multiblock/
+#DPATH := ../order_verification
+DPATH := ../multiblock
 
 OBJS := \
-	$(DPATH)parameterModule.o \
+	$(DPATH)/parameterModule.o \
 	boundaryModule.o \
 	charModule.o \
 	geoModule.o \
@@ -41,7 +41,7 @@ all: preprocessing
 preprocessing: $(OBJS)
 	@echo
 	@echo 'Invoking Fortran Linker'
-	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
+	$(CFORT) $^ -o $(DPATH)/$@ $(LIBS)
 	@echo
 	@echo 'DONE'
 	
@@ -62,5 +62,5 @@ preprocessing: $(OBJS)
 	$(CMPIF) $(CMPIFFLAGS) $(INCLUDES) $< -o $@
 
 clean:
-	@rm -rf *.o *.mod $(DPATH)*.mod $(DPATH)*.o
+	@rm -rf *.o *.mod $(DPATH)/*.mod $(DPATH)/*.o
 

@@ -30,6 +30,7 @@ Einarbeitung Multigrid-Verfahren
 
 OPTIONAL: 
 
+FASTEST Tests recherchieren zur Skalierung beim Lösen von Transportgleichungen
 Use Petsc LOG-FILES
 Iterationen in GradFi einbauen
 Use PETSC-Routine to determine Convergence: KSPDefaultConverged
