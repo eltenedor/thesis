@@ -64,7 +64,6 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
     integer, intent(in) :: N,LS
     PetscScalar, intent(in out) :: r_scalar
     
-    
     if(LS.eq.1) then
         ! save initial stiffness matrix inside the scope of the module
         ! to retain matrix between successive subroutine calls
@@ -79,7 +78,8 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
         call VecNorm(b,NORM_2,b_real,ierr)
         ! set final tolerance
         rfinal = b_real*1e-8
-        rtol = 1e-2
+        !rtol = 1e-2
+        rtol = 1e-8
         if (rank .eq. 0) print *, 'SETTING FINAL RESIDUAL TO: ', rfinal
         if (rank .eq. 0) print *, 'SETTING RELATIVE TOLERANCE TO: ', rtol
         if (rank .eq. 0) print *, 'INITIAL RESIDUAL: ', b_real
@@ -121,7 +121,9 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
             
     ! Solve the linear system
 
+    call PetscGetTime(time1,ierr)
     call KSPSolve(ksp,b,x,ierr)
+    call PetscGetTime(time2,ierr)
     
     ! Get KSP information
     call KSPGetConvergedReason(ksp,reason,ierr)
@@ -130,7 +132,7 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
     reasonInt=reason
     itsInt=its
 
-    if (rank .eq. 0) print '(A I6 A I2)', '... REACHED AFTER: ', its, ', REASON: #', reason
+    if (rank .eq. 0) print '(A,I6,A,I2)', '... REACHED AFTER: ', its, ', REASON: #', reason
 
     !print *, TOL
     ! View solver info

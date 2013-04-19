@@ -7,7 +7,8 @@ LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthr
 #CFORT := gfortran
 CFORT := mpif90
 #CFORTFLAGS := -c -Wall -Wno-unused-variable
-CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
+#CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
+CFORTFLAGS := -mcmodel=medium -c -g
 #CFORTFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable
 
 #CCPP := g++
@@ -15,7 +16,8 @@ CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
 
 CMPIF := mpif90
 #CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
-CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
+#CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
+CMPIFFLAGS := -mcmodel=medium -c -g
 #CMPIFFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable -g
 
 DPATH := ../multiblock

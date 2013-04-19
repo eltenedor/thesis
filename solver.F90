@@ -14,14 +14,13 @@ program main
 #include <finclude/petscsys.h>
 !#include <finclude/petsctime.h>
 
-    PetscLogDouble :: time1, time2
 !
 !==========================================================
 !....INPUT DATA AND INITIALIZATION
 !==========================================================
 !
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-    call PetscGetTime(time1,ierr)
+    !call PetscGetTime(time1,ierr)
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
     open(unit=9,FILE='ERR.out')
@@ -29,7 +28,7 @@ program main
 
     if (rank .eq. 0) print *, 'STARTING SOLVER'
     call init
-    print '(I2 A)', rank, ': SETTING UP KSP'
+    print '(I2,A)', rank, ': SETTING UP KSP'
     call setUpKSP
 !
 !==========================================================
@@ -38,7 +37,7 @@ program main
 !
     ITIMS=1
     ITIME=1
-    print '(I2 A)',rank, ': STARTING TIMELOOP'
+    print '(I2,A)',rank, ': STARTING TIMELOOP'
     do ITIM=ITIMS,ITIME
 !
 !.....SHIFT SOLUTIONS IN TIME (OLD = CURRENT)
@@ -59,17 +58,17 @@ program main
             end do
        end if
 
-       print '(I2 A)', rank, ': UPDATING BOUNDARIES'
+       print '(I2,A)', rank, ': UPDATING BOUNDARIES'
        call updateBd
-       print '(I2 A)', rank, ': SETTING ANALYTICAL SOLUTION'
+       print '(I2,A)', rank, ': SETTING ANALYTICAL SOLUTION'
        call setSolution
 !
 !==========================================================
 !....START OUTER ITERATIONS
 !==========================================================
 !
-        LSG=100
-        !LSG=1
+        !LSG=100
+        LSG=1
         !LSG=2
         do LS=1,LSG
             if (CONVERGED) then
@@ -77,11 +76,11 @@ program main
                 exit
             else
                 if (rank .eq. 1) print *, 'OUTER ITERATION: ', LS
-                print '(I2 A)', rank, ': UPDATING GHOST VALUES'
+                print '(I2,A)', rank, ': UPDATING GHOST VALUES'
                 call updateGhost
                 !print *, '  CALCULATING VELOCITY FIELD'
                 !call calcuvw
-                print '(I2 A)', rank, ': SOLVING TRANSPORT EQUATION'
+                print '(I2,A)', rank, ': SOLVING TRANSPORT EQUATION'
                 call calcsc
             end if
         end do
@@ -110,11 +109,10 @@ subroutine init
     
     use boundaryModule
     use coefModule
-    use controlModule, only: ierr, rank
+    use controlModule
     use charModule
     use geoModule
     use indexModule
-    use controlModule
     use parameterModule
     use scalarModule
     use varModule
@@ -407,8 +405,8 @@ subroutine writeVtk
         write(BLOCKUNIT,'(A)') 'grid'
         write(BLOCKUNIT,'(A)') 'ASCII'
         write(BLOCKUNIT,'(A)') 'DATASET STRUCTURED_GRID'
-        write(BLOCKUNIT,'(A I6 I6 I6)') 'DIMENSIONS', NIM,NJM,NKM
-        write(BLOCKUNIT,'(A I9 A)') 'Points', NIM*NJM*NKM, ' float'
+        write(BLOCKUNIT,'(A,I6,I6,I6)') 'DIMENSIONS', NIM,NJM,NKM
+        write(BLOCKUNIT,'(A6,I9,A5)') 'Points', NIM*NJM*NKM, ' float'
         !
         do K=1,NKM
         do I=1,NIM
@@ -480,7 +478,7 @@ subroutine updateGhost
 
     use boundaryModule
     use coefModule
-    use controlModule, only: ierr, rank
+    use controlModule
     use geoModule
     use indexModule
     use mmsModule
@@ -565,14 +563,13 @@ subroutine calcSc
 
     use boundaryModule
     use coefModule
-    use controlModule, only: ierr, rank
+    use controlModule
     use geoModule
     use gradModule
     use indexModule
     use mmsModule
     use petsc_ksp_module
     use scalarModule
-    use controlModule
     use varModule
     implicit none
 #include <finclude/petscsys.h>
@@ -581,7 +578,6 @@ subroutine calcSc
 
     real*8 :: APT,URF,CB,CP
     integer :: IJK1,IJK2,IJK3,IJK4
-    PetscLogDouble :: time1, time2
 
     URF=1.0d0
 
@@ -941,7 +937,7 @@ subroutine calcSc
     end do
 
     ! Assembly matrix and right hand vector
-    print '(I2 A)', rank,  ': STARTING MATRIX ASSEMBLY'
+    print '(I2,A)', rank,  ': STARTING MATRIX ASSEMBLY'
     call MatAssemblyBegin(A_Mat,MAT_FINAL_ASSEMBLY,ierr)
     call VecAssemblyBegin(B_Vec,ierr)
     call MatAssemblyEnd(A_Mat,MAT_FINAL_ASSEMBLY,ierr)
@@ -958,7 +954,7 @@ subroutine calcSc
 !
 !.....SOLVE LINEAR SYSTEM
 !
-    print '(I2 A)', rank, ': SOLVING LINEAR SYSTEM'
+    print '(I2,A)', rank, ': SOLVING LINEAR SYSTEM'
     !call PetscGetCPUTime(time1,ierr)
     call solveSys(A_Mat,B_Vec,SOL_Vec,N,LS,res_Scalar)
 
@@ -1000,7 +996,7 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
 !################################################################
 
     use boundaryModule
-    use controlModule, only: ierr
+    use controlModule
     use geoModule
     use gradModule
     use indexModule
@@ -1434,10 +1430,9 @@ subroutine calcErr
 
     use parameterModule
     use coefModule
-    use controlModule, only: ierr, rank, res_Scalar
+    use controlModule
     use geoModule
     use indexModule
-    use controlModule
     use mmsModule
     use varModule
     implicit none
@@ -1465,7 +1460,7 @@ end subroutine calcErr
 subroutine setSolution
 !################################################################
     use parameterModule
-    use controlModule, only: ierr
+    use controlModule
     use geoModule
     use indexModule
     use mmsModule

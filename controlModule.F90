@@ -14,5 +14,6 @@ module controlModule
     PetscErrorCode :: ierr
     PetscMPIInt :: rank
     PetscScalar :: res_Scalar
+    PetscLogDouble :: time1, time2
 
 end module controlModule
