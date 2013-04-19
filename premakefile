@@ -1,8 +1,8 @@
-INCLUDES := -I/usr/include/opencascade -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include -I$(MPI_ARCH_PATH)/include #-I/usr/lib/openmpi/include/openmpi
+INCLUDES := -I/usr/include/opencascade -I$(PETSC_DIR)/include -I$(PETSC_DIR)/include -I$(MPI_ARCH_PATH)/include #-I/usr/lib/openmpi/include/openmpi
 
 OCCT_LIBS := -lTKBinXCAF -lTKIGES -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTL -lTKVRML -lTKXCAF -lTKXCAFSchema -lTKXDEIGES -lTKXDESTEP -lTKXSBase -lTKXmlXCAF
 #OCCT_LIBS := -lTKAdvTools -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBool -lTKBO -lTKBRep -lTKCAF -lTKCDF -lTKernel -lTKFeat -lTKFillet -lTKG2d -lTKG3d -lTKGeomAlgo -lTKGeomBase -lTKHLR -lTKIGES -lTKLCAF -lTKMath -lTKMesh -lTKMeshVS -lTKNIS -lTKOffset -lTKOpenGl -lTKPCAF -lTKPLCAF -lTKPrim -lTKPShape -lTKService -lTKShapeSchema -lTKShHealing -lTKStdLSchema -lTKStdSchema -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTEP -lTKSTL -lTKTObj -lTKTopAlgo -lTKV2d -lTKV3d -lTKVRML -lTKXCAFSchema -lTKXCAF -lTKXDEIGES -lTKXDESTEP -lTKXMesh -lTKXmlL -lTKXml -lTKXmlTObj -lTKXmlXCAF
-PETSC_LIBS := -L$(PETSC_DIR)/$(PETSC_ARCH)/lib  -lpetsc -lX11 -lpthread -llapack -lblas -L$(MPI_ARCH_PATH)/lib -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
+PETSC_LIBS := -L$(PETSC_DIR)/lib  -lpetsc -lX11 -lpthread -llapack -lblas -L$(MPI_ARCH_PATH)/lib -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
 LIBS := $(OCCT_LIBS) $(PETSC_LIBS)
 
 #CFORT := gfortran
