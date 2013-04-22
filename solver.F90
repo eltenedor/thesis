@@ -67,8 +67,8 @@ program main
 !....START OUTER ITERATIONS
 !==========================================================
 !
-        !LSG=100
-        LSG=1
+        LSG=100
+        !LSG=1
         !LSG=2
         do LS=1,LSG
             if (CONVERGED) then
@@ -122,7 +122,15 @@ subroutine init
 #include <finclude/petscpc.h>
 
     ! MUSS NOCH ANGEPASST WERDEN, ENTWEDER PROCFILE ODER NUR AUS SCALAR MODULE!
-    DT=0.0d0
+    !DT=0
+    !DT=1.0d0
+    !DT=0.5d0
+    !DT=0.25d0
+    !DT=0.125d0
+    !DT=0.0625d0
+    !DT=0.03125d0
+    !DT=0.015625d0
+    DT=0.0078125d0
     !if (rank.eq.0) then
         !print *, 'ENTER DT (0 - stationary)'
         !read *, DT

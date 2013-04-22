@@ -57,14 +57,21 @@ INFO LOCICAL
 GESRÄCH MIT PROFESSOR SCHÄFER
 
 worum geht es in meiner Arbeit
+	Titel der Arbeit
+	Lösen einer allgemeinen Transportgleichung (instationär): Gleichung struktur : generische Transportgleichung
+	Parallelisierung des Lösers mit PETSc (Beinhaltet Gleichungslöser und Framework)
 wie untersuchen wir das
+	Gittergenerierung: Blockweise Erzeugung des Gitters. 2 Randbedingungen: Dirichlet und Blockränder (innere Ränder)
+	Preprocessing: Feststellen der Beziehungen zwischen den einzelnen Teilrechengebieten. Erzeugen eines Local-To-Global Mappings
+	Solver: Lösen der PDGL mit einer FVM. Deferred Correction. Absenken des Residuums um 2 GO pro Äußere Iteration
 wie ist Petsc aufgebaut
+	Bild, mit Erklärung
 
-was habe ich bisher gemacht (sequentiell - verifikation mittels mms - multiblock seq - ver - parallel - ver)
-wie verwende ich petsc -> was wäre noch interessant zu testen
-welche tests habe ich noch geplant
+was habe ich bisher gemacht (sequentiell - verifikation mittels mms (gleichung in Fortran, mupad) - multiblock seq - ver - parallel - ver)
+wie verwende ich petsc: Mat,Vec,KSPSolve (mit output)
+welche tests habe ich noch geplant: StrongScaling (optimierung, unterschiedliche Löser, PETSc Kofigurationen, Compiler), WeakScaling (optimierung), Ghost Values direkt in Vektoren speichern, Kommunikation von Gradienten über ein Field interlacing, verwenden von AO.
 
-optional, falls noch Zeit ist: was möchte ich mit fastest vergleichen
+optional, falls noch Zeit ist: was möchte ich mit fastest vergleichen: inwiefern kann man multigrid mit KSP vergleichen? Rechenzeit, vor und nachteile beider Methoden gegenüberstellen und erklären
 
 ---------------------------------------------------------------------------------------
 
