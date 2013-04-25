@@ -13,6 +13,8 @@ program main
     implicit none
 #include <finclude/petscsys.h>
 !#include <finclude/petsctime.h>
+    
+    character(len=10) :: NOTHING
 
 !
 !==========================================================
@@ -36,9 +38,10 @@ program main
 !==========================================================
 !
     ITIMS=1
-    ITIME=1
+    ITIME=32
     print '(I2,A)',rank, ': STARTING TIMELOOP'
     do ITIM=ITIMS,ITIME
+        print *, 'TIMESTEP: ', ITIM
 !
 !.....SHIFT SOLUTIONS IN TIME (OLD = CURRENT)
 !
@@ -72,7 +75,7 @@ program main
         !LSG=2
         do LS=1,LSG
             if (CONVERGED) then
-                call writeVtk
+                !call writeVtk
                 exit
             else
                 if (rank .eq. 1) print *, 'OUTER ITERATION: ', LS
@@ -84,6 +87,7 @@ program main
                 call calcsc
             end if
         end do
+        CONVERGED=.false.
         !call setField
     end do
 !
@@ -122,20 +126,22 @@ subroutine init
 #include <finclude/petscpc.h>
 
     ! MUSS NOCH ANGEPASST WERDEN, ENTWEDER PROCFILE ODER NUR AUS SCALAR MODULE!
-    !DT=0
+    !DT=0.0d0
     !DT=1.0d0
     !DT=0.5d0
     !DT=0.25d0
     !DT=0.125d0
     !DT=0.0625d0
+    !DT=0.0625d0/3.8258604184154104d0
     !DT=0.03125d0
-    !DT=0.015625d0
-    DT=0.0078125d0
+    DT=0.015625d0
+    !DT=0.0078125d0
     !if (rank.eq.0) then
         !print *, 'ENTER DT (0 - stationary)'
         !read *, DT
         if (DT.gt.0.0d0) then
             LTIME=.true.
+            print *, 'DT: ', DT
             !print *, 'ENTER T_0'
             !read *, T_0
         else
@@ -225,6 +231,7 @@ subroutine init
     
     ! calculate processor load
     N=sum(NBL)
+    print '(I2,A,I10)',rank, ': PROCESSOR LOAD: ', N
     NIJKPROC=sum(NIJKBL)
     NDIRPROC=sum(NDIRBL)
     NNEUPROC=sum(NNEUBL)
@@ -308,10 +315,8 @@ subroutine init
     call distributeLoad(N)
 
     TIME=0.0d0
-
     if (LTIME) then
         call setField
-        !call writeVtk
     end if
 
     print *, 'REMAPPING VALUES'
@@ -414,7 +419,7 @@ subroutine writeVtk
         write(BLOCKUNIT,'(A)') 'ASCII'
         write(BLOCKUNIT,'(A)') 'DATASET STRUCTURED_GRID'
         write(BLOCKUNIT,'(A,I6,I6,I6)') 'DIMENSIONS', NIM,NJM,NKM
-        write(BLOCKUNIT,'(A6,I9,A5)') 'Points', NIM*NJM*NKM, ' float'
+        write(BLOCKUNIT,'(A6,I9,A6)') 'Points', NIM*NJM*NKM, ' float'
         !
         do K=1,NKM
         do I=1,NIM
@@ -586,31 +591,26 @@ subroutine calcSc
 
     real*8 :: APT,URF,CB,CP
     integer :: IJK1,IJK2,IJK3,IJK4
+    character(len=8) :: NOTHING
 
     URF=1.0d0
 
-    !print *, '  CALCULATE CV-CENTER GRADIENTS'
-    !if (rank .eq. 1) print *, 'BEFORE GRADFI', F1(276-NJCV)
     call gradfi(T,TR,DTX,DTY,DTZ,DTX_Vec,DTY_Vec,DTZ_Vec)
-    !if (rank .eq. 1) print *, 'BEFORE UPDATEGRAD', F1(276-NJCV)
     call updateGrad
 !
 !.....START BLOCK LOOP
 !
     do B=1,NB
-        !if (rank .eq. 1) print *, 'BLOCK: ', B
         call setBlockInd(B)
 !
 !.....INITIALIZE Q AND AP
 !
-        !if (rank .eq. 1) print *, 'BEFORE INIT', F1(276-NJCV)
 
         do K=2,NKM
         do I=2,NIM
         do J=2,NJM
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             Q(IJK)=src(XC(IJK), YC(IJK), ZC(IJK), TIME)*VOL
-            !print *,MIJK(IJK)+IJKPROC_GLO,Q(IJK)
             AP(IJK)=0.0d0
         end do
         end do
@@ -972,7 +972,6 @@ subroutine calcSc
 
     !tges=time2-time1
 
-    !if (rank .eq. 1) print *, 'AFTER'
     do B=1,NB
         call setBlockInd(B)
         do K=2,NKM
@@ -981,7 +980,6 @@ subroutine calcSc
             IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
             row=MIJK(IJK+IJKPROC)
             call VecGetValues(SOL_Vec,i1,row,valt,ierr)
-            !if (rank .eq. 1) print *, F1(IJK)
             T(IJK)=valt
         end do
         end do

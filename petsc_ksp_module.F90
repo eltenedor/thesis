@@ -31,6 +31,8 @@ subroutine setUpKSP
 #include <finclude/petscsys.h>
 #include <finclude/petscksp.h>
 
+    integer, intent(in) :: N
+
     ! Create KSPContext
 
     call KSPCreate(PETSC_COMM_WORLD,ksp,ierr)
@@ -77,9 +79,9 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
         ! Calculate initial Residual
         call VecNorm(b,NORM_2,b_real,ierr)
         ! set final tolerance
-        rfinal = b_real*1e-8
-        rtol = 1e-2
-        !rtol = 1e-8
+        rfinal = b_real*1D-8
+        rtol = 1D-2
+        !rtol = 1D-8
         if (rank .eq. 0) print *, 'SETTING FINAL RESIDUAL TO: ', rfinal
         if (rank .eq. 0) print *, 'SETTING RELATIVE TOLERANCE TO: ', rtol
         if (rank .eq. 0) print *, 'INITIAL RESIDUAL: ', b_real
@@ -101,10 +103,14 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
             if (rank .eq. 0) print *, 'FINAL RESIDUAL: ', rinit
             if (rank .eq. 0) write (9,*) 'FINAL RESIDUAL: ', rinit
             r_scalar = rinit
+            call VecDestroy(vt1,ierr)
+            call VecDestroy(vt2,ierr)
+            call VecDestroy(res,ierr)
+            call MatDestroy(A2,ierr) 
             return
         else
             call VecNorm(b,NORM_2,b_real,ierr)
-            rtol=(rinit/b_real)*1e-2
+            rtol=(rinit/b_real)*1D-2
             if (rank .eq. 0) print *, 'MOMENTARY RESIDUAL: ', rinit
             !if (rank .eq. 0) print *, "SETTING RELATIVE TOLERANCE TO: ", rtol
             r_scalar = rinit
@@ -168,11 +174,7 @@ subroutine cleanUp(A,b,x)
 
     call VecDestroy(x,ierr)
     call VecDestroy(b,ierr)
-    call VecDestroy(vt1,ierr)
-    call VecDestroy(vt2,ierr)
-    call VecDestroy(res,ierr)
     call MatDestroy(A,ierr)
-    call MatDestroy(A2,ierr)
     call KSPDestroy(ksp,ierr) 
 
 end subroutine cleanUp

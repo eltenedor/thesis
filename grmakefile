@@ -10,8 +10,7 @@ CFORTFLAGS := -mcmodel=large -c -g
 CCPP := g++
 CCPPFLAGS := -c -Wall -Wno-unused-variable
 
-#DPATH := ../order_verification/
-DPATH := ../multiblock/
+DPATH := ../multiblock
 
 OBJS := \
 	parameterModule.o \
@@ -26,8 +25,8 @@ all: grgen
 grgen: $(OBJS)
 	@echo
 	@echo 'Invoking Fortran Linker'
-	$(CFORT) $^ -o $(DPATH)$@ $(LIBS)
-	@rm -rf *.o *.mod $(DPATH)*.o $(DPATH)*.mod
+	$(CFORT) $^ -o $(DPATH)/$@ $(LIBS)
+	@rm -rf *.o *.mod $(DPATH)/*.o $(DPATH)/*.mod
 	@echo
 	@echo 'DONE'
 
