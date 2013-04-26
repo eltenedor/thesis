@@ -31,8 +31,6 @@ subroutine setUpKSP
 #include <finclude/petscsys.h>
 #include <finclude/petscksp.h>
 
-    integer, intent(in) :: N
-
     ! Create KSPContext
 
     call KSPCreate(PETSC_COMM_WORLD,ksp,ierr)

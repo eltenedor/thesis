@@ -38,7 +38,8 @@ program main
 !==========================================================
 !
     ITIMS=1
-    ITIME=32
+    !ITIME=32
+    ITIME=1
     print '(I2,A)',rank, ': STARTING TIMELOOP'
     do ITIM=ITIMS,ITIME
         print *, 'TIMESTEP: ', ITIM
@@ -126,7 +127,7 @@ subroutine init
 #include <finclude/petscpc.h>
 
     ! MUSS NOCH ANGEPASST WERDEN, ENTWEDER PROCFILE ODER NUR AUS SCALAR MODULE!
-    !DT=0.0d0
+    DT=0.0d0
     !DT=1.0d0
     !DT=0.5d0
     !DT=0.25d0
@@ -134,8 +135,9 @@ subroutine init
     !DT=0.0625d0
     !DT=0.0625d0/3.8258604184154104d0
     !DT=0.03125d0
-    DT=0.015625d0
+    !DT=0.015625d0
     !DT=0.0078125d0
+    !DT=0.00390625d0
     !if (rank.eq.0) then
         !print *, 'ENTER DT (0 - stationary)'
         !read *, DT
