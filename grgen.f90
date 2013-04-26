@@ -42,7 +42,7 @@ subroutine readData
     !PRINT *, ' INPUT FILE NAME (* - KEYBOARD):  '
     !READ(*,1) FILIN
     IF(FILIN.NE.'*') THEN
-        BLOCKFILE=trim(FILIN)//'_'//trim(adjustl((BLOCK_CH)))//'.inp'
+        BLOCKFILE=trim(FILIN)//'_'//trim(adjustl(BLOCK_CH))//'.inp'
         OPEN (UNIT=BLOCKUNIT,FILE=BLOCKFILE)
         REWIND BLOCKUNIT
         ITYP=0

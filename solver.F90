@@ -12,10 +12,7 @@ program main
     use varModule
     implicit none
 #include <finclude/petscsys.h>
-!#include <finclude/petsctime.h>
     
-    character(len=10) :: NOTHING
-
 !
 !==========================================================
 !....INPUT DATA AND INITIALIZATION
@@ -71,8 +68,8 @@ program main
 !....START OUTER ITERATIONS
 !==========================================================
 !
-        LSG=100
-        !LSG=1
+        !LSG=100
+        LSG=1
         !LSG=2
         do LS=1,LSG
             if (CONVERGED) then

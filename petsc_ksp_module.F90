@@ -63,6 +63,9 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
     Vec, intent(in out) :: x
     integer, intent(in) :: N,LS
     PetscScalar, intent(in out) :: r_scalar
+    character(len=20) :: LOG_CH,LOGSTAGE
+    Integer :: I
+    PetscLogStage :: stage
     
     if(LS.eq.1) then
         ! save initial stiffness matrix inside the scope of the module
@@ -78,8 +81,8 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
         call VecNorm(b,NORM_2,b_real,ierr)
         ! set final tolerance
         rfinal = b_real*1D-8
-        rtol = 1D-2
-        !rtol = 1D-8
+        !rtol = 1D-2
+        rtol = 1D-8
         if (rank .eq. 0) print *, 'SETTING FINAL RESIDUAL TO: ', rfinal
         if (rank .eq. 0) print *, 'SETTING RELATIVE TOLERANCE TO: ', rtol
         if (rank .eq. 0) print *, 'INITIAL RESIDUAL: ', b_real
@@ -121,12 +124,21 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
 
     call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION, &
             !& PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
-            & PETSC_DEFAULT_DOUBLE_PRECISION,20000,ierr)
+            & PETSC_DEFAULT_DOUBLE_PRECISION,50,ierr)
             
     ! Solve the linear system
 
     call PetscGetTime(time1,ierr)
-    call KSPSolve(ksp,b,x,ierr)
+    do I=1,4
+        !write(LOG_CH,*) LS
+        write(LOG_CH,*) I
+        LOGSTAGE='Iter_'//trim(adjustl(LOG_CH))
+        call PetscLogStageRegister(LOGSTAGE,stage,ierr)
+        call PetscLogStagePush(stage,ierr)
+        call KSPSolve(ksp,b,x,ierr)
+        call PetscLogStagePop(ierr)
+    end do
+    !call PetscLogDump(LOGFILE,ierr)
     call PetscGetTime(time2,ierr)
     
     ! Get KSP information
