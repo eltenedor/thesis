@@ -114,8 +114,7 @@ subroutine readData
     !end if
 
     close(unit=BLOCKUNIT)
-    OPEN (UNIT=BLOCKUNIT,FILE=FILOUT)
-    REWIND BLOCKUNIT
+    OPEN (UNIT=BLOCKUNIT,FILE=FILOUT,FORM=FORM_CH,POSITION='REWIND')
 
        
 end subroutine readData
@@ -198,55 +197,55 @@ subroutine gridExport
     DZ=(ZZE-ZZS)/dble(NKCV)
 
     
-    write(BLOCKUNIT,*)  NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO
-    write(BLOCKUNIT,*)  (NEIGH(B,I),I=1,6)
+    write(BLOCKUNIT)  NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO
+    write(BLOCKUNIT)  (NEIGH(B,I),I=1,6)
     !print *, (NEIGH(B,I),I=1,6)
     !write(3,*)  (LK(K),K=1,NK)
     !write(3,*)  (LI(I),I=1,NI)
 
-    write(BLOCKUNIT,*)  (X(I),I=1,NIJK)
-    write(BLOCKUNIT,*)  (Y(I),I=1,NIJK)
-    write(BLOCKUNIT,*)  (Z(I),I=1,NIJK)
-    write(BLOCKUNIT,*)  (XC(I),I=1,NIJK)
-    write(BLOCKUNIT,*)  (YC(I),I=1,NIJK)
-    write(BLOCKUNIT,*)  (ZC(I),I=1,NIJK)
+    write(BLOCKUNIT)  (X(I),I=1,NIJK)
+    write(BLOCKUNIT)  (Y(I),I=1,NIJK)
+    write(BLOCKUNIT)  (Z(I),I=1,NIJK)
+    write(BLOCKUNIT)  (XC(I),I=1,NIJK)
+    write(BLOCKUNIT)  (YC(I),I=1,NIJK)
+    write(BLOCKUNIT)  (ZC(I),I=1,NIJK)
 
-    write(BLOCKUNIT,*)  (IJKBDIR(I),I=1,NDIR)
-    write(BLOCKUNIT,*)  (IJKPDIR(I),I=1,NDIR)
-    write(BLOCKUNIT,*)  (IJKDIR1(I),I=1,NDIR)
-    write(BLOCKUNIT,*)  (IJKDIR2(I),I=1,NDIR)
-    write(BLOCKUNIT,*)  (IJKDIR3(I),I=1,NDIR)
-    write(BLOCKUNIT,*)  (IJKDIR4(I),I=1,NDIR)
+    write(BLOCKUNIT)  (IJKBDIR(I),I=1,NDIR)
+    write(BLOCKUNIT)  (IJKPDIR(I),I=1,NDIR)
+    write(BLOCKUNIT)  (IJKDIR1(I),I=1,NDIR)
+    write(BLOCKUNIT)  (IJKDIR2(I),I=1,NDIR)
+    write(BLOCKUNIT)  (IJKDIR3(I),I=1,NDIR)
+    write(BLOCKUNIT)  (IJKDIR4(I),I=1,NDIR)
     
-    write(BLOCKUNIT,*)  (IJKBNEU(I),I=1,NNEU)
-    write(BLOCKUNIT,*)  (IJKPNEU(I),I=1,NNEU)
-    write(BLOCKUNIT,*)  (IJKNEU1(I),I=1,NNEU)
-    write(BLOCKUNIT,*)  (IJKNEU2(I),I=1,NNEU)
-    write(BLOCKUNIT,*)  (IJKNEU3(I),I=1,NNEU)
-    write(BLOCKUNIT,*)  (IJKNEU4(I),I=1,NNEU)
+    write(BLOCKUNIT)  (IJKBNEU(I),I=1,NNEU)
+    write(BLOCKUNIT)  (IJKPNEU(I),I=1,NNEU)
+    write(BLOCKUNIT)  (IJKNEU1(I),I=1,NNEU)
+    write(BLOCKUNIT)  (IJKNEU2(I),I=1,NNEU)
+    write(BLOCKUNIT)  (IJKNEU3(I),I=1,NNEU)
+    write(BLOCKUNIT)  (IJKNEU4(I),I=1,NNEU)
     
-    write(BLOCKUNIT,*)  (IJKBWAL(I),I=1,NWAL)
-    write(BLOCKUNIT,*)  (IJKPWAL(I),I=1,NWAL)
-    write(BLOCKUNIT,*)  (IJKWAL1(I),I=1,NWAL)
-    write(BLOCKUNIT,*)  (IJKWAL2(I),I=1,NWAL)
-    write(BLOCKUNIT,*)  (IJKWAL3(I),I=1,NWAL)
-    write(BLOCKUNIT,*)  (IJKWAL4(I),I=1,NWAL)
+    write(BLOCKUNIT)  (IJKBWAL(I),I=1,NWAL)
+    write(BLOCKUNIT)  (IJKPWAL(I),I=1,NWAL)
+    write(BLOCKUNIT)  (IJKWAL1(I),I=1,NWAL)
+    write(BLOCKUNIT)  (IJKWAL2(I),I=1,NWAL)
+    write(BLOCKUNIT)  (IJKWAL3(I),I=1,NWAL)
+    write(BLOCKUNIT)  (IJKWAL4(I),I=1,NWAL)
 
-    write(BLOCKUNIT,*)  (IJKBBLO(I),I=1,NBLO)
-    write(BLOCKUNIT,*)  (IJKPBLO(I),I=1,NBLO)
-    write(BLOCKUNIT,*)  (IJKBLO1(I),I=1,NBLO)
-    write(BLOCKUNIT,*)  (IJKBLO2(I),I=1,NBLO)
-    write(BLOCKUNIT,*)  (IJKBLO3(I),I=1,NBLO)
-    write(BLOCKUNIT,*)  (IJKBLO4(I),I=1,NBLO)
+    write(BLOCKUNIT)  (IJKBBLO(I),I=1,NBLO)
+    write(BLOCKUNIT)  (IJKPBLO(I),I=1,NBLO)
+    write(BLOCKUNIT)  (IJKBLO1(I),I=1,NBLO)
+    write(BLOCKUNIT)  (IJKBLO2(I),I=1,NBLO)
+    write(BLOCKUNIT)  (IJKBLO3(I),I=1,NBLO)
+    write(BLOCKUNIT)  (IJKBLO4(I),I=1,NBLO)
     
-    write(BLOCKUNIT,*)  (FX(I), I=1,NIJK)
-    write(BLOCKUNIT,*)  (FY(I), I=1,NIJK)
-    write(BLOCKUNIT,*)  (FZ(I), I=1,NIJK)
+    write(BLOCKUNIT)  (FX(I), I=1,NIJK)
+    write(BLOCKUNIT)  (FY(I), I=1,NIJK)
+    write(BLOCKUNIT)  (FZ(I), I=1,NIJK)
 
-    write(BLOCKUNIT,*)  DX,DY,DZ,VOL
-    !write(BLOCKUNIT,*)  (SRDDIR(I),I=1,NDIR)
-    !write(BLOCKUNIT,*)  (SRDNEU(I),I=1,NNEU)
-    write(BLOCKUNIT,*)  (SRDWAL(I),I=1,NWAL)
+    write(BLOCKUNIT)  DX,DY,DZ,VOL
+    !write(BLOCKUNIT)  (SRDDIR(I),I=1,NDIR)
+    !write(BLOCKUNIT)  (SRDNEU(I),I=1,NNEU)
+    write(BLOCKUNIT)  (SRDWAL(I),I=1,NWAL)
 
     close(unit=BLOCKUNIT)
 
