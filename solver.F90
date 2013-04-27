@@ -19,7 +19,7 @@ program main
 !==========================================================
 !
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-    !call PetscGetTime(time1,ierr)
+    call PetscGetTime(time1,ierr)
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
     open(unit=9,FILE='ERR.out')
@@ -35,7 +35,7 @@ program main
 !==========================================================
 !
     ITIMS=1
-    !ITIME=32
+    !ITIME=512
     ITIME=1
     print '(I2,A)',rank, ': STARTING TIMELOOP'
     do ITIM=ITIMS,ITIME
@@ -135,6 +135,7 @@ subroutine init
     !DT=0.015625d0
     !DT=0.0078125d0
     !DT=0.00390625d0
+    !DT=0.000244140625d0
     !if (rank.eq.0) then
         !print *, 'ENTER DT (0 - stationary)'
         !read *, DT

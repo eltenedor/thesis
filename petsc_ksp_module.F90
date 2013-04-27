@@ -123,22 +123,18 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
     call KSPSetOperators(ksp,A,A2,SAME_PRECONDITIONER,ierr)
 
     call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION, &
-            !& PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
-            & PETSC_DEFAULT_DOUBLE_PRECISION,50,ierr)
+            & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
+            !& PETSC_DEFAULT_DOUBLE_PRECISION,50,ierr)
+            !& PETSC_DEFAULT_DOUBLE_PRECISION,20000,ierr)
             
     ! Solve the linear system
 
-    call PetscGetTime(time1,ierr)
-    !do I=1,4
-        write(LOG_CH,*) LS
-        !write(LOG_CH,*) I
-        LOGSTAGE='Iter_'//trim(adjustl(LOG_CH))
-        call PetscLogStageRegister(LOGSTAGE,stage,ierr)
-        call PetscLogStagePush(stage,ierr)
-        call KSPSolve(ksp,b,x,ierr)
-        call PetscLogStagePop(ierr)
-    !end do
-    call PetscGetTime(time2,ierr)
+    write(LOG_CH,*) LS
+    LOGSTAGE='Iter_'//trim(adjustl(LOG_CH))
+    call PetscLogStageRegister(LOGSTAGE,stage,ierr)
+    call PetscLogStagePush(stage,ierr)
+    call KSPSolve(ksp,b,x,ierr)
+    call PetscLogStagePop(ierr)
     
     ! Get KSP information
     call KSPGetConvergedReason(ksp,reason,ierr)
@@ -147,7 +143,8 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
     reasonInt=reason
     itsInt=its
 
-    if (rank .eq. 0) print '(A,I6,A,I2)', '... REACHED AFTER: ', its, ', REASON: #', reason
+    !if (rank .eq. 0) print '(A,I6,A,I2,A,F6.3)', '... REACHED AFTER: ', its, ', REASON: #', reason, ', TIME: ', time2-time1
+    if (rank .eq. 0) print '(A,I6,A,I2,A,F6.3)', '... REACHED AFTER: ', its, ', REASON: #', reason
 
     !print *, TOL
     ! View solver info
