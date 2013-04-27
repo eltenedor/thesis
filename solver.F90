@@ -19,7 +19,6 @@ program main
 !==========================================================
 !
     call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
-    call PetscGetTime(time1,ierr)
     call MPI_Comm_rank(PETSC_COMM_WORLD,rank,ierr)
 
     open(unit=9,FILE='ERR.out')
@@ -27,6 +26,7 @@ program main
 
     if (rank .eq. 0) print *, 'STARTING SOLVER'
     call init
+    call PetscGetTime(time1,ierr) ! don't consider IO for performance measurement
     print '(I2,A)', rank, ': SETTING UP KSP'
     call setUpKSP
 !
@@ -198,9 +198,8 @@ subroutine init
         BLOCKUNIT=BLOCKOFFSET+B_GLO(B)
         write(BLOCK_CH,*) B_GLO(B)
         BLOCKFILE='grid_'//trim(adjustl(BLOCK_CH))//'.out'
-        !print *, BLOCKFILE
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE,FORM=FORM_CH,POSITION='REWIND')
-        !print *, 'opening ... ', BLOCKFILE
+        print *, 'opening ... ', BLOCKFILE
         read(BLOCKUNIT) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO,NFACE,N
 
         BB=B-1
