@@ -18,6 +18,7 @@ program grgen
         call setBc
         call calcG
         call gridExport
+        !call vtkExport
     end do
     call writeParamMod
 
@@ -249,9 +250,19 @@ subroutine gridExport
 
     close(unit=BLOCKUNIT)
 
+end subroutine gridExport
+
+!########################################################
+subroutine vtkExport
+!########################################################
 !
 !.....Create .vtk file
 !
+    use charModule
+    use geoModule
+    use indexModule
+    implicit none
+
     write(BLOCK_CH,*) B
     VTKFILE='grid_'//trim(adjustl(BLOCK_CH))//'.vtk'
     open (unit=BLOCKUNIT,FILE=VTKFILE)
@@ -275,7 +286,7 @@ subroutine gridExport
 
     close(unit=BLOCKUNIT)
 
-end subroutine gridExport
+end subroutine vtkExport
 
 !=======================================================
 !>  writes the boundary type of each boundary cell into
@@ -776,7 +787,7 @@ subroutine writeParamMod
     write(9,'(4X, A22, A8, I2)') 'integer, parameter :: ', 'NBLOCKS=',NB
     write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
     write(9,'(4X, A22, A4, I12)') 'integer, parameter :: ', 'NAL=',NIJKA
-    write(9,'(4X, A22, A8, I8)') 'integer, parameter :: ', 'NFACEAL=',1000000
+    write(9,'(4X, A22, A8, I8)') 'integer, parameter :: ', 'NFACEAL=',10000000
     write(9,'(4X, A22, A8, I2)') 'integer, parameter :: ', 'NPROCS=',1
     write(9,'(A)') 'end module parameterModule'
 

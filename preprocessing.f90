@@ -53,6 +53,7 @@ subroutine readData
     BLOCKFILE='grid_'//trim(adjustl(BLOCK_CH))//'.pre'
     
     open(UNIT=BLOCKUNIT,FILE=BLOCKFILE,FORM=FORM_CH,POSITION='REWIND')
+    print *, 'READING FROM FILE: ', BLOCKFILE
     read(BLOCKUNIT) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO
     
     IBL(1)=0
@@ -77,6 +78,7 @@ subroutine readData
         write(BLOCK_CH,*) (BLOCKUNIT-OFFSET)
         BLOCKFILE='grid_'//trim(adjustl(BLOCK_CH))//'.pre'
         open(UNIT=BLOCKUNIT,FILE=BLOCKFILE,FORM=FORM_CH,POSITION='REWIND')
+        print *, 'READING FROM FILE: ', BLOCKFILE
         read(BLOCKUNIT) NI,NJ,NK,NIJK,NDIR,NNEU,NWAL,NBLO
 
         BB=B-1
