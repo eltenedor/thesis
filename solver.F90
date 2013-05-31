@@ -123,31 +123,12 @@ subroutine init
 #include <finclude/petscksp.h>
 #include <finclude/petscpc.h>
 
-    ! MUSS NOCH ANGEPASST WERDEN, ENTWEDER PROCFILE ODER NUR AUS SCALAR MODULE!
-    DT=0.0d0
-    !DT=1.0d0
-    !DT=0.5d0
-    !DT=0.25d0
-    !DT=0.125d0
-    !DT=0.0625d0
-    !DT=0.0625d0/3.8258604184154104d0
-    !DT=0.03125d0
-    !DT=0.015625d0
-    !DT=0.0078125d0
-    !DT=0.00390625d0
-    !DT=0.000244140625d0
-    !if (rank.eq.0) then
-        !print *, 'ENTER DT (0 - stationary)'
-        !read *, DT
-        if (DT.gt.0.0d0) then
-            LTIME=.true.
-            print *, 'DT: ', DT
-            !print *, 'ENTER T_0'
-            !read *, T_0
-        else
-            LTIME=.false.
-        end if
-    !end if
+    if (DT.gt.0.0d0) then
+        LTIME=.true.
+        print *, 'DT: ', DT
+    else
+        LTIME=.false.
+    end if
 
     PROC=rank
     write(PROC_CH,*) PROC
@@ -288,6 +269,9 @@ subroutine init
         read(BLOCKUNIT) (XF(FACEST+I),I=1,NFACE)
         read(BLOCKUNIT) (YF(FACEST+I),I=1,NFACE)
         read(BLOCKUNIT) (ZF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT) (XCF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT) (YCF(FACEST+I),I=1,NFACE)
+        read(BLOCKUNIT) (ZCF(FACEST+I),I=1,NFACE)
         read(BLOCKUNIT) (FF(FACEST+I),I=1,NFACE)
         read(BLOCKUNIT) (ARF(FACEST+I),I=1,NFACE)
         read(BLOCKUNIT) (DNF(FACEST+I),I=1,NFACE)
@@ -1270,7 +1254,7 @@ end subroutine updateGrad
 subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
 !################################################################
         
-    use boundaryModule
+    !use boundaryModule
     use coefModule
     use fluxModule
     use geoModule
@@ -1282,12 +1266,23 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
     real(KIND=PREC), intent(in) :: FM,FAC,G
     integer, intent(in) :: IJKP,IJKN,IJK2,IJK3,IJK4
     real(KIND=PREC), intent(out) :: CAN, CAP
+    real(KIND=PREC) :: XF,YF,ZF
 
     FACP=1.0d0-FAC
-    FII=T(IJKN)*FAC+T(IJKP)*FACP
     DFXI=DTX(IJKN)*FAC+DTX(IJKP)*FACP
     DFYI=DTY(IJKN)*FAC+DTY(IJKP)*FACP
     DFZI=DTZ(IJKN)*FAC+DTZ(IJKP)*FACP    
+
+    XI=XC(IJKN)*FAC+XC(IJKP)*FACP
+    YI=YC(IJKN)*FAC+YC(IJKP)*FACP
+    ZI=ZC(IJKN)*FAC+ZC(IJKP)*FACP
+
+    XF=0.5*(X(IJK3)+X(IJK4))
+    YF=0.5*(Y(IJK2)+Y(IJK4))
+    ZF=0.5*(Z(IJK2)+Z(IJK3))
+
+    FII=T(IJKN)*FAC+T(IJKP)*FACP+DFXI*(XF-XI)+DFYI*(YF-YI)+DFZI*(ZF-ZI)
+    !FII=T(IJKN)*FAC+T(IJKP)*FACP
 !
 !.....SURFACE AND DISTANCE VECTOR COMPONENTS, DIFFUSION COEFF.
 !
@@ -1389,12 +1384,21 @@ subroutine blockBdFlux
     do F=FACEST+1,FACEST+NFACE
         FAC=FF(F)
         FACP=1.0d0-FAC
-        FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP
+
         DFXI=DTXR(F)*FAC+DTX(L(F)-IJKPROC)*FACP
         DFYI=DTYR(F)*FAC+DTY(L(F)-IJKPROC)*FACP
         DFZI=DTZR(F)*FAC+DTZ(L(F)-IJKPROC)*FACP
 
-        FM=F1(L(F)-IJKPROC)*NXF(F)+F2(L(F)-IJKPROC)*NYF(F)+F3(L(F)-IJKPROC)*NZF(F)
+        XI=XCF(F)*FAC+XC(L(F)-IJKPROC)*FACP
+        YI=YCF(F)*FAC+YC(L(F)-IJKPROC)*FACP
+        ZI=ZCF(F)*FAC+ZC(L(F)-IJKPROC)*FACP
+
+        !print *, XI,XCF(F),XC(L(F)-IJKPROC)
+        FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP+DFXI*(XF(F)-XI)+DFYI*(YF(F)-YI)+DFZI*(ZF(F)-ZI)
+        !FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP
+
+        !FM=F1(L(F)-IJKPROC)*NXF(F)+F2(L(F)-IJKPROC)*NYF(F)+F3(L(F)-IJKPROC)*NZF(F)
+        FM=RHO*(VX*NXF(F)+VY*NYF(F)+VZ*NZF(F))*ARF(F)
 
         VSOL=ALPHA*ARF(F)/(DNF(F)+SMALL)
 !

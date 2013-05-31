@@ -12,6 +12,7 @@ module geoModule
                         DXBL(NBLOCKS),DYBL(NBLOCKS),DZBL(NBLOCKS),VOLBL(NBLOCKS),&
                         AR,DN,NX,NY,NZ,&
                         XPN,YPN,ZPN,SX,SY,SZ,&
+                        XI,YI,ZI,&
                         FX(NXYZA),FY(NXYZA),FZ(NXYZA)
                         
     public :: normalArea,calcGrad,reverseOrder

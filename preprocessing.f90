@@ -272,6 +272,9 @@ subroutine findNeighbours
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
+                                    XCF(NF)=XC(R(NF))
+                                    YCF(NF)=YC(R(NF))
+                                    ZCF(NF)=ZC(R(NF))
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
@@ -326,6 +329,9 @@ subroutine findNeighbours
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
+                                    XCF(NF)=XC(R(NF))
+                                    YCF(NF)=YC(R(NF))
+                                    ZCF(NF)=ZC(R(NF))
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
@@ -382,6 +388,9 @@ subroutine findNeighbours
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
+                                    XCF(NF)=XC(R(NF))
+                                    YCF(NF)=YC(R(NF))
+                                    ZCF(NF)=ZC(R(NF))
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
@@ -436,6 +445,9 @@ subroutine findNeighbours
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
+                                    XCF(NF)=XC(R(NF))
+                                    YCF(NF)=YC(R(NF))
+                                    ZCF(NF)=ZC(R(NF))
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
@@ -490,6 +502,9 @@ subroutine findNeighbours
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
+                                    XCF(NF)=XC(IJKR)
+                                    YCF(NF)=YC(IJKR)
+                                    ZCF(NF)=ZC(IJKR)
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
@@ -543,6 +558,9 @@ subroutine findNeighbours
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
+                                    XCF(NF)=XC(R(NF))
+                                    YCF(NF)=YC(R(NF))
+                                    ZCF(NF)=ZC(R(NF))
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
@@ -656,6 +674,9 @@ subroutine writeBlockData(IB)
     write(BLOCKUNIT) (XF(FACEST+I),I=1,NFACE)
     write(BLOCKUNIT) (YF(FACEST+I),I=1,NFACE)
     write(BLOCKUNIT) (ZF(FACEST+I),I=1,NFACE)
+    write(BLOCKUNIT) (XCF(FACEST+I),I=1,NFACE)
+    write(BLOCKUNIT) (YCF(FACEST+I),I=1,NFACE)
+    write(BLOCKUNIT) (ZCF(FACEST+I),I=1,NFACE)
     write(BLOCKUNIT) (FF(FACEST+I),I=1,NFACE)
     write(BLOCKUNIT) (ARF(FACEST+I),I=1,NFACE)
     write(BLOCKUNIT) (DNF(FACEST+I),I=1,NFACE)

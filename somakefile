@@ -62,7 +62,7 @@ clean:
 	@rm -rf *.o *.mod $(DPATH)/*.mod $(DPATH)/*.o
 
 ################################# ADDITIONAL COMMENTS ##################################
-	# different flags result from:
+# different flags result from:
 # http://amiatypist.blogspot.de/2010/05/relocation-truncated-to-fit-rx866432s.html
 # two versions of INCLUDES and LIBS,
 # 	first version used (run (as su) from $PETSC_DIR):

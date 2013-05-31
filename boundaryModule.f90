@@ -24,6 +24,7 @@ module boundaryModule
     ! face geometry related data
     !
     real(KIND=PREC) ::  XF(NFACEAL),YF(NFACEAL),ZF(NFACEAL),&
+                        XCF(NFACEAL),YCF(NFACEAL),ZCF(NFACEAL),&
                         FF(NFACEAL),ARF(NFACEAL),DNF(NFACEAL),&
                         XPNF(NFACEAL),YPNF(NFACEAL),ZPNF(NFACEAL),&
                         NXF(NFACEAL),NYF(NFACEAL),NZF(NFACEAL)
