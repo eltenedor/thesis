@@ -1381,6 +1381,7 @@ subroutine blockBdFlux
 
     G=1.0d0
 
+    print *, 'NEXT BLOCK'
     do F=FACEST+1,FACEST+NFACE
         FAC=FF(F)
         FACP=1.0d0-FAC
@@ -1393,9 +1394,9 @@ subroutine blockBdFlux
         YI=YCF(F)*FAC+YC(L(F)-IJKPROC)*FACP
         ZI=ZCF(F)*FAC+ZC(L(F)-IJKPROC)*FACP
 
-        !print *, XI,XCF(F),XC(L(F)-IJKPROC)
-        FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP+DFXI*(XF(F)-XI)+DFYI*(YF(F)-YI)+DFZI*(ZF(F)-ZI)
-        !FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP
+        print *, XF(F)-XI, YF(F)-YI, ZF(F)-ZI
+        !FII2=TR(F)*FAC+T(L(F)-IJKPROC)*FACP+DFXI*(XF(F)-XI)+DFYI*(YF(F)-YI)+DFZI*(ZF(F)-ZI)
+        FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP
 
         !FM=F1(L(F)-IJKPROC)*NXF(F)+F2(L(F)-IJKPROC)*NYF(F)+F3(L(F)-IJKPROC)*NZF(F)
         FM=RHO*(VX*NXF(F)+VY*NYF(F)+VZ*NZF(F))*ARF(F)

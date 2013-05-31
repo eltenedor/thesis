@@ -502,9 +502,9 @@ subroutine findNeighbours
                                     XF(NF)=XYZF(1)
                                     YF(NF)=XYZF(2)
                                     ZF(NF)=XYZF(3)
-                                    XCF(NF)=XC(IJKR)
-                                    YCF(NF)=YC(IJKR)
-                                    ZCF(NF)=ZC(IJKR)
+                                    XCF(NF)=XC(R(NF))
+                                    YCF(NF)=YC(R(NF))
+                                    ZCF(NF)=ZC(R(NF))
                                     call calcGrad(L(NF),R(NF),XF(NF),YF(NF),ZF(NF),FF(NF))
                                     call normalArea(&
                                         XYZCommon,L(NF),R(NF),ARF(NF),&

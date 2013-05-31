@@ -18,7 +18,7 @@ program grgen
         call setBc
         call calcG
         call gridExport
-        call vtkExport
+        !call vtkExport
     end do
     call writeParamMod
 
