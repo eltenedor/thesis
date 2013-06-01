@@ -60,6 +60,7 @@ subroutine readData
         WRITE(BLOCKUNIT,1) FILOUT
     ELSE
         READ(BLOCKUNIT,1) FILOUT
+        FILOUT = trim(adjustl(FILOUT))
         print *, FILOUT
     ENDIF
     1 FORMAT(A12)

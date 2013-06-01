@@ -230,6 +230,7 @@ subroutine findNeighbours
                 call setBlockInd(B,NEIGH(B,INEIGH))
                 if (NIJKL.eq.NIJKR) then ! this works only with quadratic grids
                     equalSize=.true.
+                    !equalSize=.false.
                 else
                     equalSize=.false.
                 end if
@@ -280,6 +281,14 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                    if (IJKR.eq.IJKENR) then
+                                        IJKSTL=IJKL+1
+                                        exit SouthOuter
+                                    end if
+                                    !if (equalSize) then
+                                    !    IJKSTR=IJKR+1
+                                    !    cycle SouthOuter
+                                    !end if
                                 else if (.not.equalSize) then
                                     cycle SouthInner
                                 else if (AR.le.0.0d0.and.STARTED) then
@@ -337,6 +346,14 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                    if (IJKR.eq.IJKENR) then
+                                        IJKSTL=IJKL+1
+                                        exit NorthOuter
+                                    end if
+                                    !if (equalSize) then
+                                    !    IJKSTR=IJKR+1
+                                    !    cycle NorthOuter
+                                    !end if
                                 else if (.not.equalSize) then
                                     cycle NorthInner
                                 else if (AR.le.0.0d0.and.STARTED) then
@@ -396,6 +413,14 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                    if (IJKR.eq.IJKENR) then
+                                        IJKSTL=IJKL+1
+                                        exit WestOuter
+                                    end if
+                                    !if (equalSize) then
+                                    !    IJKSTR=IJKR+1
+                                    !    cycle WestOuter
+                                    !end if
                                 else if (.not.equalSize) then
                                     cycle WestInner
                                 else if (AR.le.0.0d0.and.STARTED) then
@@ -453,6 +478,14 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                    if (IJKR.eq.IJKENR) then
+                                        IJKSTL=IJKL+1
+                                        exit EastOuter
+                                    end if
+                                    !if (equalSize) then
+                                    !    IJKSTR=IJKR+1
+                                    !    cycle EastOuter
+                                    !end if
                                 else if (.not.equalSize) then
                                     cycle EastInner
                                 else if (AR.le.0.0d0.and.STARTED) then
@@ -510,6 +543,14 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                    if (IJKR.eq.IJKENR) then
+                                        IJKSTL=IJKL+1
+                                        exit BottomOuter
+                                    end if
+                                    !if (equalSize) then
+                                    !    IJKSTR=IJKR+1
+                                    !    cycle BottomOuter
+                                    !end if
                                 else if (.not.equalSize) then
                                     cycle BottomInner
                                 else if (AR.le.0.0d0.and.STARTED) then
@@ -566,6 +607,14 @@ subroutine findNeighbours
                                         XYZCommon,L(NF),R(NF),ARF(NF),&
                                         DNF(NF),XPNF(NF),YPNF(NF),ZPNF(NF),&
                                         NXF(NF),NYF(NF),NZF(NF))
+                                    if (IJKR.eq.IJKENR) then
+                                        IJKSTL=IJKL+1
+                                        exit TopOuter
+                                    end if
+                                    !if (equalSize) then
+                                    !    IJKSTR=IJKR+1
+                                    !    cycle TopOuter
+                                    !end if
                                 else if (.not.equalSize) then
                                     cycle TopInner
                                 else if (AR.le.0.0d0.and.STARTED) then
