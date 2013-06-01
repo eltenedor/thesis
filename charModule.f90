@@ -6,6 +6,6 @@ module charModule
                         TIME_CH
     character(len=11) :: FORM_CH='UNFORMATTED'
     integer :: BLOCKUNIT,PROC,PROCUNIT
-    integer, parameter :: OFFSET=20
+    integer, parameter :: OFFSET=103
 
 end module charModule

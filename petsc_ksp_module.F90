@@ -81,8 +81,8 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
         call VecNorm(b,NORM_2,b_real,ierr)
         ! set final tolerance
         rfinal = b_real*1D-8
-        rtol = 1D-2
-        !rtol = 1D-8
+        !rtol = 1D-2
+        rtol = 1D-8
         if (rank .eq. 0) print *, 'SETTING FINAL RESIDUAL TO: ', rfinal
         if (rank .eq. 0) print *, 'SETTING RELATIVE TOLERANCE TO: ', rtol
         if (rank .eq. 0) print *, 'INITIAL RESIDUAL: ', b_real
@@ -130,11 +130,11 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
     ! Solve the linear system
 
     write(LOG_CH,*) LS
-    LOGSTAGE='Iter_'//trim(adjustl(LOG_CH))
-    call PetscLogStageRegister(LOGSTAGE,stage,ierr)
-    call PetscLogStagePush(stage,ierr)
+    !LOGSTAGE='Iter_'//trim(adjustl(LOG_CH))
+    !call PetscLogStageRegister(LOGSTAGE,stage,ierr)
+    !call PetscLogStagePush(stage,ierr)
     call KSPSolve(ksp,b,x,ierr)
-    call PetscLogStagePop(ierr)
+    !call PetscLogStagePop(ierr)
     
     ! Get KSP information
     call KSPGetConvergedReason(ksp,reason,ierr)

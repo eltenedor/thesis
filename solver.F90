@@ -68,8 +68,8 @@ program main
 !....START OUTER ITERATIONS
 !==========================================================
 !
-        LSG=100
-        !LSG=1
+        !LSG=100
+        LSG=1
         !LSG=2
         do LS=1,LSG
             if (CONVERGED) then

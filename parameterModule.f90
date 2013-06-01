@@ -10,7 +10,7 @@ module parameterModule
     integer, parameter :: NWALAL=393216
     integer, parameter :: NBLOAL=393216
     integer, parameter :: PREC=8
-    integer, parameter :: NBLOCKS=20
+    integer, parameter :: NBLOCKS=1000
     integer, parameter :: NAL=16777216
     integer, parameter :: NFACEAL=1000000
     integer, parameter :: NPROCS=1

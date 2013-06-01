@@ -21,7 +21,7 @@ program proc
         rewind 20
         write(20,*) STRIDE
         print *, IBLOCK,STRIDE,(J,J=IBLOCK+1,IBLOCK+STRIDE)
-        write(20,*) (J,J=IBLOCK,IBLOCK+STRIDE)
+        write(20,*) (J,J=IBLOCK+1,IBLOCK+STRIDE)
         IBLOCK=IBLOCK+STRIDE
     end do
 

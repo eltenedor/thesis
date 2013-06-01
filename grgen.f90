@@ -60,10 +60,11 @@ subroutine readData
         WRITE(BLOCKUNIT,1) FILOUT
     ELSE
         READ(BLOCKUNIT,1) FILOUT
+        print *, FILOUT
         FILOUT = trim(adjustl(FILOUT))
         print *, FILOUT
     ENDIF
-    1 FORMAT(A12)
+    1 FORMAT(A20)
 
     PRINT *, ' ENTER> XSTART, XEND, NUMBER OF CVS:  '
     IF(ITYP.EQ.1) THEN
@@ -785,11 +786,11 @@ subroutine writeParamMod
     write(9,'(4X, A22, A7, I7)') 'integer, parameter :: ', 'NNEUAL=', NNEUA
     write(9,'(4X, A22, A7, I7)') 'integer, parameter :: ', 'NWALAL=', NWALA
     write(9,'(4X, A22, A7, I7)') 'integer, parameter :: ', 'NBLOAL=', NBLOA
-    write(9,'(4X, A22, A8, I2)') 'integer, parameter :: ', 'NBLOCKS=',NB
+    write(9,'(4X, A22, A8, I4)') 'integer, parameter :: ', 'NBLOCKS=',NB
     write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
     write(9,'(4X, A22, A4, I12)') 'integer, parameter :: ', 'NAL=',NIJKA
     write(9,'(4X, A22, A8, I8)') 'integer, parameter :: ', 'NFACEAL=',10000000
-    write(9,'(4X, A22, A8, I2)') 'integer, parameter :: ', 'NPROCS=',1
+    write(9,'(4X, A22, A8, I3)') 'integer, parameter :: ', 'NPROCS=',1
     write(9,'(A)') 'end module parameterModule'
 
 end subroutine writeParamMod
