@@ -66,7 +66,7 @@ program grid
     
     do K=1,NKCV
     do I=1,NICV
-    do J=1,NJCV
+    do J=1,NJCVBLOC
         IJK=J+NJCV*(I-1)+NICV*NJCV*(K-1)
         write(BLOCKNUMBER,*) IJK
         FILOUT='grid_'//trim(adjustl(BLOCKNUMBER))//'.inp'
