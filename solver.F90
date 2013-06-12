@@ -68,8 +68,8 @@ program main
 !....START OUTER ITERATIONS
 !==========================================================
 !
-        !LSG=100
-        LSG=1
+        LSG=100
+        !LSG=1
         !LSG=2
         do LS=1,LSG
             if (CONVERGED) then
@@ -570,11 +570,13 @@ subroutine calcSc
 
     real*8 :: APT,URF,CB,CP
     integer :: IJK1,IJK2,IJK3,IJK4
-    character(len=8) :: NOTHING
 
     URF=1.0d0
 
     call gradfi(T,TR,DTX,DTY,DTZ,DTX_Vec,DTY_Vec,DTZ_Vec)
+
+    ! need to synchronize all processes in MPI_COMM_WORLD
+    call PetscBarrier(T,ierr)
     call updateGrad
 !
 !.....START BLOCK LOOP
@@ -739,12 +741,10 @@ subroutine calcSc
         end do
         !stop
 
-        ! Assembly matrix coefficients of inlet boundaries
-        !print *, 'Assembling inlet boundary terms'
+        ! Assembly matrix coefficients of dirichlet boundaries
         do IJKDIR=IJKDIRST+1,IJKDIRST+NDIR
             IJK=IJKPDIR(IJKDIR)
             IJKP=MIJK(IJK+IJKPROC)
-            !print *, IJKP
             row=IJKP
             col=(/-1,-1,-1,IJKP,-1,-1,-1/)
             !
@@ -775,16 +775,10 @@ subroutine calcSc
                 val(7)=AT(IJK)
                 col(7)=IJKP+NIJCV
             end if
-            !print *,IJKPROC,MIJK(IJK),col,val
             !
             call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
             call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
-            !print *, row
-            if (row .eq. 276) then
-                !print *, 'Matrix coefficients to set - Iteration No.', LS,IJK,IJKP, val
-            end if
-
         end do
 
         ! Assembly matrix coefficients of neumann boundaries
@@ -905,14 +899,12 @@ subroutine calcSc
                 col(7)=IJKP+NIJCV
             end if
             !
-            !print *,IJKPROC,row,col
             call MatSetValues(A_Mat,i1,row,i7,col,val,INSERT_VALUES,ierr)
             call VecSetValue(B_Vec,row,valq,INSERT_VALUES,ierr)
             !
         end do
 
         ! Assembly off diagonal matrix coefficients of block boundaries
-        !print *, 'FACES'
         do F=FACEST+1,FACEST+NFACE
             row=MIJK(L(F))
             col1=MIJK(R(F))
@@ -965,7 +957,6 @@ subroutine calcSc
         end do
     end do
 
-    !stop
     call calcErr
 
 end subroutine calcSc
@@ -997,7 +988,7 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
     integer :: IJK1, IJK2, IJK3, IJK4
     PetscScalar, pointer :: DFX_Sca(:),DFY_Sca(:),DFZ_Sca(:)
 
-    ! modify the local portion of the vector
+    ! modify the local portion of the vector (no syncronization needed)
     call VecGetArrayF90(DFX_Vec,DFX_Sca,ierr)
     call VecGetArrayF90(DFY_Vec,DFY_Sca,ierr)
     call VecGetArrayF90(DFZ_Vec,DFZ_Sca,ierr)
@@ -1254,7 +1245,6 @@ end subroutine updateGrad
 subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
 !################################################################
         
-    !use boundaryModule
     use coefModule
     use fluxModule
     use geoModule
@@ -1299,7 +1289,6 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
 !
     FCFII=MIN(FM,ZERO)*T(IJKN)+MAX(FM,ZERO)*T(IJKP)
     FDFII=VSOL*(DFXI*XPN+DFYI*YPN+DFZI*ZPN)
-    !print *, MIJK(IJKP),T(IJKN),T(IJKP),FII,FCFIE
 !
 !.....COEFFICIENTS, DEFERRED CORRECTION, SOURCE TERMS
 !
@@ -1308,8 +1297,6 @@ subroutine fluxSc(IJKP,IJKN,IJK2,IJK3,IJK4,FM,CAP,CAN,FAC,G)
     FFIC=G*(FCFIE-FCFII)
     Q(IJKP)=Q(IJKP)-FFIC+FDFIE-FDFII
     Q(IJKN)=Q(IJKN)+FFIC-FDFIE+FDFII
-    !print *, MIJK(IJKP),VSOL,FM
-    !if (IJKN.eq.86) print *,'MASS FLUX: ', FM,VSOL 
 
 end subroutine fluxsc
 
@@ -1350,11 +1337,9 @@ subroutine walBdFlux
         SY=AR*NY
         SZ=AR*NZ
         !
-        !COEFC=RHO*(SX*VX+SY*VY+SZ*VZ)
         COEFD=ALPHA*SRDWAL(IJKWAL)
         AP(IJKP)=AP(IJKP)+COEFD
         Q(IJKP)=Q(IJKP)+COEFD*T(IJKB)
-        !print *, MIJK(IJKP),AP(IJKP),Q(IJKP),COEFD,COEFC
     end do
 
 end subroutine walBdFlux
@@ -1393,7 +1378,6 @@ subroutine blockBdFlux
         YI=YCF(F)*FAC+YC(L(F)-IJKPROC)*FACP
         ZI=ZCF(F)*FAC+ZC(L(F)-IJKPROC)*FACP
 
-        !print *, XF(F)-XI, YF(F)-YI, ZF(F)-ZI
         FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP+DFXI*(XF(F)-XI)+DFYI*(YF(F)-YI)+DFZI*(ZF(F)-ZI)
         !FII=TR(F)*FAC+T(L(F)-IJKPROC)*FACP
 
@@ -1436,14 +1420,10 @@ subroutine calcErr
     use parameterModule
     use coefModule
     use controlModule
-    use geoModule
-    use indexModule
-    use mmsModule
     use varModule
     implicit none
 #include <finclude/petscsys.h>
 #include <finclude/petscvec.h>
-!#include <finclude/petscvec.h90>
 
     real(KIND=PREC) :: E,ER
     PetscScalar :: ERR_Sca
@@ -1453,9 +1433,10 @@ subroutine calcErr
     call VecNorm(ERR_Vec,NORM_1,ERR_Sca,ierr)
     call VecGetSize(ERR_Vec,N_GLO,ierr)
 
-    !if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO,'TGES ',tges,'ITS ',itsInt 
-    if (rank.eq. 0) print *,'ERROR ',ERR_Sca/N_GLO
-    if (rank.eq. 0) write(9,*),'ERROR ',ERR_Sca/N_GLO, 'RESNORM ', res_Scalar, 'ITS ', itsInt
+    if (rank.eq. 0) then
+        print *,'ERROR ',ERR_Sca/N_GLO
+        write(9,*),'ERROR ',ERR_Sca/N_GLO, 'RESNORM ', res_Scalar, 'ITS ', itsInt
+    end if
 
 end subroutine calcErr
 

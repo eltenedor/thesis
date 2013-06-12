@@ -5,7 +5,6 @@ module coefModule
 #include <finclude/petscvecdef.h>
 #include <finclude/petscmatdef.h>
 
-
     real(KIND=PREC) :: Q(NXYZA), AP(NXYZA), AS(NXYZA), AN(NXYZA),&
                        AW(NXYZA), AE(NXYZA), AB(NXYZA), AT(NXYZA),&
                        AF(NFACEAL)

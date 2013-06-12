@@ -16,6 +16,10 @@ module varModule
 
 contains
 
+!================================================================
+!>  Collect N necessary Vector elements (either on- or off-
+!>  processor) from INP_VEC in a single continous local
+!>  array OUTP by specifying their global indices with MAP.
 !################################################################
 subroutine VecToArr(N,MAP,INP_Vec,OUTP)
 !################################################################
@@ -37,8 +41,6 @@ subroutine VecToArr(N,MAP,INP_Vec,OUTP)
     integer, intent(in) :: N,MAP(N)
     integer :: I
     real(kind=PREC) ,intent(inout) :: OUTP(N)
-
-    !print *, MAP
 
     call VecCreateSeq(PETSC_COMM_SELF,N,TEMP_Vec,ierr)
     call ISCreateGeneral(PETSC_COMM_SELF,N,MAP,PETSC_COPY_VALUES,FROM_Is,ierr)

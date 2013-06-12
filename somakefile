@@ -1,23 +1,18 @@
-#INCLUDES := -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include -I$(MPI_ARCH_PATH)/include #-I/usr/lib/openmpi/include/openmpi
 INCLUDES := -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include
 
-#LIBS := -L$(PETSC_DIR)/$(PETSC_ARCH)/lib  -lpetsc -lX11 -lpthread -llapack -lblas -L$(MPI_ARCH_PATH)/lib -L/usr/lib/gcc/x86_64-linux-gnu/4.4.5 -L/usr/lib/x86_64-linux-gnu -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
 LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -llapack -lblas -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
 
 CFORT := gfortran
+#CFORT := tau_f90.sh
 #CFORT := mpif90
-#CFORTFLAGS := -c -Wall -Wno-unused-variable
-CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
-#CFORTFLAGS := -mcmodel=large -c -g
+CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -O
 
 #CCPP := g++
 #CCPPFLAGS := -c -Wall -Wno-unused-variable
 
 CMPIF := mpif90
-#CMPIFFLAGS := -c -Wall -Wno-unused-variable -g
-CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -g
-#CMPIFFLAGS := -mcmodel=large -c -g
-#CMPIFFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable -g
+#CMPIF := tau_f90.sh
+CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -O
 
 DPATH := ../multiblock
 

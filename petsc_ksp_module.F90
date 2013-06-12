@@ -101,8 +101,10 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
 
         if (rinit<rfinal) then
             CONVERGED=.true.
-            if (rank .eq. 0) print *, 'FINAL RESIDUAL: ', rinit
-            if (rank .eq. 0) write (9,*) 'FINAL RESIDUAL: ', rinit
+            if (rank .eq. 0) then
+                print *, 'FINAL RESIDUAL: ', rinit
+                write (9,*) 'FINAL RESIDUAL: ', rinit
+            end if
             r_scalar = rinit
             call VecDestroy(vt1,ierr)
             call VecDestroy(vt2,ierr)
@@ -124,7 +126,7 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
 
     call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION, &
             & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
-            !& PETSC_DEFAULT_DOUBLE_PRECISION,50,ierr)
+            !& PETSC_DEFAULT_DOUBLE_PRECISION,45,ierr)
             !& PETSC_DEFAULT_DOUBLE_PRECISION,20000,ierr)
             
     ! Solve the linear system
