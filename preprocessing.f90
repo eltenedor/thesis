@@ -786,19 +786,19 @@ subroutine writeParameterModule
     REWIND 9
     read(9,*) ! 'module parameterModule'
     read(9,*) ! 'implicit none'
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NXA=', NXMAX
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NYA=', NYMAX
-    write(9,'(4X, A22, A4, I6)') 'integer, parameter :: ', 'NZA=', NZMAX
-    write(9,'(4X, A22, A6, I9)') 'integer, parameter :: ', 'NXYZA=', NXYZMAX
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NDIRAL=', NDIRMAX
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NNEUAL=', NNEUMAX
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NWALAL=', NWALMAX
-    write(9,'(4X, A22, A7, I6)') 'integer, parameter :: ', 'NBLOAL=', NBLOMAX
-    write(9,'(4X, A22, A8, I6)') 'integer, parameter :: ', 'NBLOCKS=',NBLOCKSMAX
+    write(9,'(4X, A22, A4, I12)') 'integer, parameter :: ', 'NXA=', NXMAX
+    write(9,'(4X, A22, A4, I12)') 'integer, parameter :: ', 'NYA=', NYMAX
+    write(9,'(4X, A22, A4, I12)') 'integer, parameter :: ', 'NZA=', NZMAX
+    write(9,'(4X, A22, A6, I12)') 'integer, parameter :: ', 'NXYZA=', NXYZMAX
+    write(9,'(4X, A22, A7, I12)') 'integer, parameter :: ', 'NDIRAL=', NDIRMAX
+    write(9,'(4X, A22, A7, I12)') 'integer, parameter :: ', 'NNEUAL=', NNEUMAX
+    write(9,'(4X, A22, A7, I12)') 'integer, parameter :: ', 'NWALAL=', NWALMAX
+    write(9,'(4X, A22, A7, I12)') 'integer, parameter :: ', 'NBLOAL=', NBLOMAX
+    write(9,'(4X, A22, A8, I12)') 'integer, parameter :: ', 'NBLOCKS=',NBLOCKSMAX
     write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
     write(9,'(4X, A22, A4, I12)') 'integer, parameter :: ', 'NAL=', NA
-    write(9,'(4X, A22, A8, I8)') 'integer, parameter :: ', 'NFACEAL=',NFMAX
-    write(9,'(4X, A22, A8, I3)') 'integer, parameter :: ', 'NPROCS=',NPROCSA
+    write(9,'(4X, A22, A8, I12)') 'integer, parameter :: ', 'NFACEAL=',NFMAX
+    write(9,'(4X, A22, A8, I4)') 'integer, parameter :: ', 'NPROCS=',NPROCSA
     write(9,'(A)') 'end module parameterModule'
     print *, 'NFACEAL= ', NF, NPROCSA, NF/NPROCSA
 

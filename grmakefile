@@ -1,7 +1,7 @@
 INCLUDES :=
 LIBS :=
 
-CFORT := mpif90
+CFORT := gfortran
 #CFORTFLAGS := -c -Wall -Wno-unused-variable
 #CFORTFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable
 #CFORTFLAGS := -mcmodel=large -c -Wall -Wno-unused-variable

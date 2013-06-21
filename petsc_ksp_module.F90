@@ -81,8 +81,8 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
         call VecNorm(b,NORM_2,b_real,ierr)
         ! set final tolerance
         rfinal = b_real*1D-8
-        !rtol = 1D-2
-        rtol = 1D-8
+        rtol = 1D-2
+        !rtol = 1D-8
         if (rank .eq. 0) print *, 'SETTING FINAL RESIDUAL TO: ', rfinal
         if (rank .eq. 0) print *, 'SETTING RELATIVE TOLERANCE TO: ', rtol
         if (rank .eq. 0) print *, 'INITIAL RESIDUAL: ', b_real
@@ -126,8 +126,9 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
 
     call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION, &
             & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
-            !& PETSC_DEFAULT_DOUBLE_PRECISION,45,ierr)
+            !& PETSC_DEFAULT_DOUBLE_PRECISION,193,ierr)
             !& PETSC_DEFAULT_DOUBLE_PRECISION,20000,ierr)
+    call KSPSetFromOptions(ksp,ierr)
             
     ! Solve the linear system
 

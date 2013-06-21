@@ -4,7 +4,7 @@ module scalarModule
     implicit none
     real(KIND=PREC) :: RHO = 1.0d0, ALPHA = 1.0d0 ! material constants
     real(KIND=PREC) :: VX = 1.0d0, VY = 1.0d0, VZ = 1.0d0,V_0=0.0d0 ! velocity
-    real(KIND=PREC) :: T_0 = 0.0d0,DT = 0.0d0
+    real(KIND=PREC) :: T_0 = 0.0d0,DT = 0.125d0
     !DT=1.0d0
     !DT=0.5d0
     !DT=0.25d0

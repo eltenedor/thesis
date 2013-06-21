@@ -1,6 +1,12 @@
 INCLUDES := -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include
 
-LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -llapack -lblas -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
+# complete libraries using openmpi, hypre and ml (all located in PETSC_DIR!)
+LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -lHYPRE -lmpi_cxx -lstdc++ -lml -lmpi_cxx -lstdc++ -llapack -lblas -lm -lmpi_f90 -lmpi_f77 -lgfortran -ldl -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s
+#LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -lmpi_cxx -lstdc++ -lmpi_cxx -lstdc++ -llapack -lblas -lm -lmpi_f90 -lmpi_f77 -lgfortran -ldl -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s
+
+#MPICH2 LIBS
+#LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -lHYPRE -lmpichcxx -lstdc++ -lml -lmpichcxx -lstdc++ -llapack -lblas -lmpichf90 -lgfortran -lm -lmpichcxx -lstdc++ -lmpich -lopa -lmpl -lrt -lpthread -lgcc_s -ldl
+
 
 CFORT := gfortran
 #CFORT := tau_f90.sh

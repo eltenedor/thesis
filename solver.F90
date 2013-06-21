@@ -27,6 +27,7 @@ program main
     if (rank .eq. 0) print *, 'STARTING SOLVER'
     call init
     call PetscGetTime(time1,ierr) ! don't consider IO for performance measurement
+    !call PetscTime(time1,ierr) ! don't consider IO for performance measurement
     print '(I2,A)', rank, ': SETTING UP KSP'
     call setUpKSP
 !
@@ -35,8 +36,8 @@ program main
 !==========================================================
 !
     ITIMS=1
-    !ITIME=512
-    ITIME=1
+    ITIME=8
+    !ITIME=1
     print '(I2,A)',rank, ': STARTING TIMELOOP'
     do ITIM=ITIMS,ITIME
         print *, 'TIMESTEP: ', ITIM
@@ -95,6 +96,7 @@ program main
 !
     call cleanUp(A_Mat,B_Vec,SOL_Vec)
     call PetscGetTime(time2,ierr)
+    !call PetscTime(time2,ierr)
     tges=time2-time1
     if (rank .eq. 0) print *, 'TGES ', tges
     if (rank .eq. 0) write(9,*), 'TGES ', tges
@@ -576,7 +578,7 @@ subroutine calcSc
     call gradfi(T,TR,DTX,DTY,DTZ,DTX_Vec,DTY_Vec,DTZ_Vec)
 
     ! need to synchronize all processes in MPI_COMM_WORLD
-    call PetscBarrier(T,ierr)
+    call PetscBarrier(SOL_Vec,ierr)
     call updateGrad
 !
 !.....START BLOCK LOOP
@@ -995,6 +997,7 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
 
     do B=1,NB
         call setBlockInd(B)
+
 !
 !.....INITIALIZE FIELDS
 !
