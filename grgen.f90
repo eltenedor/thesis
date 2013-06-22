@@ -789,7 +789,7 @@ subroutine writeParamMod
     write(9,'(4X, A22, A8, I12)') 'integer, parameter :: ', 'NBLOCKS=',NB
     write(9,'(4X, A22, A5, I1)') 'integer, parameter :: ', 'PREC=',PREC
     write(9,'(4X, A22, A4, I12)') 'integer, parameter :: ', 'NAL=',NIJKA
-    write(9,'(4X, A22, A8, I12)') 'integer, parameter :: ', 'NFACEAL=',1000000000
+    write(9,'(4X, A22, A8, I12)') 'integer, parameter :: ', 'NFACEAL=',10000000
     write(9,'(4X, A22, A8, I3)') 'integer, parameter :: ', 'NPROCS=',1
     write(9,'(A)') 'end module parameterModule'
 

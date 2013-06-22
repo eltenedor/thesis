@@ -52,7 +52,7 @@ program main
                 do I=1,NI
                 do J=1,NJ
                     !IJK=LK(K)+LI(I)+J
-                    IJK=IJKST+(K-1)*NK*NJ+(I-1)*NJ+J
+                    IJK=IJKST+(K-1)*NI*NJ+(I-1)*NJ+J
                     TO(IJK)=T(IJK)
                 end do
                 end do
@@ -1099,9 +1099,9 @@ subroutine gradfi(FI,FIR,DFX,DFY,DFZ,DFX_vec,DFY_vec,DFZ_vec)
             DFX(IJK)=DFX(IJK)+DFXT
             DFY(IJK)=DFY(IJK)+DFYT
             DFZ(IJK)=DFZ(IJK)+DFZT
-            DFX(IJK+1)=DFX(IJK+1)-DFXT
-            DFY(IJK+1)=DFY(IJK+1)-DFYT
-            DFZ(IJK+1)=DFZ(IJK+1)-DFZT
+            DFX(IJK+NIJ)=DFX(IJK+NIJ)-DFXT
+            DFY(IJK+NIJ)=DFY(IJK+NIJ)-DFYT
+            DFZ(IJK+NIJ)=DFZ(IJK+NIJ)-DFZT
         end do
         end do
         end do
