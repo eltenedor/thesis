@@ -26,7 +26,7 @@ program main
 
     if (rank .eq. 0) print *, 'STARTING SOLVER'
     call init
-    call PetscGetTime(time1,ierr) ! don't consider IO for performance measurement
+    call PetscTime(time1,ierr) ! don't consider IO for performance measurement
     !call PetscTime(time1,ierr) ! don't consider IO for performance measurement
     print '(I2,A)', rank, ': SETTING UP KSP'
     call setUpKSP
@@ -95,7 +95,7 @@ program main
 !==========================================================
 !
     call cleanUp(A_Mat,B_Vec,SOL_Vec)
-    call PetscGetTime(time2,ierr)
+    call PetscTime(time2,ierr)
     !call PetscTime(time2,ierr)
     tges=time2-time1
     if (rank .eq. 0) print *, 'TGES ', tges

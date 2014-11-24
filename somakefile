@@ -1,7 +1,7 @@
 INCLUDES := -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include
 
 # complete libraries using openmpi, hypre and ml (all located in PETSC_DIR!)
-LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -lHYPRE -lmpi_cxx -lstdc++ -lml -lmpi_cxx -lstdc++ -llapack -lblas -lm -lmpi_f90 -lmpi_f77 -lgfortran -ldl -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s
+LIBS=-Wl,-rpath=$(PETSC_DIR)/lib -L$(PETSC_DIR)/lib -lpetsc
 #LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -lmpi_cxx -lstdc++ -lmpi_cxx -lstdc++ -llapack -lblas -lm -lmpi_f90 -lmpi_f77 -lgfortran -ldl -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s
 
 #MPICH2 LIBS
@@ -20,7 +20,7 @@ CMPIF := mpif90
 #CMPIF := tau_f90.sh
 CMPIFFLAGS := -mcmodel=medium -c -Wall -Wno-unused-variable -O
 
-DPATH := ../multiblock
+DPATH := ../case
 
 OBJS := \
 	$(DPATH)/parameterModule.o \

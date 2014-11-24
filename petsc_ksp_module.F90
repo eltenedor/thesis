@@ -122,10 +122,11 @@ subroutine solveSys(A,b,x,N,LS,r_scalar)
 
     ! Set operators
 
-    call KSPSetOperators(ksp,A,A2,SAME_PRECONDITIONER,ierr)
+    !call KSPSetOperators(ksp,A,A2,SAME_PRECONDITIONER,ierr)
+    call KSPSetOperators(ksp,A,A,ierr)
 
-    call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_DOUBLE_PRECISION, &
-            & PETSC_DEFAULT_DOUBLE_PRECISION,PETSC_DEFAULT_INTEGER,ierr)
+    call KSPSetTolerances(ksp,rtol,PETSC_DEFAULT_REAL, &
+            & PETSC_DEFAULT_REAL,PETSC_DEFAULT_INTEGER,ierr)
             !& PETSC_DEFAULT_DOUBLE_PRECISION,193,ierr)
             !& PETSC_DEFAULT_DOUBLE_PRECISION,20000,ierr)
     call KSPSetFromOptions(ksp,ierr)

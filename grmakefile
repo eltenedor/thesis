@@ -10,7 +10,7 @@ CFORTFLAGS := -mcmodel=large -c -g
 CCPP := g++
 CCPPFLAGS := -c -Wall -Wno-unused-variable
 
-DPATH := ../multiblock
+DPATH := ../case
 
 OBJS := \
 	parameterModule.o \

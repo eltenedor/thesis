@@ -1,9 +1,10 @@
-INCLUDES := -I/usr/include/opencascade -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include 
+INCLUDES := -I/usr/include/opencascade -I$(PETSC_DIR)/include -I$(PETSC_DIR)/$(PETSC_ARCH)/include -I/software/oce/include/oce
 
 #OCCT_LIBS := -lTKBinXCAF -lTKIGES -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTL -lTKVRML -lTKXCAF -lTKXCAFSchema -lTKXDEIGES -lTKXDESTEP -lTKXSBase -lTKXmlXCAF
-OCCT_LIBS := -lTKBinXCAF -lTKIGES -lTKSTEP -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTL -lTKXCAF -lTKXCAFSchema -lTKXDEIGES -lTKXDESTEP -lTKXSBase -lTKXmlXCAF
+OCCT_LIBS := -Wl,-rpath=-L/software/oce/lib -L/software/oce/lib -lTKTopAlgo -lTKMath -lTKG2d -lTKernel -lTKBRep -lTKBO -lstdc++
 #OCCT_LIBS := -lTKAdvTools -lTKBinL -lTKBin -lTKBinTObj -lTKBinXCAF -lTKBool -lTKBO -lTKBRep -lTKCAF -lTKCDF -lTKernel -lTKFeat -lTKFillet -lTKG2d -lTKG3d -lTKGeomAlgo -lTKGeomBase -lTKHLR -lTKIGES -lTKLCAF -lTKMath -lTKMesh -lTKMeshVS -lTKNIS -lTKOffset -lTKOpenGl -lTKPCAF -lTKPLCAF -lTKPrim -lTKPShape -lTKService -lTKShapeSchema -lTKShHealing -lTKStdLSchema -lTKStdSchema -lTKSTEP209 -lTKSTEPAttr -lTKSTEPBase -lTKSTEP -lTKSTL -lTKTObj -lTKTopAlgo -lTKV2d -lTKV3d -lTKVRML -lTKXCAFSchema -lTKXCAF -lTKXDEIGES -lTKXDESTEP -lTKXMesh -lTKXmlL -lTKXml -lTKXmlTObj -lTKXmlXCAF
-PETSC_LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -llapack -lblas -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
+#PETSC_LIBS := -L$(PETSC_DIR)/lib -L$(PETSC_DIR)/$(PETSC_ARCH)/lib -lpetsc -lX11 -lpthread -llapack -lblas -lmpi_f90 -lmpi_f77 -lgfortran -lm -lmpi -lopen-rte -lopen-pal -lnsl -lutil -lgcc_s -lpthread -ldl 
+PETSC_LIBS=-Wl,-rpath=$(PETSC_DIR)/lib -L$(PETSC_DIR)/lib -lpetsc
 LIBS := $(OCCT_LIBS) $(PETSC_LIBS)
 
 #CFORT := gfortran
@@ -25,7 +26,7 @@ CMPIF := mpif90
 CMPIFFLAGS := -mcmodel=large -c -g
 
 #DPATH := ../order_verification/
-DPATH := ../multiblock/
+DPATH := ../case/
 
 OBJS := \
 	$(DPATH)parameterModule.o \
